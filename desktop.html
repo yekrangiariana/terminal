@@ -1,0 +1,375 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>ariana.exe — Desktop</title>
+    <link rel="stylesheet" href="css/desktop.css" />
+  </head>
+  <body>
+    <!-- ═══════════════════════════════════════
+       HUMANITY CHECK OVERLAY
+  ═══════════════════════════════════════ -->
+    <div id="captcha-overlay">
+      <div id="captcha-box">
+        <div class="captcha-titlebar">
+          <span class="captcha-icon">🔒</span>
+          <span>Security Verification</span>
+          <span class="captcha-close" onclick="captchaFail()">✕</span>
+        </div>
+        <div class="captcha-body">
+          <p class="captcha-prompt">Before entering, prove you are human.</p>
+          <p class="captcha-prompt">Type the phrase exactly as shown:</p>
+          <div class="captcha-phrase" id="captcha-phrase">free palestine</div>
+          <input
+            id="captcha-input"
+            type="text"
+            autocomplete="off"
+            spellcheck="false"
+            placeholder="type here..."
+          />
+          <div id="captcha-error" class="captcha-error" hidden>
+            ✗ Incorrect. Try again.
+          </div>
+          <div class="captcha-actions">
+            <button class="xp-btn" onclick="captchaSubmit()">OK</button>
+            <button class="xp-btn" onclick="captchaFail()">Cancel</button>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- ═══════════════════════════════════════
+       DESKTOP
+  ═══════════════════════════════════════ -->
+    <div id="desktop" hidden>
+      <!-- Desktop icons -->
+      <div id="icon-area">
+        <div class="desktop-icon" ondblclick="openWindow('win-writing')">
+          <img
+            src="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 48 48'%3E%3Cg%3E%3Crect x='8' y='4' width='26' height='34' rx='2' fill='%23ffffff' stroke='%23cccccc' stroke-width='1'/%3E%3Crect x='8' y='4' width='26' height='34' rx='2' fill='url(%23p)'/%3E%3Cdefs%3E%3ClinearGradient id='p' x1='0' y1='0' x2='1' y2='1'%3E%3Cstop offset='0' stop-color='%23ffffff'/%3E%3Cstop offset='1' stop-color='%23e8e8e8'/%3E%3C/linearGradient%3E%3C/defs%3E%3Crect x='12' y='12' width='14' height='2' rx='1' fill='%23aac4e8'/%3E%3Crect x='12' y='17' width='18' height='2' rx='1' fill='%23aac4e8'/%3E%3Crect x='12' y='22' width='18' height='2' rx='1' fill='%23aac4e8'/%3E%3Crect x='12' y='27' width='12' height='2' rx='1' fill='%23aac4e8'/%3E%3Crect x='28' y='2' width='12' height='14' rx='1' fill='%234c9ce0' opacity='0.9'/%3E%3Cpath d='M28 2 l12 0 l0 14 l-12 0 z' fill='none' stroke='%232277bb' stroke-width='0.5'/%3E%3Ctext x='34' y='12' font-family='serif' font-size='9' fill='white' text-anchor='middle' font-weight='bold'%3EW%3C/text%3E%3C/g%3E%3C/svg%3E"
+            alt=""
+          />
+          <span>Writing</span>
+        </div>
+        <div class="desktop-icon" ondblclick="openWindow('win-journalism')">
+          <img
+            src="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 48 48'%3E%3Cdefs%3E%3ClinearGradient id='fldr' x1='0' y1='0' x2='0' y2='1'%3E%3Cstop offset='0' stop-color='%23ffd966'/%3E%3Cstop offset='1' stop-color='%23e6a817'/%3E%3C/linearGradient%3E%3ClinearGradient id='fldrf' x1='0' y1='0' x2='0' y2='1'%3E%3Cstop offset='0' stop-color='%23ffe680'/%3E%3Cstop offset='1' stop-color='%23f5c518'/%3E%3C/linearGradient%3E%3C/defs%3E%3Crect x='4' y='16' width='40' height='28' rx='2' fill='url(%23fldr)' stroke='%23c48a00' stroke-width='1'/%3E%3Crect x='4' y='12' width='18' height='6' rx='2' fill='url(%23fldrf)' stroke='%23c48a00' stroke-width='1'/%3E%3Crect x='4' y='16' width='40' height='28' rx='2' fill='url(%23fldrf)'/%3E%3Cpath d='M4 20 Q24 16 44 20' stroke='%23c48a00' stroke-width='0.5' fill='none' opacity='0.5'/%3E%3C/svg%3E"
+            alt=""
+          />
+          <span>Journalism</span>
+        </div>
+        <div class="desktop-icon" ondblclick="openWindow('win-projects')">
+          <img
+            src="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 48 48'%3E%3Cdefs%3E%3ClinearGradient id='fldrb' x1='0' y1='0' x2='0' y2='1'%3E%3Cstop offset='0' stop-color='%236ab0e8'/%3E%3Cstop offset='1' stop-color='%232a7fcb'/%3E%3C/linearGradient%3E%3ClinearGradient id='fldrbf' x1='0' y1='0' x2='0' y2='1'%3E%3Cstop offset='0' stop-color='%2390c8f8'/%3E%3Cstop offset='1' stop-color='%234a9fe0'/%3E%3C/linearGradient%3E%3C/defs%3E%3Crect x='4' y='16' width='40' height='28' rx='2' fill='url(%23fldrb)' stroke='%23156ab5' stroke-width='1'/%3E%3Crect x='4' y='12' width='18' height='6' rx='2' fill='url(%23fldrbf)' stroke='%23156ab5' stroke-width='1'/%3E%3Crect x='4' y='16' width='40' height='28' rx='2' fill='url(%23fldrbf)'/%3E%3C/svg%3E"
+            alt=""
+          />
+          <span>Projects</span>
+        </div>
+        <div class="desktop-icon" ondblclick="openWindow('win-about')">
+          <img
+            src="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 48 48'%3E%3Cdefs%3E%3CradialGradient id='face' cx='50%25' cy='40%25' r='55%25'%3E%3Cstop offset='0' stop-color='%23fce8b2'/%3E%3Cstop offset='1' stop-color='%23f0b96b'/%3E%3C/radialGradient%3E%3ClinearGradient id='body' x1='0' y1='0' x2='0' y2='1'%3E%3Cstop offset='0' stop-color='%234a9ee0'/%3E%3Cstop offset='1' stop-color='%232266bb'/%3E%3C/linearGradient%3E%3C/defs%3E%3Ccircle cx='24' cy='16' r='10' fill='url(%23face)' stroke='%23d4994a' stroke-width='0.8'/%3E%3Cellipse cx='24' cy='40' rx='16' ry='10' fill='url(%23body)'/%3E%3C/svg%3E"
+            alt=""
+          />
+          <span>About</span>
+        </div>
+        <div class="desktop-icon" ondblclick="openWindow('win-github')">
+          <img
+            src="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 48 48'%3E%3Cdefs%3E%3CradialGradient id='ie' cx='40%25' cy='35%25' r='60%25'%3E%3Cstop offset='0' stop-color='%23a8d8f8'/%3E%3Cstop offset='1' stop-color='%232060d0'/%3E%3C/radialGradient%3E%3C/defs%3E%3Ccircle cx='24' cy='24' r='20' fill='url(%23ie)' stroke='%231040a0' stroke-width='1'/%3E%3Cellipse cx='24' cy='24' rx='8' ry='20' fill='none' stroke='white' stroke-width='1.5' opacity='0.7'/%3E%3Cline x1='4' y1='24' x2='44' y2='24' stroke='white' stroke-width='1.5' opacity='0.7'/%3E%3Cpath d='M8 14 Q24 10 40 14' stroke='white' stroke-width='1.2' fill='none' opacity='0.7'/%3E%3Cpath d='M8 34 Q24 38 40 34' stroke='white' stroke-width='1.2' fill='none' opacity='0.7'/%3E%3Ctext x='24' y='29' font-family='Arial' font-size='11' fill='white' text-anchor='middle' font-weight='bold' opacity='0.9'%3Egh%3C/text%3E%3C/svg%3E"
+            alt=""
+          />
+          <span>GitHub</span>
+        </div>
+        <div class="desktop-icon" id="terminal-icon" ondblclick="goTerminal()">
+          <img
+            src="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 48 48'%3E%3Cdefs%3E%3ClinearGradient id='mon' x1='0' y1='0' x2='0' y2='1'%3E%3Cstop offset='0' stop-color='%23444'/%3E%3Cstop offset='1' stop-color='%23111'/%3E%3C/linearGradient%3E%3C/defs%3E%3Crect x='4' y='6' width='40' height='28' rx='3' fill='url(%23mon)' stroke='%23888' stroke-width='1.5'/%3E%3Crect x='6' y='8' width='36' height='24' rx='1' fill='%23001800'/%3E%3Ctext x='10' y='20' font-family='monospace' font-size='10' fill='%2300cc44' font-weight='bold'%3EC:%5C%3E_%3C/text%3E%3Ctext x='10' y='30' font-family='monospace' font-size='7' fill='%2300992e' opacity='0.7'%3Edir /s%3C/text%3E%3Crect x='18' y='36' width='12' height='4' rx='1' fill='%23666'/%3E%3Crect x='10' y='40' width='28' height='3' rx='1' fill='%23555'/%3E%3C/svg%3E"
+            alt=""
+          />
+          <span>Terminal</span>
+        </div>
+      </div>
+
+      <!-- ── WRITING WINDOW ── -->
+      <div class="xp-window" id="win-writing" hidden>
+        <div class="win-titlebar" onmousedown="dragStart(event, 'win-writing')">
+          <span class="win-icon">📄</span>
+          <span class="win-title">Writing</span>
+          <div class="win-controls">
+            <button onclick="minimizeWindow('win-writing')">_</button>
+            <button onclick="closeWindow('win-writing')">✕</button>
+          </div>
+        </div>
+        <div class="win-menu">
+          <span>File</span><span>View</span><span>Help</span>
+        </div>
+        <div class="win-body">
+          <div id="writing-list" class="file-list"></div>
+        </div>
+        <div class="win-status-bar"><span id="writing-count"></span></div>
+      </div>
+
+      <!-- ── JOURNALISM WINDOW ── -->
+      <div class="xp-window" id="win-journalism" hidden>
+        <div
+          class="win-titlebar"
+          onmousedown="dragStart(event, 'win-journalism')"
+        >
+          <span class="win-icon">📰</span>
+          <span class="win-title">Journalism &amp; Investigations</span>
+          <div class="win-controls">
+            <button onclick="minimizeWindow('win-journalism')">_</button>
+            <button onclick="closeWindow('win-journalism')">✕</button>
+          </div>
+        </div>
+        <div class="win-menu">
+          <span>File</span><span>View</span><span>Help</span>
+        </div>
+        <div class="win-body">
+          <div id="journalism-list" class="file-list"></div>
+        </div>
+        <div class="win-status-bar"><span id="journalism-count"></span></div>
+      </div>
+
+      <!-- ── PROJECTS WINDOW ── -->
+      <div class="xp-window" id="win-projects" hidden>
+        <div
+          class="win-titlebar"
+          onmousedown="dragStart(event, 'win-projects')"
+        >
+          <span class="win-icon">💾</span>
+          <span class="win-title">Projects</span>
+          <div class="win-controls">
+            <button onclick="minimizeWindow('win-projects')">_</button>
+            <button onclick="closeWindow('win-projects')">✕</button>
+          </div>
+        </div>
+        <div class="win-menu">
+          <span>File</span><span>View</span><span>Help</span>
+        </div>
+        <div class="win-body">
+          <div id="projects-list" class="file-list"></div>
+        </div>
+        <div class="win-status-bar"><span id="projects-count"></span></div>
+      </div>
+
+      <!-- ── ABOUT WINDOW ── -->
+      <div class="xp-window" id="win-about" hidden>
+        <div class="win-titlebar" onmousedown="dragStart(event, 'win-about')">
+          <span class="win-icon">👤</span>
+          <span class="win-title">About — Ariana Yekrangi</span>
+          <div class="win-controls">
+            <button onclick="closeWindow('win-about')">✕</button>
+          </div>
+        </div>
+        <div class="win-body about-body">
+          <div class="about-avatar">AY</div>
+          <div class="about-text">
+            <h2>Ariana Yekrangi</h2>
+            <p><strong>Location:</strong> Helsinki, Finland</p>
+            <p><strong>Occupation:</strong> Journalist · Editor · Builder</p>
+            <hr />
+            <p>
+              Thinks too much about systems, writes about the internet,<br />and
+              builds things in the quiet hours.
+            </p>
+            <hr />
+            <p>github.com/arianayekrangi</p>
+          </div>
+        </div>
+      </div>
+
+      <!-- ── GITHUB WINDOW ── -->
+      <div class="xp-window" id="win-github" hidden>
+        <div class="win-titlebar" onmousedown="dragStart(event, 'win-github')">
+          <span class="win-icon">🐙</span>
+          <span class="win-title">GitHub — yekrangiariana</span>
+          <div class="win-controls">
+            <button onclick="minimizeWindow('win-github')">_</button>
+            <button onclick="closeWindow('win-github')">✕</button>
+          </div>
+        </div>
+        <div class="win-menu">
+          <span>File</span><span>View</span>
+          <span
+            style="margin-left: auto; cursor: pointer"
+            onclick="window.open('https://github.com/yekrangiariana', '_blank')"
+            >↗ Open GitHub</span
+          >
+        </div>
+        <div class="win-body">
+          <div id="github-list" class="file-list"></div>
+          <div
+            id="github-error"
+            hidden
+            style="padding: 12px; font-size: 11px; color: #800"
+          ></div>
+        </div>
+        <div class="win-status-bar">
+          <span id="github-count">Loading…</span>
+        </div>
+      </div>
+
+      <!-- ── ARTICLE READER WINDOW ── -->
+      <div class="xp-window" id="win-reader" hidden>
+        <div class="win-titlebar" onmousedown="dragStart(event, 'win-reader')">
+          <span class="win-icon">📖</span>
+          <span class="win-title" id="reader-title">—</span>
+          <div class="win-controls">
+            <button onclick="closeWindow('win-reader')">✕</button>
+          </div>
+        </div>
+        <div class="win-body">
+          <div id="reader-body" class="reader-body"></div>
+        </div>
+      </div>
+
+      <!-- Taskbar -->
+      <div id="taskbar">
+        <button class="start-btn" onclick="toggleStart()">
+          <img
+            src="assets/windows-xp-logo.svg"
+            class="start-logo-img"
+            alt=""
+          />
+          <strong>Start</strong>
+        </button>
+        <div id="taskbar-items"></div>
+        <div id="taskbar-clock"></div>
+      </div>
+
+      <!-- Start menu -->
+      <div id="start-menu" hidden>
+        <div class="start-header">
+          <div class="start-header-avatar">AY</div>
+          <div class="start-header-name">Ariana Yekrangi</div>
+        </div>
+        <div class="start-main">
+          <div class="start-left">
+            <div class="start-items">
+              <div
+                class="start-item"
+                onclick="
+                  openWindow('win-writing');
+                  toggleStart();
+                "
+              >
+                📄 Writing
+              </div>
+              <div
+                class="start-item"
+                onclick="
+                  openWindow('win-journalism');
+                  toggleStart();
+                "
+              >
+                📰 Journalism
+              </div>
+              <div
+                class="start-item"
+                onclick="
+                  openWindow('win-projects');
+                  toggleStart();
+                "
+              >
+                💾 Projects
+              </div>
+              <div
+                class="start-item"
+                onclick="
+                  openWindow('win-github');
+                  toggleStart();
+                "
+              >
+                🐙 GitHub
+              </div>
+              <div
+                class="start-item"
+                onclick="
+                  openWindow('win-about');
+                  toggleStart();
+                "
+              >
+                👤 About
+              </div>
+            </div>
+            <hr />
+            <div class="start-items">
+              <div class="start-item" onclick="goTerminal()">⬛ Terminal</div>
+            </div>
+          </div>
+          <div class="start-right">
+            <div class="start-items">
+              <div class="start-item">My Documents</div>
+              <div class="start-item">My Pictures</div>
+              <div class="start-item">Help</div>
+            </div>
+          </div>
+        </div>
+        <div class="start-footer">
+          <div class="start-item" onclick="goTerminal()">Shut Down</div>
+        </div>
+      </div>
+
+      <!-- Desktop right-click context menu -->
+      <div id="desktop-ctx-menu" hidden>
+        <div class="ctx-item" onclick="ctxRefresh()">Refresh</div>
+        <hr class="ctx-sep" />
+        <div class="ctx-item ctx-disabled">New Folder</div>
+        <div class="ctx-item ctx-disabled">Paste</div>
+        <hr class="ctx-sep" />
+        <div
+          class="ctx-item"
+          onclick="
+            openWindow('win-writing');
+            hideCtxMenu();
+          "
+        >
+          📄 Open Writing
+        </div>
+        <div
+          class="ctx-item"
+          onclick="
+            openWindow('win-journalism');
+            hideCtxMenu();
+          "
+        >
+          📰 Open Journalism
+        </div>
+        <div
+          class="ctx-item"
+          onclick="
+            openWindow('win-projects');
+            hideCtxMenu();
+          "
+        >
+          💾 Open Projects
+        </div>
+        <hr class="ctx-sep" />
+        <div
+          class="ctx-item"
+          onclick="
+            openWindow('win-about');
+            hideCtxMenu();
+          "
+        >
+          Properties
+        </div>
+      </div>
+
+      <!-- Rubber-band selection rectangle -->
+      <div id="selection-rect" hidden></div>
+    </div>
+    <!-- /desktop -->
+
+    <!-- Windows XP startup sound -->
+    <audio
+      id="startup-sound"
+      src="assets/xp-sound.mp3"
+      preload="auto"
+      style="display: none"
+    ></audio>
+
+    <script src="js/shared.js"></script>
+    <script src="js/desktop.js"></script>
+  </body>
+</html>

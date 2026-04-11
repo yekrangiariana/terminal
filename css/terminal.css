@@ -1,0 +1,1100 @@
+@import url("post.css");
+
+/* ─────────────────────────────────────────────
+   Design Tokens — Modern Phosphor Terminal
+───────────────────────────────────────────── */
+:root {
+  --cyan: #00ffd5;
+  --cyan-dim: #00b396;
+  --cyan-glow: rgba(0, 255, 213, 0.15);
+  --cyan-subtle: rgba(0, 255, 213, 0.06);
+  --red: #ff4466;
+  --yellow: #ffd866;
+  --amber: #ffaa44;
+  --blue: #6eb4ff;
+  --purple: #c084fc;
+  --pink: #f472b6;
+  --white: #d4dbd8;
+  --grey: #3d4f4a;
+  --grey-dim: #1e2d28;
+  --bg: #0a0e1a;
+  --bg-term: #060d0b;
+  --bg-surface: rgba(0, 255, 213, 0.025);
+  --border-subtle: rgba(0, 255, 213, 0.1);
+  --border-medium: rgba(0, 255, 213, 0.2);
+  /* Legacy aliases so old classes still work */
+  --green: var(--cyan);
+  --green-dim: var(--cyan-dim);
+  --green-glow: var(--cyan-glow);
+}
+
+/* ─────────────────────────────────────────────
+   Reset & Base
+───────────────────────────────────────────── */
+*,
+*::before,
+*::after {
+  box-sizing: border-box;
+  margin: 0;
+  padding: 0;
+}
+
+body {
+  background:
+    radial-gradient(
+      ellipse 380px 90px at 30% 28%,
+      rgba(255, 255, 255, 0.55) 0%,
+      transparent 70%
+    ),
+    radial-gradient(
+      ellipse 260px 60px at 28% 24%,
+      rgba(255, 255, 255, 0.45) 0%,
+      transparent 70%
+    ),
+    radial-gradient(
+      ellipse 320px 80px at 70% 22%,
+      rgba(255, 255, 255, 0.5) 0%,
+      transparent 70%
+    ),
+    radial-gradient(
+      ellipse 180px 50px at 68% 18%,
+      rgba(255, 255, 255, 0.4) 0%,
+      transparent 70%
+    ),
+    radial-gradient(
+      ellipse 200px 55px at 52% 32%,
+      rgba(255, 255, 255, 0.3) 0%,
+      transparent 70%
+    ),
+    radial-gradient(
+      ellipse 130px 40px at 85% 35%,
+      rgba(255, 255, 255, 0.25) 0%,
+      transparent 70%
+    ),
+    linear-gradient(
+      to bottom,
+      #0e4fa8 0%,
+      #1e6cc7 15%,
+      #3d8fd4 32%,
+      #6dbbea 48%,
+      #96d6f5 57%,
+      #c5e8f7 60%,
+      #92cc5a 61%,
+      #6eb83a 65%,
+      #4ea028 70%,
+      #3a8c20 78%,
+      #2e7018 90%,
+      #245a12 100%
+    );
+  color: var(--cyan);
+  font-family: "Fira Code", "Courier New", monospace;
+  font-size: 14px;
+  line-height: 1.6;
+  height: 100vh;
+  overflow: hidden;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-direction: column;
+  gap: 0;
+}
+
+/* Scanlines overlay */
+body::after {
+  content: "";
+  position: fixed;
+  inset: 0;
+  background: repeating-linear-gradient(
+    0deg,
+    transparent,
+    transparent 2px,
+    rgba(0, 0, 0, 0.03) 2px,
+    rgba(0, 0, 0, 0.03) 4px
+  );
+  pointer-events: none;
+  z-index: 9999;
+}
+
+/* ─────────────────────────────────────────────
+   Terminal Window
+───────────────────────────────────────────── */
+#terminal-wrapper {
+  width: 97%;
+  max-width: 1400px;
+  height: 93vh;
+  display: flex;
+  flex-direction: column;
+  border: 1px solid rgba(80, 100, 200, 0.25);
+  overflow: hidden;
+  /* XP-style raised window border */
+  box-shadow:
+    inset 1px 1px rgba(255, 255, 255, 0.22),
+    inset -1px -1px rgba(0, 0, 0, 0.85),
+    inset 2px 2px rgba(255, 255, 255, 0.08),
+    inset -2px -2px rgba(0, 0, 0, 0.6),
+    0 16px 60px rgba(0, 0, 0, 0.7);
+}
+
+/* ── XP-style title bar ── */
+#title-bar {
+  background: linear-gradient(to right, #000080, #1084d0);
+  border: none;
+  padding: 5px 10px 5px 12px;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  font-size: 11px;
+  letter-spacing: 0.06em;
+  user-select: none;
+}
+
+#status-dot {
+  color: #fff;
+  font-size: 13px;
+  animation: none;
+  opacity: 1;
+}
+
+#title-text {
+  flex: 1;
+  color: #fff;
+  font-weight: bold;
+  letter-spacing: 0.08em;
+}
+
+.title-sep {
+  color: rgba(255, 255, 255, 0.4);
+}
+
+#clock-display {
+  color: rgba(255, 255, 255, 0.9);
+  font-size: 11px;
+}
+#uptime-display {
+  color: rgba(255, 255, 255, 0.55);
+  font-size: 11px;
+}
+
+/* XP-style window control buttons */
+#title-bar-controls {
+  display: flex;
+  gap: 2px;
+  margin-left: 10px;
+}
+.win-btn {
+  width: 21px;
+  height: 19px;
+  font-size: 10px;
+  font-weight: bold;
+  line-height: 1;
+  font-family: Tahoma, Arial, sans-serif;
+  border: 1px solid rgba(0, 0, 0, 0.35);
+  border-radius: 3px;
+  cursor: pointer;
+  padding: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  text-shadow: 0 1px 1px rgba(0, 0, 0, 0.4);
+  box-shadow:
+    inset 0 1px 1px rgba(255, 255, 255, 0.5),
+    0 1px 2px rgba(0, 0, 0, 0.3);
+  user-select: none;
+  color: #fff;
+  background: linear-gradient(
+    to bottom,
+    #88aee8 0%,
+    #5580d4 50%,
+    #4068c4 51%,
+    #5a88de 100%
+  );
+}
+.win-close {
+  background: linear-gradient(
+    to bottom,
+    #e87878 0%,
+    #d44040 50%,
+    #c02828 51%,
+    #d85858 100%
+  );
+  width: 23px;
+}
+.win-btn:hover {
+  filter: brightness(1.15);
+}
+.win-btn:active {
+  filter: brightness(0.88);
+  box-shadow: inset 0 1px 2px rgba(0, 0, 0, 0.5);
+}
+
+/* XP status bar */
+#status-bar {
+  display: flex;
+  justify-content: space-between;
+  align-items: stretch;
+  background: linear-gradient(to bottom, #c0c8d8, #a8b2c4);
+  border-top: 2px solid #3c3c3c;
+  font-size: 10px;
+  color: #000;
+  letter-spacing: 0.04em;
+  user-select: none;
+  font-family: "Fira Code", monospace;
+  min-height: 20px;
+}
+.sb-section {
+  display: flex;
+  align-items: stretch;
+}
+.sb-item {
+  display: flex;
+  align-items: center;
+  padding: 2px 10px;
+  border-right: 1px solid rgba(255, 255, 255, 0.5);
+  border-bottom: 1px solid rgba(255, 255, 255, 0.5);
+  border-left: 1px solid #888;
+  border-top: 1px solid #888;
+  margin: 2px;
+  background: rgba(255, 255, 255, 0.15);
+  white-space: nowrap;
+}
+.sb-item#sb-mode {
+  color: #000;
+  font-weight: 500;
+}
+.sb-sep {
+  display: flex;
+  align-items: center;
+  padding: 0 4px;
+  color: #666;
+  font-size: 11px;
+}
+
+/* ── Terminal content area ── */
+#terminal {
+  flex: 1;
+  background: var(--bg-term);
+  border: none;
+  padding: 22px 28px 16px;
+  overflow-y: auto;
+  display: flex;
+  flex-direction: column;
+}
+
+#terminal::-webkit-scrollbar {
+  width: 6px;
+}
+#terminal::-webkit-scrollbar-track {
+  background: transparent;
+}
+#terminal::-webkit-scrollbar-thumb {
+  background: var(--grey-dim);
+}
+#terminal::-webkit-scrollbar-thumb:hover {
+  background: var(--grey);
+}
+
+/* ─────────────────────────────────────────────
+   Progress bar — boot sequence
+───────────────────────────────────────────── */
+.progress-wrap {
+  font-family: "Fira Code", monospace;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding-left: 2px;
+}
+.progress-bar {
+  display: inline-block;
+  color: var(--cyan);
+  letter-spacing: -0.5px;
+}
+.progress-bar .pb-fill {
+  color: var(--cyan);
+}
+.progress-bar .pb-empty {
+  color: var(--grey-dim);
+}
+.progress-label {
+  color: var(--white);
+  font-size: 12px;
+}
+.progress-pct {
+  color: var(--cyan-dim);
+  min-width: 4ch;
+  text-align: right;
+}
+
+/* ─────────────────────────────────────────────
+   Output & Input
+───────────────────────────────────────────── */
+#output {
+  flex: 1;
+  word-break: break-word;
+}
+
+#output > div {
+  line-height: 1.75;
+  min-height: 1.5em;
+  white-space: pre-wrap;
+  color: var(--white);
+}
+
+#output > div.spacer {
+  height: 0.7em;
+  min-height: 0.7em;
+  line-height: 1;
+}
+
+#input-line {
+  display: flex;
+  align-items: center;
+  margin-top: 6px;
+  padding-top: 8px;
+  border-top: 1px solid rgba(0, 255, 213, 0.06);
+  transition: border-top-color 0.25s;
+  position: sticky;
+  bottom: 0;
+  background: var(--bg-term);
+  z-index: 10;
+}
+
+#input-line:focus-within {
+  border-top-color: rgba(0, 255, 213, 0.25);
+}
+
+.prompt {
+  white-space: nowrap;
+  margin-right: 8px;
+}
+.p-user {
+  color: var(--cyan);
+  font-weight: 600;
+}
+.p-sep {
+  color: var(--grey);
+}
+.p-host {
+  color: var(--purple);
+  font-weight: 600;
+}
+.p-dollar {
+  color: var(--cyan);
+  font-weight: 700;
+}
+
+#command-input {
+  background: transparent;
+  border: none;
+  outline: none;
+  color: var(--cyan);
+  font-family: inherit;
+  font-size: inherit;
+  width: 100%;
+  caret-color: var(--cyan);
+}
+
+/* ─────────────────────────────────────────────
+   Syntax Colour Classes
+───────────────────────────────────────────── */
+.c-cmd {
+  color: var(--cyan);
+  font-weight: bold;
+}
+.c-error {
+  color: var(--red);
+  font-weight: bold;
+}
+.c-warn {
+  color: var(--amber);
+}
+.c-info {
+  color: var(--cyan-dim);
+}
+.c-dim {
+  color: var(--grey);
+}
+.c-white {
+  color: var(--white);
+}
+.c-blue {
+  color: var(--blue);
+}
+.c-yellow {
+  color: var(--yellow);
+}
+.c-amber {
+  color: var(--amber);
+}
+.c-purple {
+  color: var(--purple);
+}
+.c-green {
+  color: var(--cyan);
+}
+.c-cyan {
+  color: var(--cyan);
+  font-weight: bold;
+}
+
+/* ─────────────────────────────────────────────
+   ASCII Art & Home Styles
+───────────────────────────────────────────── */
+.ascii-art {
+  color: var(--cyan);
+  font-size: 11px;
+  line-height: 1.15;
+  white-space: pre;
+  letter-spacing: 0;
+}
+.ascii-glow {
+  color: var(--cyan);
+  font-size: 11px;
+  line-height: 1.15;
+  white-space: pre;
+  letter-spacing: 0;
+  text-shadow:
+    0 0 20px rgba(0, 255, 213, 0.4),
+    0 0 40px rgba(0, 255, 213, 0.15);
+}
+
+/* Home hero — earth globe + name side by side */
+.home-hero {
+  display: flex;
+  align-items: center;
+  gap: 16px;
+  padding: 4px 0;
+}
+.earth-globe {
+  color: var(--cyan-dim);
+  font-size: 6px;
+  line-height: 1.1;
+  white-space: pre;
+  letter-spacing: 0;
+  margin: 0;
+  flex-shrink: 0;
+  opacity: 0.7;
+  text-shadow: 0 0 10px rgba(0, 255, 213, 0.2);
+}
+.home-hero-info {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+.home-hero-info pre {
+  margin: 0;
+  font-family: "Fira Code", monospace;
+  font-size: 10px;
+  line-height: 1.15;
+  white-space: pre;
+}
+@media (max-width: 700px) {
+  .home-hero {
+    flex-direction: column;
+    align-items: flex-start;
+  }
+  .earth-globe {
+    font-size: 4px;
+  }
+}
+
+.home-divider {
+  color: var(--grey-dim);
+  letter-spacing: 2px;
+  font-size: 12px;
+}
+
+.home-label {
+  color: var(--cyan-dim);
+  font-size: 11px;
+  letter-spacing: 0.15em;
+  text-transform: uppercase;
+}
+
+.home-cmd-line {
+  color: var(--white);
+}
+.home-cmd-line .hc-name {
+  color: var(--cyan);
+  font-weight: 500;
+}
+.home-cmd-line .hc-arrow {
+  color: var(--grey-dim);
+}
+.home-cmd-line .hc-desc {
+  color: var(--grey);
+}
+
+/* ── Home layout: commands + sidebar ── */
+.home-wrap {
+  display: flex;
+  gap: 16px;
+  align-items: flex-start;
+}
+.home-main {
+  flex: 1;
+  min-width: 0;
+}
+@media (max-width: 900px) {
+  .home-wrap > .blog-sidebar {
+    display: none;
+  }
+}
+
+/* ─────────────────────────────────────────────
+   Post headings
+───────────────────────────────────────────── */
+.c-header {
+  color: var(--white);
+  font-weight: 700;
+  font-size: 1.1em;
+  letter-spacing: 0.03em;
+  border-bottom: 1px solid rgba(0, 255, 213, 0.12);
+  padding-bottom: 4px;
+  display: block;
+}
+.c-sub {
+  color: var(--cyan);
+  font-weight: 600;
+  padding-left: 0;
+  display: block;
+}
+
+/* Category badges */
+.badge {
+  display: inline-block;
+  font-size: 10px;
+  padding: 1px 8px;
+  letter-spacing: 0.08em;
+  vertical-align: middle;
+  margin-left: 8px;
+}
+.badge-blog {
+  border: 1px solid var(--cyan-dim);
+  color: var(--cyan-dim);
+}
+.badge-work {
+  border: 1px solid var(--blue);
+  color: var(--blue);
+}
+.badge-project {
+  border: 1px solid var(--purple);
+  color: var(--purple);
+}
+
+/* ─────────────────────────────────────────────
+   Entry List — Blog with Sidebar
+───────────────────────────────────────────── */
+#entry-list {
+  margin: 2px 0 10px;
+  font-family: "Fira Code", monospace;
+  font-size: 13px;
+}
+
+/* ── Blog title ── */
+.blog-title {
+  color: var(--cyan);
+  font-size: 12px;
+  line-height: 1.15;
+  white-space: pre;
+  letter-spacing: 0;
+  margin: 0 0 2px;
+  text-shadow:
+    0 0 20px rgba(0, 255, 213, 0.3),
+    0 0 40px rgba(0, 255, 213, 0.1);
+  font-family: "Fira Code", monospace;
+}
+.blog-filter-label {
+  color: var(--cyan-dim);
+  font-size: 11px;
+  letter-spacing: 0.15em;
+  padding: 0 0 4px;
+  user-select: none;
+}
+.blog-rule {
+  color: var(--grey-dim);
+  font-size: 13px;
+  line-height: 1.4;
+  user-select: none;
+}
+
+/* ── Sidebar + list wrapper ── */
+.blog-wrap {
+  display: flex;
+  gap: 24px;
+  align-items: flex-start;
+}
+.blog-list-pane {
+  flex: 1;
+  min-width: 0;
+}
+.blog-sidebar {
+  flex-shrink: 0;
+  color: var(--grey);
+  font-size: 10px;
+  line-height: 1.15;
+  white-space: pre;
+  font-family: "Fira Code", monospace;
+  margin: 0;
+  user-select: none;
+  border-left: 1px solid var(--grey-dim);
+  padding-left: 12px;
+}
+.blog-sidebar .sb-frame {
+  color: var(--grey-dim);
+}
+.blog-sidebar .sb-heading {
+  color: var(--cyan);
+  font-weight: 600;
+  letter-spacing: 0.06em;
+}
+.blog-sidebar .sb-label {
+  color: var(--cyan-dim);
+}
+.blog-sidebar .sb-val {
+  color: var(--cyan);
+  font-weight: 500;
+}
+.blog-sidebar .sb-bar {
+  color: var(--cyan);
+  text-shadow: 0 0 8px rgba(0, 255, 213, 0.4);
+}
+.blog-sidebar .sb-dim {
+  color: var(--grey);
+}
+.blog-sidebar .sb-sun {
+  color: var(--yellow);
+  font-size: 2.5em;
+  line-height: 0;
+  display: inline-block;
+  width: 0;
+  overflow: visible;
+  vertical-align: middle;
+  margin-right: 6px;
+  text-shadow: 0 0 12px rgba(255, 216, 102, 0.7);
+}
+.blog-sidebar .sb-earth {
+  color: var(--cyan);
+  font-size: 2em;
+  line-height: 0;
+  display: inline-block;
+  width: 0;
+  overflow: visible;
+  vertical-align: middle;
+  margin-right: 6px;
+  font-weight: bold;
+  text-shadow: 0 0 14px rgba(0, 255, 213, 0.7);
+}
+.blog-sidebar .sb-nf-user {
+  color: var(--cyan);
+  font-weight: 700;
+}
+.blog-sidebar .sb-nf-host {
+  color: var(--purple);
+  font-weight: 700;
+}
+.blog-sidebar .sb-nf-key {
+  color: var(--cyan);
+  font-weight: 600;
+}
+@media (max-width: 900px) {
+  .blog-sidebar {
+    display: none;
+  }
+}
+
+/* ── Row styles ── */
+.elist-row {
+  display: flex;
+  align-items: baseline;
+  padding: 2px 8px;
+  cursor: pointer;
+  white-space: nowrap;
+  color: var(--white);
+  transition:
+    background 0.1s,
+    border-left-color 0.1s;
+  border-left: 2px solid transparent;
+}
+.elist-row:hover {
+  background: var(--cyan-subtle);
+  border-left-color: var(--grey);
+}
+.elist-row.active {
+  background: rgba(0, 255, 213, 0.08);
+  border-left-color: var(--cyan);
+  color: var(--cyan);
+}
+.elist-row.active .elr-cursor {
+  color: var(--cyan);
+}
+.elist-row.active .elr-title {
+  color: var(--cyan);
+  font-weight: 500;
+}
+
+.elr-cursor {
+  width: 2ch;
+  color: transparent;
+  flex-shrink: 0;
+}
+.elr-idx {
+  width: 3ch;
+  text-align: right;
+  color: var(--grey);
+  flex-shrink: 0;
+}
+.elr-cat {
+  width: 7ch;
+  padding: 0 4px;
+  margin-right: 4px;
+  font-size: 10px;
+  flex-shrink: 0;
+  letter-spacing: 0.04em;
+}
+.post-image {
+  margin: 4px 0 4px 8px;
+}
+.post-image img {
+  max-width: 100%;
+  max-height: 260px;
+  object-fit: cover;
+  border: 1px solid var(--border-medium);
+  display: block;
+}
+.elr-date {
+  width: 11ch;
+  color: var(--grey);
+  flex-shrink: 0;
+  font-size: 11px;
+  text-align: right;
+}
+.elr-title {
+  flex: 1;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.elist-footer {
+  color: var(--grey);
+  font-size: 11px;
+  padding: 4px 8px 0;
+  letter-spacing: 0.04em;
+}
+
+/* ══ NEOFETCH ══ */
+.neofetch-wrap {
+  display: flex;
+  align-items: flex-start;
+  gap: 40px;
+  padding: 6px 0 6px 16px;
+  font-family: "Fira Code", monospace;
+  font-size: 13px;
+  line-height: 1.5;
+}
+.neofetch-art {
+  flex-shrink: 0;
+  color: var(--cyan);
+  white-space: pre;
+  margin: 0;
+  text-shadow: 0 0 12px rgba(0, 255, 213, 0.25);
+}
+.neofetch-info {
+  display: flex;
+  flex-direction: column;
+  gap: 1px;
+  justify-content: center;
+  padding-top: 2px;
+}
+.nf-hostname {
+  font-weight: bold;
+  margin-bottom: 1px;
+  font-size: 14px;
+}
+.nf-user {
+  color: var(--cyan);
+}
+.nf-at {
+  color: var(--grey);
+}
+.nf-host {
+  color: var(--purple);
+}
+.nf-separator {
+  color: var(--grey-dim);
+  margin-bottom: 4px;
+}
+.nf-row {
+  display: flex;
+  font-size: 13px;
+  line-height: 1.65;
+}
+.nf-key {
+  color: var(--cyan);
+  font-weight: bold;
+  min-width: 96px;
+}
+.nf-colon {
+  color: var(--grey);
+}
+.nf-val {
+  color: var(--white);
+}
+.nf-palette {
+  display: flex;
+  gap: 5px;
+  margin-top: 12px;
+}
+.nf-swatch {
+  display: inline-block;
+  width: 24px;
+  height: 15px;
+  box-shadow: 0 0 6px rgba(0, 0, 0, 0.3);
+}
+
+/* ─────────────────────────────────────────────
+   GitHub interactive list
+───────────────────────────────────────────── */
+#github-list-term {
+  margin: 4px 0 8px;
+}
+.entry-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(220px, 1fr));
+  gap: 3px;
+}
+.entry-box {
+  position: relative;
+  border: 1px solid rgba(0, 255, 213, 0.05);
+  border-left: 3px solid var(--grey-dim);
+  padding: 7px 10px;
+  cursor: pointer;
+  background: rgba(0, 0, 0, 0.3);
+  transition:
+    border-left-color 0.1s,
+    background 0.1s;
+  overflow: hidden;
+}
+.entry-box:hover {
+  border-left-color: var(--cyan-dim);
+  background: var(--cyan-subtle);
+}
+.entry-box.active {
+  border-left-color: var(--cyan);
+  border-color: var(--border-medium);
+  background: rgba(0, 255, 213, 0.06);
+}
+.entry-row {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  margin-bottom: 2px;
+}
+.entry-arrow {
+  color: var(--cyan);
+  font-size: 10px;
+}
+.entry-title {
+  color: var(--white);
+  font-weight: 500;
+  font-size: 12px;
+}
+.entry-meta {
+  font-size: 10px;
+  color: var(--grey);
+  padding-left: 14px;
+  line-height: 1.4;
+}
+
+/* ─────────────────────────────────────────────
+   Post Body — see post.css
+───────────────────────────────────────────── */
+
+/* ── Terminal reveal animation ── */
+@keyframes term-reveal {
+  from { opacity: 0; transform: translateY(2px); }
+  to   { opacity: 1; transform: translateY(0); }
+}
+.term-reveal {
+  opacity: 0;
+  animation: term-reveal 0.15s ease forwards;
+}
+
+/* ─────────────────────────────────────────────
+   Command Palette
+───────────────────────────────────────────── */
+#palette {
+  display: none;
+  position: fixed;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -52%);
+  width: 520px;
+  max-width: 92vw;
+  background: rgba(8, 14, 12, 0.98);
+  border: 1px solid var(--border-medium);
+  box-shadow:
+    0 0 60px rgba(0, 255, 213, 0.15),
+    0 24px 60px rgba(0, 0, 0, 0.5);
+  z-index: 1000;
+  overflow: hidden;
+  backdrop-filter: blur(12px);
+}
+
+#palette.open {
+  display: block;
+}
+
+#palette-header {
+  display: flex;
+  align-items: center;
+  padding: 14px 18px;
+  border-bottom: 1px solid var(--border-subtle);
+  gap: 10px;
+}
+
+#palette-prompt {
+  color: var(--cyan-dim);
+  font-size: 16px;
+}
+
+#palette-input {
+  background: transparent;
+  border: none;
+  outline: none;
+  color: var(--cyan);
+  font-family: inherit;
+  font-size: 14px;
+  flex: 1;
+}
+
+#palette-results {
+  max-height: 300px;
+  overflow-y: auto;
+  padding: 6px 0;
+}
+
+.palette-item {
+  padding: 10px 18px;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  cursor: pointer;
+  gap: 16px;
+  transition: background 0.1s;
+}
+
+.palette-item.active,
+.palette-item:hover {
+  background: var(--cyan-subtle);
+}
+
+.palette-cmd {
+  color: var(--cyan);
+  font-weight: bold;
+  min-width: 110px;
+}
+.palette-desc {
+  color: var(--grey);
+  font-size: 12px;
+}
+
+#palette-footer {
+  padding: 8px 18px;
+  border-top: 1px solid var(--border-subtle);
+  display: flex;
+  gap: 18px;
+  font-size: 11px;
+  color: var(--grey);
+}
+
+/* Tab autocomplete hint strip */
+#tab-hints {
+  display: none;
+  padding: 4px 0 6px;
+  color: var(--cyan-dim);
+  font-size: 13px;
+  letter-spacing: 0.02em;
+}
+#tab-hints.visible {
+  display: block;
+}
+#tab-hints span {
+  margin-right: 18px;
+  cursor: pointer;
+}
+#tab-hints span:hover {
+  color: var(--cyan);
+}
+
+/* ─────────────────────────────────────────────
+   Accessibility
+───────────────────────────────────────────── */
+.sr-only {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  padding: 0;
+  overflow: hidden;
+  clip: rect(0, 0, 0, 0);
+  white-space: nowrap;
+  border: 0;
+}
+
+/* ─────────────────────────────────────────────
+   Animations
+───────────────────────────────────────────── */
+@keyframes blink {
+  0%,
+  100% {
+    opacity: 1;
+  }
+  50% {
+    opacity: 0;
+  }
+}
+.blink {
+  animation: blink 1s step-end infinite;
+}
+
+@keyframes screen-flash {
+  0% {
+    opacity: 1;
+  }
+  25% {
+    opacity: 0.04;
+  }
+  100% {
+    opacity: 1;
+  }
+}
+#terminal.flash {
+  animation: screen-flash 0.15s ease-out forwards;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  * {
+    animation: none !important;
+    transition: none !important;
+  }
+}
+
+/* ─────────────────────────────────────────────
+   Mobile responsive
+───────────────────────────────────────────── */
+@media (max-width: 768px) {
+  #terminal-wrapper {
+    width: 100%;
+    height: 100vh;
+  }
+  #terminal {
+    padding: 14px 14px 12px;
+  }
+  .neofetch-wrap {
+    flex-direction: column;
+    gap: 16px;
+    padding-left: 0;
+  }
+  .neofetch-art {
+    font-size: 9px;
+  }
+}

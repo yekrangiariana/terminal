@@ -1,0 +1,119 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>visitor@ariana</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link
+      href="https://fonts.googleapis.com/css2?family=Fira+Code:wght@300;400;500;700&display=swap"
+      rel="stylesheet"
+    />
+    <link rel="stylesheet" href="css/terminal.css" />
+  </head>
+  <body>
+    <!-- Command Palette Overlay -->
+    <div
+      id="palette"
+      role="dialog"
+      aria-modal="true"
+      aria-label="Command palette"
+    >
+      <div id="palette-header">
+        <span id="palette-prompt">⌘</span>
+        <input
+          id="palette-input"
+          type="text"
+          placeholder="type a command..."
+          autocomplete="off"
+          spellcheck="false"
+        />
+      </div>
+      <div id="palette-results"></div>
+      <div id="palette-footer">
+        <span>↑↓ navigate</span>
+        <span>↵ execute</span>
+        <span>ESC dismiss</span>
+      </div>
+    </div>
+
+    <!-- Terminal Window -->
+    <div id="terminal-wrapper">
+      <div id="title-bar">
+        <span id="status-dot">◉</span>
+        <span id="title-text">visitor@ariana:~</span>
+        <span class="title-sep">·</span>
+        <span id="clock-display">--:--:--</span>
+        <div id="title-bar-controls">
+          <button
+            class="win-btn win-min"
+            title="Minimize"
+            tabindex="-1"
+            onclick="minimizeWindow()"
+          >
+            _
+          </button>
+          <button
+            class="win-btn win-max"
+            title="Maximize"
+            tabindex="-1"
+            onclick="maximizeWindow()"
+          >
+            □
+          </button>
+          <button
+            class="win-btn win-close"
+            title="Close"
+            tabindex="-1"
+            onclick="closeWindow()"
+          >
+            ✕
+          </button>
+        </div>
+      </div>
+      <div id="terminal">
+        <div id="output"></div>
+        <div id="tab-hints"></div>
+        <div id="input-line">
+          <span class="prompt">
+            <span class="p-user">visitor</span><span class="p-sep">@</span
+            ><span class="p-host">ariana</span><span class="p-sep">:~</span
+            ><span class="p-dollar">$</span>
+          </span>
+          <input
+            type="text"
+            id="command-input"
+            autocomplete="off"
+            spellcheck="false"
+            aria-label="Terminal input"
+            autofocus
+          />
+        </div>
+      </div>
+      <div id="status-bar">
+        <div class="sb-section">
+          <span class="sb-item" id="sb-path">📁 ~/visitor/ariana</span>
+          <span class="sb-sep">│</span>
+          <span class="sb-item" id="sb-mode">TERMINAL</span>
+        </div>
+        <div class="sb-section">
+          <span class="sb-item" id="sb-enc">UTF-8</span>
+          <span class="sb-sep">│</span>
+          <span class="sb-item" id="sb-status">ready</span>
+        </div>
+      </div>
+    </div>
+
+    <!-- Accessible fallback nav (visually hidden) -->
+    <nav aria-label="Site navigation" class="sr-only">
+      <a href="#" onclick="executeCommand('home')">Home</a>
+      <a href="#" onclick="executeCommand('blog')">Blog</a>
+      <a href="#" onclick="executeCommand('about')">About</a>
+    </nav>
+
+    <script src="js/shared.js"></script>
+    <script src="js/earth.js"></script>
+    <script src="js/terminal.js"></script>
+  </body>
+</html>
