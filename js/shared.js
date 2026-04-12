@@ -18,7 +18,6 @@ const SLUGS = [
   "climate-data-scraper",
   "parliament-tracker",
   "news-graph",
-  "this-site",
 ];
 
 // ── Frontmatter parser ─────────────────────────────────────────────────────────
