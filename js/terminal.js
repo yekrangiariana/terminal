@@ -575,7 +575,10 @@ function buildSidebar(items) {
         ? `${window._weatherData.city}, <span class="sb-val">${window._weatherData.country}</span>`
         : `Helsinki, <span class="sb-val">FI</span>`,
     ],
-    ["Uptime", `<span class="sb-val" id="sb-uptime-val">${uptimeStr.padEnd(16)}</span>`],
+    [
+      "Uptime",
+      `<span class="sb-val" id="sb-uptime-val">${uptimeStr.padEnd(16)}</span>`,
+    ],
     [
       "IP",
       `<span class="sb-val" id="sb-ip-val">${(window._visitorIP || "fetching…").padEnd(16)}</span>`,
@@ -940,7 +943,8 @@ function startSidebarUpdates(sb) {
       const h = Math.floor(sec / 3600);
       const m = Math.floor((sec % 3600) / 60);
       const s = sec % 60;
-      const uptimeStr = h > 0 ? `${h}h ${m}m ${s}s` : m > 0 ? `${m}m ${s}s` : `${s}s`;
+      const uptimeStr =
+        h > 0 ? `${h}h ${m}m ${s}s` : m > 0 ? `${m}m ${s}s` : `${s}s`;
       uptimeEl.textContent = uptimeStr.padEnd(16);
     }
 

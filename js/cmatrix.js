@@ -12,10 +12,10 @@
   const CELL_H = Math.round(FONT_SIZE * LINE_HEIGHT);
   const TICK_MS = 50;
 
-  let grid = [];       // 2D array [row][col] = { ch, age }
+  let grid = []; // 2D array [row][col] = { ch, age }
   let columns = 0;
   let rows = 0;
-  let drops = [];      // per-column state
+  let drops = []; // per-column state
   let intervalId = null;
   let container = null; // the <pre> we render into
   let idleTimer = null;
@@ -173,12 +173,18 @@
     if (!active) return;
     active = false;
 
-    if (intervalId) { clearInterval(intervalId); intervalId = null; }
+    if (intervalId) {
+      clearInterval(intervalId);
+      intervalId = null;
+    }
 
     if (container) {
       container.classList.remove("visible");
       setTimeout(() => {
-        if (container) { container.remove(); container = null; }
+        if (container) {
+          container.remove();
+          container = null;
+        }
       }, 300);
     }
 
@@ -197,15 +203,19 @@
   }
 
   // ── Dismiss on any key or click ──
-  document.addEventListener("keydown", (e) => {
-    if (active) {
-      e.preventDefault();
-      e.stopPropagation();
-      stop();
-      const inp = document.getElementById("command-input");
-      if (inp) inp.focus();
-    }
-  }, true);
+  document.addEventListener(
+    "keydown",
+    (e) => {
+      if (active) {
+        e.preventDefault();
+        e.stopPropagation();
+        stop();
+        const inp = document.getElementById("command-input");
+        if (inp) inp.focus();
+      }
+    },
+    true,
+  );
 
   document.addEventListener("click", () => {
     if (active) {
@@ -225,9 +235,11 @@
     }, IDLE_TIMEOUT);
   }
 
-  ["keydown", "mousemove", "mousedown", "touchstart", "scroll"].forEach(evt => {
-    document.addEventListener(evt, resetIdleTimer, { passive: true });
-  });
+  ["keydown", "mousemove", "mousedown", "touchstart", "scroll"].forEach(
+    (evt) => {
+      document.addEventListener(evt, resetIdleTimer, { passive: true });
+    },
+  );
 
   resetIdleTimer();
 
