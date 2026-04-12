@@ -26,6 +26,93 @@ let listItems = [];
 let listEl = null;
 const startTime = Date.now();
 
+// ─────────────────────────────────────────────
+// Settings — themes & fonts (persisted in localStorage)
+// ─────────────────────────────────────────────
+const THEMES = [
+  {
+    id: "phosphor",
+    name: "Phosphor",
+    desc: "cyan on deep black — the default",
+  },
+  { id: "monokai", name: "Monokai Pro", desc: "vibrant green & orange" },
+  {
+    id: "bloodmoon",
+    name: "Bloodmoon",
+    desc: "crimson on void — all red everything",
+  },
+  { id: "acid", name: "Acid", desc: "neon green on pure black — hacker mode" },
+  {
+    id: "vaporwave",
+    name: "Vaporwave",
+    desc: "hot pink & purple — aesthetic overload",
+  },
+  {
+    id: "frozen",
+    name: "Frozen",
+    desc: "ice white on abyss blue — monochrome cold",
+  },
+  {
+    id: "paper",
+    name: "Paper",
+    desc: "dark ink on warm white — the light one",
+  },
+];
+
+const FONTS = [
+  { id: "fira-code", name: "Fira Code", desc: "ligatures, designed for code" },
+  {
+    id: "system-mono",
+    name: "System Mono",
+    desc: "SF Mono / Cascadia / Consolas",
+  },
+];
+
+function getActiveTheme() {
+  try {
+    return localStorage.getItem("term-theme") || "phosphor";
+  } catch {
+    return "phosphor";
+  }
+}
+function getActiveFont() {
+  try {
+    return localStorage.getItem("term-font") || "fira-code";
+  } catch {
+    return "fira-code";
+  }
+}
+
+function applyTheme(id) {
+  const root = document.documentElement;
+  if (id === "phosphor") root.removeAttribute("data-theme");
+  else root.setAttribute("data-theme", id);
+  try {
+    localStorage.setItem("term-theme", id);
+  } catch {}
+  // Live-update sidebar theme name
+  const el = document.getElementById("sb-theme-val");
+  if (el)
+    el.textContent = (
+      THEMES.find((t) => t.id === id) || THEMES[0]
+    ).name.toLowerCase();
+}
+
+function applyFont(id) {
+  const root = document.documentElement;
+  if (id === "fira-code") root.removeAttribute("data-font");
+  else root.setAttribute("data-font", id);
+  try {
+    localStorage.setItem("term-font", id);
+  } catch {}
+}
+
+// Apply saved settings immediately (reset unknown themes to default)
+const _validThemeIds = THEMES.map((t) => t.id);
+const _savedTheme = getActiveTheme();
+applyTheme(_validThemeIds.includes(_savedTheme) ? _savedTheme : "phosphor");
+applyFont(getActiveFont());
+
 // Content registry is in js/shared.js (SLUGS array)
 
 let ALL = [];
@@ -124,9 +211,15 @@ function clearOutput() {
     clearInterval(window._sidebarInterval);
     window._sidebarInterval = null;
   }
+  if (window._postScrollHandler) {
+    terminal.removeEventListener("scroll", window._postScrollHandler);
+    window._postScrollHandler = null;
+  }
   output.innerHTML = "";
   blogMode = false;
   readerMode = false;
+  _configMode = false;
+  _configEl = null;
   listEl = null;
   if (titleText) titleText.textContent = "visitor@ariana:~";
   if (sbMode) sbMode.textContent = "TERMINAL";
@@ -138,11 +231,7 @@ function clearOutput() {
 // ─────────────────────────────────────────────
 // ASCII title banners
 const ASCII_TITLES = {
-  BLOG: [
-    " █▀▄ █   ▄▀▄ ▄▀▀",
-    " █▀▄ █   █ █ █ █",
-    " ▀▀  ▀▀▀ ▀▀▀ ▀▀▀",
-  ],
+  BLOG: [" █▀▄ █   ▄▀▄ ▄▀▀", " █▀▄ █   █ █ █ █", " ▀▀  ▀▀▀ ▀▀▀ ▀▀▀"],
   PROJECTS: [
     " █▀▄ █▀▄ ▄▀▄  ▀ █▀▀ ▄▀▀ ▀█▀ ▄▀▀",
     " █▀  █▀▄ █ █ ░█ █▀▀ █ █  █  ▀▄▄",
@@ -173,47 +262,112 @@ const CAT_LABELS = {
   project: "PROJECTS",
 };
 
+// ── Fetch visitor IP (free, no key) ─────────────────────────────────
+window._visitorIP = null;
+async function fetchVisitorIP() {
+  try {
+    const r = await fetch("https://api.ipify.org?format=json");
+    if (r.ok) {
+      const data = await r.json();
+      window._visitorIP = data.ip;
+    }
+  } catch (_) {
+    /* silently fail */
+  }
+}
+fetchVisitorIP();
+
 // ── Real weather via geolocation + Open-Meteo (free, no API key) ────
 window._weatherData = null;
+window._climateData = null; // { monthTemps: [12 floats], city, tMin, tMax, avg }
 
 async function fetchRealWeather() {
   try {
     const pos = await new Promise((resolve, reject) =>
-      navigator.geolocation.getCurrentPosition(resolve, reject, { timeout: 8000 })
+      navigator.geolocation.getCurrentPosition(resolve, reject, {
+        timeout: 8000,
+      }),
     );
     const { latitude: lat, longitude: lon } = pos.coords;
 
-    const [wx, geo] = await Promise.all([
+    const [wx, geo, climate] = await Promise.all([
       fetch(
-        `https://api.open-meteo.com/v1/forecast?latitude=${lat}&longitude=${lon}&current=temperature_2m`
-      ).then(r => r.json()),
+        `https://api.open-meteo.com/v1/forecast?latitude=${lat}&longitude=${lon}&current=temperature_2m`,
+      ).then((r) => r.json()),
       fetch(
         `https://nominatim.openstreetmap.org/reverse?lat=${lat}&lon=${lon}&format=json`,
-        { headers: { 'Accept-Language': 'en', 'User-Agent': 'ariana-terminal/2.0' } }
-      ).then(r => r.json()),
+        {
+          headers: {
+            "Accept-Language": "en",
+            "User-Agent": "ariana-terminal/2.0",
+          },
+        },
+      ).then((r) => r.json()),
+      fetch(
+        `https://climate-api.open-meteo.com/v1/climate?latitude=${lat}&longitude=${lon}&models=EC_Earth3P_HR&monthly=temperature_2m_mean&start_date=2010-01-01&end_date=2019-12-01`,
+      )
+        .then((r) => r.json())
+        .catch(() => null),
     ]);
 
     const temp = Math.round(wx.current.temperature_2m);
     const addr = geo.address || {};
-    const city = addr.city || addr.town || addr.village || addr.county || "unknown";
+    const city =
+      addr.city || addr.town || addr.village || addr.county || "unknown";
     const country = (addr.country_code || "").toUpperCase();
 
     window._weatherData = { temp, city, country };
 
+    // Process climate normals: average each month across all years
+    if (climate && climate.monthly && climate.monthly.temperature_2m_mean) {
+      const vals = climate.monthly.temperature_2m_mean;
+      const monthSums = new Array(12).fill(0);
+      const monthCounts = new Array(12).fill(0);
+      const dates = climate.monthly.time;
+      for (let i = 0; i < vals.length; i++) {
+        if (vals[i] != null) {
+          const m = new Date(dates[i]).getMonth();
+          monthSums[m] += vals[i];
+          monthCounts[m]++;
+        }
+      }
+      const monthTemps = monthSums.map((s, i) =>
+        monthCounts[i] ? Math.round(s / monthCounts[i]) : 0,
+      );
+      const tMin = Math.min(...monthTemps);
+      const tMax = Math.max(...monthTemps);
+      const avg = Math.round(monthTemps.reduce((a, b) => a + b, 0) / 12);
+      window._climateData = { monthTemps, tMin, tMax, avg, city };
+
+      // Live-update the TEMP widget if rendered
+      const tmEl = document.getElementById("sb-temp-widget");
+      if (tmEl) tmEl.dataset.ready = "1";
+    }
+
     // Update sidebar lines if already rendered
     const tEl = document.getElementById("sb-temp-line");
     if (tEl) {
-      const W = 46;
+      const H = 24;
       const fr = (s) => `<span class="sb-frame">${s}</span>`;
       const strip = (s) => s.replace(/<[^>]*>/g, "");
-      const pad = (inner) => {
+      const hpad = (inner) => {
         const vis = strip(inner).length;
-        const gap = Math.max(0, W - 4 - vis);
+        const gap = Math.max(0, H - 4 - vis);
         return fr("│") + " " + inner + " ".repeat(gap) + " " + fr("│");
       };
       const tz = Intl.DateTimeFormat().resolvedOptions().timeZone || "unknown";
-      const col = temp > 15 ? "var(--amber)" : temp > 5 ? "var(--yellow)" : temp > -5 ? "var(--blue)" : "var(--purple)";
-      tEl.innerHTML = pad(`<span style="color:${col}">${temp}°C</span>  <span class="sb-dim">${tz}</span>`);
+      const tzShort = tz.split("/").pop() || tz;
+      const col =
+        temp > 15
+          ? "var(--amber)"
+          : temp > 5
+            ? "var(--yellow)"
+            : temp > -5
+              ? "var(--blue)"
+              : "var(--purple)";
+      tEl.innerHTML = hpad(
+        `<span style="color:${col}">${temp}°C</span> <span class="sb-dim">${tzShort}</span>`,
+      );
     }
   } catch (_) {
     // silently fall back to seasonal estimate
@@ -229,40 +383,78 @@ function buildSidebar(items) {
   const sidebarItems = items || listItems;
   const startOfYear = new Date(now.getFullYear(), 0, 1);
   const dayOfYear = Math.floor((now - startOfYear) / 864e5) + 1;
-  const totalDays = (now.getFullYear() % 4 === 0) ? 366 : 365;
+  const totalDays = now.getFullYear() % 4 === 0 ? 366 : 365;
   const yearPct = Math.round((dayOfYear / totalDays) * 100);
 
   // Helsinki time
-  const timeStr = now.toLocaleTimeString("en-GB", { hour: "2-digit", minute: "2-digit", second: "2-digit", timeZone: "Europe/Helsinki" });
-  const dateStr = now.toLocaleDateString("en-GB", { day: "2-digit", month: "short", year: "numeric", timeZone: "Europe/Helsinki" });
-  const hHour = parseInt(now.toLocaleTimeString("en-GB", { hour: "2-digit", hour12: false, timeZone: "Europe/Helsinki" }));
-  const hMin = parseInt(now.toLocaleTimeString("en-GB", { minute: "2-digit", timeZone: "Europe/Helsinki" }));
+  const timeStr = now.toLocaleTimeString("en-GB", {
+    hour: "2-digit",
+    minute: "2-digit",
+    second: "2-digit",
+    timeZone: "Europe/Helsinki",
+  });
+  const dateStr = now.toLocaleDateString("en-GB", {
+    day: "2-digit",
+    month: "short",
+    year: "numeric",
+    timeZone: "Europe/Helsinki",
+  });
+  const hHour = parseInt(
+    now.toLocaleTimeString("en-GB", {
+      hour: "2-digit",
+      hour12: false,
+      timeZone: "Europe/Helsinki",
+    }),
+  );
+  const hMin = parseInt(
+    now.toLocaleTimeString("en-GB", {
+      minute: "2-digit",
+      timeZone: "Europe/Helsinki",
+    }),
+  );
   const dayPct = Math.round((hHour * 60 + hMin) / 14.4);
-  const dayFill = Math.round(dayPct / 5);
-  const dayBar = "█".repeat(dayFill) + "░".repeat(20 - dayFill);
+  const dayFill = Math.round(dayPct / 10);
+  const dayBar = "█".repeat(dayFill) + "░".repeat(10 - dayFill);
 
   // Temperature — real if available, seasonal estimate as fallback
-  const tempPhase = (dayOfYear - 105) / totalDays * 2 * Math.PI;
+  const tempPhase = ((dayOfYear - 105) / totalDays) * 2 * Math.PI;
   const estimatedTemp = Math.round(5.5 + 12 * Math.sin(tempPhase));
   const temp = window._weatherData?.temp ?? estimatedTemp;
   const tempPrefix = window._weatherData ? "" : "~";
   const monthTemps = [-5, -6, -2, 4, 10, 15, 18, 16, 11, 5, 0, -3];
-  const tMin = -6, tMax = 18;
+  const tMin = -6,
+    tMax = 18;
   const sparkChars = " ▁▂▃▄▅▆▇█";
-  const sparkline = monthTemps.map(t => {
-    const idx = Math.round(((t - tMin) / (tMax - tMin)) * (sparkChars.length - 1));
-    return sparkChars[Math.max(0, Math.min(sparkChars.length - 1, idx))];
-  }).join("");
+  const sparkline = monthTemps
+    .map((t) => {
+      const idx = Math.round(
+        ((t - tMin) / (tMax - tMin)) * (sparkChars.length - 1),
+      );
+      return sparkChars[Math.max(0, Math.min(sparkChars.length - 1, idx))];
+    })
+    .join("");
   const currentMonth = now.getMonth();
   const monthLabels = "JFMAMJJASOND";
 
   // Earth orbit — real calculation based on day of year
   const orbitDeg = Math.round((dayOfYear / totalDays) * 360);
   const orbitAngle = (dayOfYear / totalDays) * 2 * Math.PI - Math.PI / 2;
+  // Season (Northern Hemisphere)
+  const seasons = [
+    [80, "spring"],
+    [172, "summer"],
+    [266, "autumn"],
+    [355, "winter"],
+  ];
+  let season = "winter";
+  for (const [start, name] of seasons) {
+    if (dayOfYear >= start) season = name;
+  }
 
   // Build ASCII orbit with sun and earth glyphs
   // Ellipse: 19 wide, 7 tall
-  const OW = 19, OH = 7;
+  const OW = 19,
+    OH = 7;
   let orbitGrid = [];
   for (let y = 0; y < OH; y++) {
     let row = [];
@@ -270,9 +462,12 @@ function buildSidebar(items) {
     orbitGrid.push(row);
   }
   // Draw orbit ellipse
-  const cx = 9, cy = 3, rx = 8, ry = 3;
+  const cx = 9,
+    cy = 3,
+    rx = 8,
+    ry = 3;
   for (let a = 0; a < 360; a += 4) {
-    const rad = a * Math.PI / 180;
+    const rad = (a * Math.PI) / 180;
     const px = Math.round(cx + rx * Math.cos(rad));
     const py = Math.round(cy + ry * Math.sin(rad));
     if (px >= 0 && px < OW && py >= 0 && py < OH && orbitGrid[py][px] === " ") {
@@ -280,21 +475,39 @@ function buildSidebar(items) {
     }
   }
   // Place sun at center
-  orbitGrid[cy][cx] = "☀";
+  orbitGrid[cy][cx] = "S";
   // Place earth on orbit
   const ex = Math.round(cx + rx * Math.cos(orbitAngle));
   const ey = Math.round(cy + ry * Math.sin(orbitAngle));
   if (ex >= 0 && ex < OW && ey >= 0 && ey < OH) {
-    orbitGrid[ey][ex] = "🜨";
+    orbitGrid[ey][ex] = "E";
   }
-  const orbitLines = orbitGrid.map(r => r.join(""));
+  // Place moon orbiting earth
+  const moonAngle = (dayOfYear / 29.53) * 2 * Math.PI;
+  const mx = Math.max(
+    0,
+    Math.min(OW - 1, Math.round(ex + 2 * Math.cos(moonAngle))),
+  );
+  const my = Math.max(
+    0,
+    Math.min(OH - 1, Math.round(ey + 1 * Math.sin(moonAngle))),
+  );
+  if (orbitGrid[my][mx] === "·" || orbitGrid[my][mx] === " ") {
+    orbitGrid[my][mx] = "o";
+  }
+  const orbitLines = orbitGrid.map((r) => r.join(""));
 
   // Session uptime — real
   const uptimeSec = Math.floor((Date.now() - startTime) / 1000);
   const uptimeH = Math.floor(uptimeSec / 3600);
   const uptimeM = Math.floor((uptimeSec % 3600) / 60);
   const uptimeS = uptimeSec % 60;
-  const uptimeStr = uptimeH > 0 ? `${uptimeH}h ${uptimeM}m ${uptimeS}s` : uptimeM > 0 ? `${uptimeM}m ${uptimeS}s` : `${uptimeS}s`;
+  const uptimeStr =
+    uptimeH > 0
+      ? `${uptimeH}h ${uptimeM}m ${uptimeS}s`
+      : uptimeM > 0
+        ? `${uptimeM}m ${uptimeS}s`
+        : `${uptimeS}s`;
 
   // Real visitor info
   const screenRes = `${screen.width}×${screen.height}`;
@@ -302,6 +515,7 @@ function buildSidebar(items) {
   const colorDepth = screen.colorDepth + "bit";
   const lang = navigator.language || "en";
   const tz = Intl.DateTimeFormat().resolvedOptions().timeZone || "unknown";
+  const tzShort = tz.split("/").pop() || tz;
   const proto = location.protocol === "https:" ? "HTTPS" : "HTTP";
   const ua = navigator.userAgent;
   let browser = "unknown";
@@ -321,45 +535,72 @@ function buildSidebar(items) {
   const catEntries = Object.entries(cats).sort((a, b) => b[1] - a[1]);
   const maxCat = catEntries.length ? catEntries[0][1] : 1;
 
-  // Helpers
-  const W = 46;
-  const esc = (s) => s.replace(/&/g,"&amp;").replace(/</g,"&lt;");
+  // ── Width constants ──
+  const W = 48; // full-width (neofetch) — matches 2 × H
+  const H = 24; // half-width (panels)
+
+  // ── Helpers ──
+  const esc = (s) => s.replace(/&/g, "&amp;").replace(/</g, "&lt;");
   const fr = (s) => `<span class="sb-frame">${s}</span>`;
   const strip = (s) => s.replace(/<[^>]*>/g, "");
-  const sep = () => fr("│") + " ".repeat(W - 2) + fr("│");
-  const div = (ch = "─") => fr("├" + ch.repeat(W - 2) + "┤");
-  const pad = (inner) => {
+  const mkSep = (w) => fr("│") + " ".repeat(w - 2) + fr("│");
+  const mkPad = (w, inner) => {
     const vis = strip(inner).length;
-    const gap = Math.max(0, W - 4 - vis);
+    const gap = Math.max(0, w - 4 - vis);
     return fr("│") + " " + inner + " ".repeat(gap) + " " + fr("│");
   };
+  const sep = () => mkSep(W);
+  const pad = (inner) => mkPad(W, inner);
+  const hsep = () => mkSep(H);
+  const hpad = (inner) => mkPad(H, inner);
 
-  const SB_CAT_COLORS = { writing: "var(--cyan)", journalism: "var(--blue)", project: "var(--purple)" };
+  const SB_CAT_COLORS = {
+    writing: "var(--cyan)",
+    journalism: "var(--blue)",
+    project: "var(--purple)",
+  };
 
-  let L = [];
-  L.push(fr("╭" + "─".repeat(W - 2) + "╮"));
-  L.push(sep());
+  // ═══════════════════════════════════════
+  // NEOFETCH (full-width)
+  // ═══════════════════════════════════════
+  let NF = [];
+  NF.push(fr("┌" + "─".repeat(W - 2) + "┐"));
+  NF.push(sep());
 
-  // ── NEOFETCH with OS logo ──
   const info = [
-    ["OS",       `ariana-web <span class="sb-dim">2.0</span>`],
-    ["Host",     window._weatherData
-      ? `${window._weatherData.city}, <span class="sb-val">${window._weatherData.country}</span>`
-      : `Helsinki, <span class="sb-val">FI</span>`],
-    ["Uptime",   `<span class="sb-val">${uptimeStr}</span>`],
-    ["Shell",    `/bin/visitor`],
-    ["Theme",    `phosphor <span class="sb-dim">[dark]</span>`],
-    ["Display",  `<span class="sb-val">${screenRes}</span> <span class="sb-dim">${colorDepth}</span>`],
+    ["OS", `ariana-web <span class="sb-dim">2.0</span>`],
+    [
+      "Host",
+      window._weatherData
+        ? `${window._weatherData.city}, <span class="sb-val">${window._weatherData.country}</span>`
+        : `Helsinki, <span class="sb-val">FI</span>`,
+    ],
+    ["Uptime", `<span class="sb-val" id="sb-uptime-val">${uptimeStr.padEnd(16)}</span>`],
+    [
+      "IP",
+      `<span class="sb-val" id="sb-ip-val">${(window._visitorIP || "fetching…").padEnd(16)}</span>`,
+    ],
+    [
+      "Theme",
+      `<span id="sb-theme-val">${(THEMES.find((t) => t.id === getActiveTheme()) || THEMES[0]).name.toLowerCase()}</span> <span class="sb-dim">[dark]</span>`,
+    ],
+    [
+      "Display",
+      `<span class="sb-val">${screenRes}</span> <span class="sb-dim">${colorDepth}</span>`,
+    ],
     ["Viewport", `<span class="sb-val">${viewportRes}</span>`],
-    ["Cores",    `<span class="sb-val">${cores}</span>`],
-    ["Locale",   `<span class="sb-val">${lang}</span>`],
-    ["Browser",  `<span class="sb-val">${browser}</span> <span class="sb-dim">${proto}</span>`],
+    ["Cores", `<span class="sb-val">${cores}</span>`],
+    ["Locale", `<span class="sb-val">${lang}</span>`],
+    [
+      "Browser",
+      `<span class="sb-val">${browser}</span> <span class="sb-dim">${proto}</span>`,
+    ],
   ];
 
   // Detect OS from UA
   const uaLower = ua.toLowerCase();
   let osName = "unknown";
-  let osLogo = []; // each line is already HTML with color spans
+  let osLogo = [];
   const LW = 16;
   const c = (color, text) => `<span style="color:${color}">${esc(text)}</span>`;
 
@@ -367,14 +608,22 @@ function buildSidebar(items) {
     osName = "Android";
     const g = "var(--cyan)";
     osLogo = [
-      c(g,"  ;,           ,;"),
-      c(g,"  ';,.-----.,;' "),
-      c(g,"  ,'           ',"),
-      c(g,"  /  ") + c("var(--white)","O") + c(g,"       ") + c("var(--white)","O") + c(g,"  \\"),
-      c(g,"  |               |"),
-      c(g,"  '-----------'   "),
+      c(g, "  ;,           ,;"),
+      c(g, "  ';,.-----.,;' "),
+      c(g, "  ,'           ',"),
+      c(g, "  /  ") +
+        c("var(--white)", "O") +
+        c(g, "       ") +
+        c("var(--white)", "O") +
+        c(g, "  \\"),
+      c(g, "  |               |"),
+      c(g, "  '-----------'   "),
     ];
-  } else if (uaLower.includes("iphone") || uaLower.includes("ipad") || uaLower.includes("mac")) {
+  } else if (
+    uaLower.includes("iphone") ||
+    uaLower.includes("ipad") ||
+    uaLower.includes("mac")
+  ) {
     osName = "macOS";
     const g = "var(--cyan)";
     const y = "var(--yellow)";
@@ -408,13 +657,19 @@ function buildSidebar(items) {
     const w = "var(--white)";
     const y = "var(--yellow)";
     osLogo = [
-      "      " + c(w,".--.") + "      ",
-      "     " + c(w,"|") + c(y,"o") + c(w,"_") + c(y,"o") + c(w," |") + "     ",
-      "     " + c(w,"|") + c(y,":_/ ") + c(w,"|") + "     ",
-      "    " + c(y,"//") + c(w,"   \\ \\") + "    ",
-      "   " + c(y,"(|") + c(w,"     | )") + "   ",
-      "  " + c(y,"/'\\") + c(w,"_   _/") + c(y,"`\\") + "  ",
-      "  " + c(y,"\\___)") + c(w,"=(") + c(y,"___/") + "  ",
+      "      " + c(w, ".--.") + "      ",
+      "     " +
+        c(w, "|") +
+        c(y, "o") +
+        c(w, "_") +
+        c(y, "o") +
+        c(w, " |") +
+        "     ",
+      "     " + c(w, "|") + c(y, ":_/ ") + c(w, "|") + "     ",
+      "    " + c(y, "//") + c(w, "   \\ \\") + "    ",
+      "   " + c(y, "(|") + c(w, "     | )") + "   ",
+      "  " + c(y, "/'\\") + c(w, "_   _/") + c(y, "`\\") + "  ",
+      "  " + c(y, "\\___)") + c(w, "=(") + c(y, "___/") + "  ",
     ];
   } else {
     osName = "Web";
@@ -429,7 +684,7 @@ function buildSidebar(items) {
   }
 
   // Normalize: pad each line to LW visible chars
-  osLogo = osLogo.map(l => {
+  osLogo = osLogo.map((l) => {
     const vis = strip(l).length;
     if (vis >= LW) return l;
     return l + " ".repeat(LW - vis);
@@ -441,89 +696,211 @@ function buildSidebar(items) {
     `<span class="sb-dim">${"─".repeat(20)}</span>`,
   ];
   for (const [key, val] of info) {
-    infoLines.push(`<span class="sb-nf-key">${key.padEnd(8)}</span><span class="sb-dim">:</span> ${val}`);
+    infoLines.push(
+      `<span class="sb-nf-key">${key.padEnd(8)}</span><span class="sb-dim">:</span> ${val}`,
+    );
   }
   // Color palette row
   const colors = [
-    "var(--cyan)", "var(--blue)", "var(--purple)", "var(--pink)",
-    "var(--red)", "var(--amber)", "var(--yellow)", "var(--white)"
+    "var(--cyan)",
+    "var(--blue)",
+    "var(--purple)",
+    "var(--pink)",
+    "var(--red)",
+    "var(--amber)",
+    "var(--yellow)",
+    "var(--white)",
   ];
   infoLines.push("");
-  infoLines.push(colors.map(c => `<span style="color:${c}">██</span>`).join(""));
+  infoLines.push(
+    colors.map((c) => `<span style="color:${c}">██</span>`).join(""),
+  );
 
-  const maxLines = Math.max(osLogo.length, infoLines.length);
-  for (let i = 0; i < maxLines; i++) {
+  const maxNF = Math.max(osLogo.length, infoLines.length);
+  for (let i = 0; i < maxNF; i++) {
     const logo = i < osLogo.length ? osLogo[i] : " ".repeat(LW);
-    const inf  = i < infoLines.length ? infoLines[i] : "";
-    L.push(pad(logo + " " + inf));
+    const inf = i < infoLines.length ? infoLines[i] : "";
+    NF.push(pad(logo + " " + inf));
   }
 
-  L.push(sep());
-  L.push(div());
-  L.push(sep());
+  NF.push(sep());
+  NF.push(fr("└" + "─".repeat(W - 2) + "┘"));
 
-  // ── CLOCK ──
-  L.push(pad(`<span class="sb-label">CLOCK</span>`));
-  L.push(sep());
-  L.push(`<span id="sb-clock-line">${pad(`<span class="sb-val">${timeStr}</span>  <span class="sb-dim">${dateStr}</span>`)}</span>`);
-  const tempColor = temp > 15 ? "var(--amber)" : temp > 5 ? "var(--yellow)" : temp > -5 ? "var(--blue)" : "var(--purple)";
-  L.push(`<span id="sb-temp-line">${pad(`<span style="color:${tempColor}">${tempPrefix}${temp}°C</span>  <span class="sb-dim">${esc(tz)}</span>`)}</span>`);
-  L.push(sep());
-  L.push(pad(`<span class="sb-dim">day</span>  <span class="sb-bar">${dayBar}</span> <span class="sb-val">${dayPct}%</span>`));
-  L.push(pad(`<span class="sb-dim">yr</span>   <span class="sb-val">${dayOfYear}</span><span class="sb-dim">/${totalDays}</span>` + " ".repeat(10) + `<span class="sb-val">${yearPct}%</span>`));
+  const nfEl = document.createElement("div");
+  nfEl.className = "sb-full";
+  nfEl.innerHTML = NF.join("\n");
+  sb.appendChild(nfEl);
 
-  L.push(sep());
-  L.push(div("┄"));
-  L.push(sep());
+  // ═══════════════════════════════════════
+  // ROW 1: CLOCK + ORBIT
+  // ═══════════════════════════════════════
+  let CL = [];
+  CL.push(fr("┌" + "─".repeat(H - 2) + "┐"));
+  CL.push(hsep());
+  CL.push(hpad(`<span class="sb-label">CLOCK</span>`));
+  CL.push(hsep());
+  CL.push(
+    `<span id="sb-clock-line">${hpad(`<span class="sb-val">${timeStr}</span>`)}</span>`,
+  );
+  CL.push(hpad(`<span class="sb-dim">${dateStr}</span>`));
+  const tempColor =
+    temp > 15
+      ? "var(--amber)"
+      : temp > 5
+        ? "var(--yellow)"
+        : temp > -5
+          ? "var(--blue)"
+          : "var(--purple)";
+  CL.push(
+    `<span id="sb-temp-line">${hpad(`<span style="color:${tempColor}">${tempPrefix}${temp}°C</span> <span class="sb-dim">${esc(tzShort)}</span>`)}</span>`,
+  );
+  CL.push(hsep());
+  CL.push(
+    hpad(
+      `<span class="sb-dim">day</span> <span class="sb-bar">${dayBar}</span> <span class="sb-val">${dayPct}%</span>`,
+    ),
+  );
+  CL.push(
+    hpad(
+      `<span class="sb-dim">yr</span>  <span class="sb-val">${dayOfYear}</span><span class="sb-dim">/${totalDays}</span> <span class="sb-val">${yearPct}%</span>`,
+    ),
+  );
+  CL.push(hsep());
+  CL.push(fr("└" + "─".repeat(H - 2) + "┘"));
 
-  // ── ARCHIVE ──
-  L.push(pad(`<span class="sb-label">ARCHIVE</span>  <span class="sb-val">${sidebarItems.length}</span> <span class="sb-dim">entries</span>`));
-  L.push(sep());
-  for (const [cat, count] of catEntries) {
-    const barLen = Math.round((count / maxCat) * 12);
-    const catCol = SB_CAT_COLORS[cat] || "var(--cyan)";
-    const catBar = `<span style="color:${catCol}">${"█".repeat(barLen)}</span><span class="sb-dim">${"░".repeat(12 - barLen)}</span>`;
-    L.push(pad(`<span style="color:${catCol}">${esc(cat).padEnd(12)}</span>${catBar} <span class="sb-val">${String(count).padStart(2)}</span>`));
-  }
-
-  L.push(sep());
-  L.push(div("┄"));
-  L.push(sep());
-
-  // ── TEMPERATURE SPARKLINE ──
-  L.push(pad(`<span class="sb-label">TEMP</span>  <span class="sb-dim">Helsinki · approx</span>`));
-  L.push(sep());
-  let coloredSparkline = "";
-  for (let m = 0; m < 12; m++) {
-    const t = monthTemps[m];
-    const col = t > 15 ? "var(--amber)" : t > 5 ? "var(--yellow)" : t > -5 ? "var(--cyan-dim)" : "var(--blue)";
-    const highlight = m === currentMonth ? "font-weight:bold;text-shadow:0 0 6px currentColor" : "";
-    coloredSparkline += `<span style="color:${col};${highlight}">${sparkline[m]}</span>`;
-  }
-  L.push(pad(`<span class="sb-dim">${monthLabels}</span>`));
-  L.push(pad(coloredSparkline));
-  L.push(pad(`<span class="sb-dim">${String(tMin).padStart(3)}°</span>` + " ".repeat(14) + `<span class="sb-dim">${String(tMax).padStart(3)}°</span>`));
-
-  L.push(sep());
-  L.push(div("┄"));
-  L.push(sep());
-
-  // ── EARTH ORBIT ──
-  L.push(pad(`<span class="sb-label">ORBIT</span>  <span class="sb-dim">day</span> <span class="sb-val">${dayOfYear}</span><span class="sb-dim">/${totalDays}</span>  <span class="sb-val">${orbitDeg}°</span>`));
-  L.push(sep());
+  let OR = [];
+  OR.push(fr("┌" + "─".repeat(H - 2) + "┐"));
+  OR.push(hsep());
+  OR.push(
+    hpad(
+      `<span class="sb-label">ORBIT</span> <span class="sb-val">${orbitDeg}°</span> <span class="sb-dim">${season}</span>`,
+    ),
+  );
+  OR.push(hsep());
   const orbitLinesHTML = [];
   for (const ol of orbitLines) {
     const colored = ol
-      .replace("☀", `<span class="sb-sun">☀</span>`)
-      .replace("🜨", `<span class="sb-earth">⊕</span>`);
-    orbitLinesHTML.push(pad(colored));
+      .replace("S", `<span class="sb-sun">*</span>`)
+      .replace("E", `<span class="sb-earth">⊕</span>`)
+      .replace("o", `<span class="sb-moon">o</span>`);
+    orbitLinesHTML.push(hpad(colored));
   }
-  L.push(`<span id="sb-orbit-lines">${orbitLinesHTML.join("\n")}</span>`);
+  // Push each orbit line individually so array length = visual line count
+  OR.push(`<span id="sb-orbit-lines">${orbitLinesHTML[0]}`);
+  for (let i = 1; i < orbitLinesHTML.length - 1; i++)
+    OR.push(orbitLinesHTML[i]);
+  OR.push(`${orbitLinesHTML[orbitLinesHTML.length - 1]}</span>`);
+  OR.push(hsep());
+  OR.push(fr("└" + "─".repeat(H - 2) + "┘"));
 
-  L.push(sep());
-  L.push(fr("╰" + "─".repeat(W - 2) + "╯"));
+  // Equalize heights
+  while (CL.length < OR.length) CL.splice(CL.length - 1, 0, hsep());
+  while (OR.length < CL.length) OR.splice(OR.length - 1, 0, hsep());
 
-  sb.innerHTML = L.join("\n");
+  const row1 = document.createElement("div");
+  row1.className = "sb-row";
+  const clDiv = document.createElement("div");
+  clDiv.className = "sb-half";
+  clDiv.innerHTML = CL.join("\n");
+  const orDiv = document.createElement("div");
+  orDiv.className = "sb-half";
+  orDiv.innerHTML = OR.join("\n");
+  row1.appendChild(clDiv);
+  row1.appendChild(orDiv);
+  sb.appendChild(row1);
+
+  // ═══════════════════════════════════════
+  // ROW 2: ARCHIVE + TEMP
+  // ═══════════════════════════════════════
+  let AR = [];
+  AR.push(fr("┌" + "─".repeat(H - 2) + "┐"));
+  AR.push(hsep());
+  AR.push(
+    hpad(
+      `<span class="sb-label">ARCHIVE</span> <span class="sb-val">${sidebarItems.length}</span>`,
+    ),
+  );
+  AR.push(hsep());
+  for (const [cat, count] of catEntries) {
+    const barLen = Math.round((count / maxCat) * 6);
+    const catCol = SB_CAT_COLORS[cat] || "var(--cyan)";
+    const catBar = `<span style="color:${catCol}">${"█".repeat(barLen)}</span><span class="sb-dim">${"░".repeat(6 - barLen)}</span>`;
+    AR.push(
+      hpad(
+        `<span style="color:${catCol}">${esc(cat).padEnd(8)}</span>${catBar} <span class="sb-val">${String(count).padStart(2)}</span>`,
+      ),
+    );
+  }
+  AR.push(hsep());
+  AR.push(fr("└" + "─".repeat(H - 2) + "┘"));
+
+  let TM = [];
+  TM.push(fr("┌" + "─".repeat(H - 2) + "┐"));
+  TM.push(hsep());
+  // Use real climate data if available, else Helsinki defaults
+  const cd = window._climateData;
+  const tmTemps = cd ? cd.monthTemps : monthTemps;
+  const tmMin = cd ? cd.tMin : tMin;
+  const tmMax = cd ? cd.tMax : tMax;
+  const tmAvg = cd
+    ? cd.avg
+    : Math.round(monthTemps.reduce((a, b) => a + b, 0) / monthTemps.length);
+  const tmCity = cd ? cd.city : "Helsinki";
+  const tmSparkChars = " ▁▂▃▄▅▆▇█";
+  const tmSparkline = tmTemps
+    .map((t) => {
+      const idx = Math.round(
+        ((t - tmMin) / Math.max(tmMax - tmMin, 1)) * (tmSparkChars.length - 1),
+      );
+      return tmSparkChars[Math.max(0, Math.min(tmSparkChars.length - 1, idx))];
+    })
+    .join("");
+  TM.push(
+    hpad(
+      `<span class="sb-label">TEMP</span> <span class="sb-dim">${esc(tmCity)}</span>`,
+    ),
+  );
+  TM.push(hsep());
+  let coloredSparkline = "";
+  for (let m = 0; m < 12; m++) {
+    const t = tmTemps[m];
+    const col =
+      t > 15
+        ? "var(--amber)"
+        : t > 5
+          ? "var(--yellow)"
+          : t > -5
+            ? "var(--cyan-dim)"
+            : "var(--blue)";
+    const highlight = m === currentMonth ? "font-weight:bold" : "";
+    coloredSparkline += `<span style="color:${col};${highlight}">${tmSparkline[m]}</span>`;
+  }
+  TM.push(hpad(`<span class="sb-dim">${monthLabels}</span>`));
+  TM.push(`<span id="sb-sparkline">${hpad(coloredSparkline)}</span>`);
+  TM.push(
+    hpad(
+      `<span class="sb-dim">yr avg</span> <span class="sb-val">${tmAvg}°</span> <span class="sb-dim">${tmMin}°→${tmMax}°</span>`,
+    ),
+  );
+  TM.push(hsep());
+  TM.push(fr("└" + "─".repeat(H - 2) + "┘"));
+
+  // Equalize heights
+  while (AR.length < TM.length) AR.splice(AR.length - 1, 0, hsep());
+  while (TM.length < AR.length) TM.splice(TM.length - 1, 0, hsep());
+
+  const row2 = document.createElement("div");
+  row2.className = "sb-row";
+  const arDiv = document.createElement("div");
+  arDiv.className = "sb-half";
+  arDiv.innerHTML = AR.join("\n");
+  const tmDiv = document.createElement("div");
+  tmDiv.className = "sb-half";
+  tmDiv.innerHTML = TM.join("\n");
+  row2.appendChild(arDiv);
+  row2.appendChild(tmDiv);
+  sb.appendChild(row2);
+
   return sb;
 }
 
@@ -531,14 +908,21 @@ function buildSidebar(items) {
 function startSidebarUpdates(sb) {
   if (window._sidebarInterval) clearInterval(window._sidebarInterval);
 
-  const W = 46;
+  const W = 48;
+  const H = 24;
+  const LW = 16;
   const fr = (s) => `<span class="sb-frame">${s}</span>`;
   const strip = (s) => s.replace(/<[^>]*>/g, "");
-  const pad = (inner) => {
+  const mkPad = (w, inner) => {
     const vis = strip(inner).length;
-    const gap = Math.max(0, W - 4 - vis);
+    const gap = Math.max(0, w - 4 - vis);
     return fr("│") + " " + inner + " ".repeat(gap) + " " + fr("│");
   };
+  const hpad = (inner) => mkPad(H, inner);
+  const pad = (inner) => mkPad(W, inner);
+
+  // Build a full neofetch info line (logo col + key: val) with correct padding
+  // (Not needed — values are fixed-width padded in their spans)
 
   let orbitStep = 0;
   let tickCount = 0;
@@ -549,13 +933,37 @@ function startSidebarUpdates(sb) {
     // Refresh weather every 10 minutes
     if (tickCount % 600 === 0) fetchRealWeather();
 
+    // Update uptime — value is padEnd(16) so line width stays constant
+    const uptimeEl = sb.querySelector("#sb-uptime-val");
+    if (uptimeEl) {
+      const sec = Math.floor((Date.now() - startTime) / 1000);
+      const h = Math.floor(sec / 3600);
+      const m = Math.floor((sec % 3600) / 60);
+      const s = sec % 60;
+      const uptimeStr = h > 0 ? `${h}h ${m}m ${s}s` : m > 0 ? `${m}m ${s}s` : `${s}s`;
+      uptimeEl.textContent = uptimeStr.padEnd(16);
+    }
+
+    // Update IP — value is padEnd(16) so line width stays constant
+    if (window._visitorIP) {
+      const ipEl = sb.querySelector("#sb-ip-val");
+      if (ipEl && !ipEl._done) {
+        ipEl.textContent = window._visitorIP.padEnd(16);
+        ipEl._done = true;
+      }
+    }
+
     // Update clock
     const clockEl = sb.querySelector("#sb-clock-line");
     if (clockEl) {
       const now = new Date();
-      const timeStr = now.toLocaleTimeString("en-GB", { hour: "2-digit", minute: "2-digit", second: "2-digit", timeZone: "Europe/Helsinki" });
-      const dateStr = now.toLocaleDateString("en-GB", { day: "2-digit", month: "short", year: "numeric", timeZone: "Europe/Helsinki" });
-      clockEl.innerHTML = pad(`<span class="sb-val">${timeStr}</span>  <span class="sb-dim">${dateStr}</span>`);
+      const timeStr = now.toLocaleTimeString("en-GB", {
+        hour: "2-digit",
+        minute: "2-digit",
+        second: "2-digit",
+        timeZone: "Europe/Helsinki",
+      });
+      clockEl.innerHTML = hpad(`<span class="sb-val">${timeStr}</span>`);
     }
 
     // Animate orbit — advance earth position
@@ -565,13 +973,17 @@ function startSidebarUpdates(sb) {
       const now = new Date();
       const startOfYear = new Date(now.getFullYear(), 0, 1);
       const dayOfYear = Math.floor((now - startOfYear) / 864e5) + 1;
-      const totalDays = (now.getFullYear() % 4 === 0) ? 366 : 365;
+      const totalDays = now.getFullYear() % 4 === 0 ? 366 : 365;
       // Base angle from real day + slow animated offset
       const baseAngle = (dayOfYear / totalDays) * 2 * Math.PI - Math.PI / 2;
-      const animAngle = baseAngle + (orbitStep * 0.05);
+      const animAngle = baseAngle + orbitStep * 0.05;
 
-      const OW = 19, OH = 7;
-      const cx = 9, cy = 3, rx = 8, ry = 3;
+      const OW = 19,
+        OH = 7;
+      const cx = 9,
+        cy = 3,
+        rx = 8,
+        ry = 3;
       let grid = [];
       for (let y = 0; y < OH; y++) {
         let row = [];
@@ -579,26 +991,42 @@ function startSidebarUpdates(sb) {
         grid.push(row);
       }
       for (let a = 0; a < 360; a += 4) {
-        const rad = a * Math.PI / 180;
+        const rad = (a * Math.PI) / 180;
         const px = Math.round(cx + rx * Math.cos(rad));
         const py = Math.round(cy + ry * Math.sin(rad));
         if (px >= 0 && px < OW && py >= 0 && py < OH && grid[py][px] === " ") {
           grid[py][px] = "·";
         }
       }
-      grid[cy][cx] = "☀";
+      grid[cy][cx] = "S";
       const ex = Math.round(cx + rx * Math.cos(animAngle));
       const ey = Math.round(cy + ry * Math.sin(animAngle));
       if (ex >= 0 && ex < OW && ey >= 0 && ey < OH) {
-        grid[ey][ex] = "🜨";
+        grid[ey][ex] = "E";
       }
-      const lines = grid.map(r => r.join(""));
-      const html = lines.map(ol => {
-        const colored = ol
-          .replace("☀", `<span class="sb-sun">☀</span>`)
-          .replace("🜨", `<span class="sb-earth">⊕</span>`);
-        return pad(colored);
-      }).join("\n");
+      // Moon orbiting earth — spins ~12× faster than earth
+      const moonAngle = animAngle * 12;
+      const mxPos = Math.max(
+        0,
+        Math.min(OW - 1, Math.round(ex + 2 * Math.cos(moonAngle))),
+      );
+      const myPos = Math.max(
+        0,
+        Math.min(OH - 1, Math.round(ey + 1 * Math.sin(moonAngle))),
+      );
+      if (grid[myPos][mxPos] === "·" || grid[myPos][mxPos] === " ") {
+        grid[myPos][mxPos] = "o";
+      }
+      const lines = grid.map((r) => r.join(""));
+      const html = lines
+        .map((ol) => {
+          const colored = ol
+            .replace("S", `<span class="sb-sun">*</span>`)
+            .replace("E", `<span class="sb-earth">⊕</span>`)
+            .replace("o", `<span class="sb-moon">o</span>`);
+          return hpad(colored);
+        })
+        .join("\n");
       orbitEl.innerHTML = html;
     }
   }, 1000);
@@ -611,28 +1039,28 @@ function renderNewspaper(heading) {
     titleText.textContent = `visitor@ariana:~  [ ${selectedPost + 1} / ${listItems.length} ]`;
   listEl.innerHTML = "";
 
-  // ASCII title
+  // Wrapper: list left, sidebar right
+  const wrap = document.createElement("div");
+  wrap.className = "blog-wrap";
+
+  // ── Article list (left column) ──
+  const listPane = document.createElement("div");
+  listPane.className = "blog-list-pane";
+
+  // ASCII title — inside left column
   const titleArt = ASCII_TITLES[_currentTitleKey] || ASCII_TITLES.BLOG;
   const title = document.createElement("pre");
   title.className = "blog-title";
   title.textContent = titleArt.join("\n");
-  listEl.appendChild(title);
+  listPane.appendChild(title);
 
   // Heading banner if filtered (e.g. "BLOG / WRITING")
   if (heading !== "BLOG" && heading !== "PROJECTS") {
     const hBanner = document.createElement("div");
     hBanner.className = "blog-filter-label";
     hBanner.textContent = `  ▸ ${heading}`;
-    listEl.appendChild(hBanner);
+    listPane.appendChild(hBanner);
   }
-
-  // Wrapper: list left, sidebar right
-  const wrap = document.createElement("div");
-  wrap.className = "blog-wrap";
-
-  // ── Article list ──
-  const listPane = document.createElement("div");
-  listPane.className = "blog-list-pane";
 
   const sep = document.createElement("div");
   sep.className = "blog-rule";
@@ -703,6 +1131,286 @@ function renderList() {
 
 // parseFrontmatter is in js/shared.js
 
+// ── Post-specific sidebar with nerdy stats ──────
+function buildPostSidebar(post) {
+  const md = post.content || "";
+  const plainText = md
+    .replace(/^#+\s.*/gm, "")
+    .replace(/\[([^\]]+)\]\([^)]+\)/g, "$1")
+    .replace(/[*_`~>#\-]/g, "")
+    .trim();
+
+  const words = plainText.split(/\s+/).filter(Boolean);
+  const wordCount = words.length;
+  const charCount = plainText.length;
+  const charNoSpaces = plainText.replace(/\s/g, "").length;
+  const sentences = plainText.split(/[.!?]+/).filter((s) => s.trim()).length;
+  const paragraphs = md.split(/\n\s*\n/).filter((p) => p.trim()).length;
+  const headings = (md.match(/^#{1,6}\s/gm) || []).length;
+  const links = (md.match(/\[([^\]]+)\]\(/g) || []).length;
+  const codeBlocks = (md.match(/`[^`]+`/g) || []).length;
+  const readMin = Math.max(1, Math.ceil(wordCount / 238));
+  const avgWordLen = wordCount ? (charNoSpaces / wordCount).toFixed(1) : "0";
+  const avgSentLen = sentences ? Math.round(wordCount / sentences) : 0;
+
+  // Lexical diversity (type-token ratio)
+  const uniqueWords = new Set(words.map((w) => w.toLowerCase()));
+  const lexDiv = wordCount
+    ? ((uniqueWords.size / wordCount) * 100).toFixed(0)
+    : "0";
+
+  // Word frequency — top 5 longest common words
+  const freq = {};
+  for (const w of words) {
+    const lw = w.toLowerCase().replace(/[^a-z]/g, "");
+    if (lw.length > 3) freq[lw] = (freq[lw] || 0) + 1;
+  }
+  const topWords = Object.entries(freq)
+    .sort((a, b) => b[1] - a[1])
+    .slice(0, 5);
+  const topMax = topWords.length ? topWords[0][1] : 1;
+
+  const sb = document.createElement("div");
+  sb.className = "blog-sidebar post-sidebar";
+
+  // ── Same dimensions as main sidebar ──
+  const W = 48; // full-width
+  const H = 24; // half-width (matches main sidebar exactly)
+
+  const esc = (s) => s.replace(/&/g, "&amp;").replace(/</g, "&lt;");
+  const fr = (s) => `<span class="sb-frame">${s}</span>`;
+  const strip = (s) => s.replace(/<[^>]*>/g, "");
+  const mkSep = (w) => fr("│") + " ".repeat(w - 2) + fr("│");
+  const mkPad = (w, inner) => {
+    const vis = strip(inner).length;
+    const gap = Math.max(0, w - 4 - vis);
+    return fr("│") + " " + inner + " ".repeat(gap) + " " + fr("│");
+  };
+  const sep = () => mkSep(W);
+  const pad = (inner) => mkPad(W, inner);
+  const hsep = () => mkSep(H);
+  const hpad = (inner) => mkPad(H, inner);
+
+  // ═══════════════════════════════════════
+  // FULL-WIDTH: POST OVERVIEW
+  // ═══════════════════════════════════════
+  let OV = [];
+  OV.push(fr("┌" + "─".repeat(W - 2) + "┐"));
+  OV.push(sep());
+  OV.push(pad(`<span class="sb-label">POST</span>`));
+  OV.push(sep());
+  OV.push(
+    pad(
+      `<span class="sb-val">${wordCount.toLocaleString()}</span> <span class="sb-dim">words</span>  ·  <span class="sb-val">~${readMin} min</span> <span class="sb-dim">read</span>`,
+    ),
+  );
+  OV.push(
+    pad(
+      `<span class="sb-val">${charCount.toLocaleString()}</span> <span class="sb-dim">chars</span>  ·  <span class="sb-val">${charNoSpaces.toLocaleString()}</span> <span class="sb-dim">no-space</span>`,
+    ),
+  );
+  OV.push(sep());
+
+  // Reading progress bar (full-width)
+  OV.push(pad(`<span class="sb-label">PROGRESS</span>`));
+  OV.push(sep());
+  OV.push(
+    `<span id="sb-read-progress">${pad(`<span class="sb-bar">░░░░░░░░░░░░░░░░░░░░</span> <span class="sb-val"> 0%</span>`)}</span>`,
+  );
+  OV.push(sep());
+  OV.push(fr("└" + "─".repeat(W - 2) + "┘"));
+
+  const ovEl = document.createElement("div");
+  ovEl.className = "sb-full";
+  ovEl.innerHTML = OV.join("\n");
+  sb.appendChild(ovEl);
+
+  // ═══════════════════════════════════════
+  // ROW 1: STRUCTURE + LEXICON
+  // ═══════════════════════════════════════
+  let ST = [];
+  ST.push(fr("┌" + "─".repeat(H - 2) + "┐"));
+  ST.push(hsep());
+  ST.push(hpad(`<span class="sb-label">STRUCTURE</span>`));
+  ST.push(hsep());
+  ST.push(
+    hpad(
+      `<span class="sb-dim">¶ paras</span>  <span class="sb-val">${paragraphs}</span>`,
+    ),
+  );
+  ST.push(
+    hpad(
+      `<span class="sb-dim">§ heads</span>  <span class="sb-val">${headings}</span>`,
+    ),
+  );
+  ST.push(
+    hpad(
+      `<span class="sb-dim">. sents</span>  <span class="sb-val">${sentences}</span>`,
+    ),
+  );
+  ST.push(
+    hpad(
+      `<span class="sb-dim">🔗 links</span> <span class="sb-val">${links}</span>`,
+    ),
+  );
+  ST.push(
+    hpad(
+      `<span class="sb-dim">\` code</span>   <span class="sb-val">${codeBlocks}</span>`,
+    ),
+  );
+  ST.push(hsep());
+  ST.push(fr("└" + "─".repeat(H - 2) + "┘"));
+
+  let LX = [];
+  LX.push(fr("┌" + "─".repeat(H - 2) + "┐"));
+  LX.push(hsep());
+  LX.push(hpad(`<span class="sb-label">LEXICON</span>`));
+  LX.push(hsep());
+  LX.push(
+    hpad(
+      `<span class="sb-dim">avg word</span> <span class="sb-val">${avgWordLen} ch</span>`,
+    ),
+  );
+  LX.push(
+    hpad(
+      `<span class="sb-dim">avg sent</span> <span class="sb-val">${avgSentLen} w</span>`,
+    ),
+  );
+  LX.push(
+    hpad(
+      `<span class="sb-dim">unique</span>   <span class="sb-val">${uniqueWords.size.toLocaleString()}</span>`,
+    ),
+  );
+  LX.push(
+    hpad(
+      `<span class="sb-dim">diversity</span><span class="sb-val">${lexDiv}%</span>`,
+    ),
+  );
+  LX.push(hsep());
+  LX.push(fr("└" + "─".repeat(H - 2) + "┘"));
+
+  // Equalize heights
+  while (ST.length < LX.length) ST.splice(ST.length - 1, 0, hsep());
+  while (LX.length < ST.length) LX.splice(LX.length - 1, 0, hsep());
+
+  const row1 = document.createElement("div");
+  row1.className = "sb-row";
+  const stDiv = document.createElement("div");
+  stDiv.className = "sb-half";
+  stDiv.innerHTML = ST.join("\n");
+  const lxDiv = document.createElement("div");
+  lxDiv.className = "sb-half";
+  lxDiv.innerHTML = LX.join("\n");
+  row1.appendChild(stDiv);
+  row1.appendChild(lxDiv);
+  sb.appendChild(row1);
+
+  // ═══════════════════════════════════════
+  // ROW 2: META + TOP WORDS
+  // ═══════════════════════════════════════
+  let MT = [];
+  MT.push(fr("┌" + "─".repeat(H - 2) + "┐"));
+  MT.push(hsep());
+  MT.push(hpad(`<span class="sb-label">META</span>`));
+  MT.push(hsep());
+  if (post.category) {
+    const catCol =
+      {
+        writing: "var(--cyan)",
+        journalism: "var(--blue)",
+        project: "var(--purple)",
+      }[post.category] || "var(--cyan)";
+    MT.push(
+      hpad(
+        `<span class="sb-dim">cat</span>  <span style="color:${catCol}">${esc(post.category)}</span>`,
+      ),
+    );
+  }
+  if (post.date)
+    MT.push(
+      hpad(
+        `<span class="sb-dim">date</span> <span class="sb-val">${post.date.slice(0, 10)}</span>`,
+      ),
+    );
+  if (post.tags && post.tags.length) {
+    const tagsArr = Array.isArray(post.tags) ? post.tags : [post.tags];
+    for (const t of tagsArr) {
+      MT.push(
+        hpad(
+          `<span class="sb-dim">tag</span>  <span style="color:var(--purple)">${esc(t)}</span>`,
+        ),
+      );
+    }
+  }
+  MT.push(hsep());
+  MT.push(fr("└" + "─".repeat(H - 2) + "┘"));
+
+  let TW = [];
+  TW.push(fr("┌" + "─".repeat(H - 2) + "┐"));
+  TW.push(hsep());
+  TW.push(hpad(`<span class="sb-label">TOP WORDS</span>`));
+  TW.push(hsep());
+  for (const [w, n] of topWords) {
+    const barLen = Math.round((n / topMax) * 6);
+    const twBar = `<span class="sb-bar">${"█".repeat(barLen)}</span><span class="sb-dim">${"░".repeat(6 - barLen)}</span>`;
+    TW.push(
+      hpad(
+        `<span class="sb-val">${esc(w).padEnd(8)}</span>${twBar} <span class="sb-val">${String(n).padStart(2)}</span>`,
+      ),
+    );
+  }
+  TW.push(hsep());
+  TW.push(fr("└" + "─".repeat(H - 2) + "┘"));
+
+  // Equalize heights
+  while (MT.length < TW.length) MT.splice(MT.length - 1, 0, hsep());
+  while (TW.length < MT.length) TW.splice(TW.length - 1, 0, hsep());
+
+  const row2 = document.createElement("div");
+  row2.className = "sb-row";
+  const mtDiv = document.createElement("div");
+  mtDiv.className = "sb-half";
+  mtDiv.innerHTML = MT.join("\n");
+  const twDiv = document.createElement("div");
+  twDiv.className = "sb-half";
+  twDiv.innerHTML = TW.join("\n");
+  row2.appendChild(mtDiv);
+  row2.appendChild(twDiv);
+  sb.appendChild(row2);
+
+  return sb;
+}
+
+// ── Update reading progress on scroll ──
+function startPostProgressUpdates(postSb) {
+  const W = 48;
+  const fr = (s) => `<span class="sb-frame">${s}</span>`;
+  const strip = (s) => s.replace(/<[^>]*>/g, "");
+  const pad = (inner) => {
+    const vis = strip(inner).length;
+    const gap = Math.max(0, W - 4 - vis);
+    return fr("│") + " " + inner + " ".repeat(gap) + " " + fr("│");
+  };
+
+  function update() {
+    const el = document.getElementById("sb-read-progress");
+    if (!el) return;
+    const scrollTop = terminal.scrollTop;
+    const scrollHeight = terminal.scrollHeight - terminal.clientHeight;
+    const pct =
+      scrollHeight > 0 ? Math.round((scrollTop / scrollHeight) * 100) : 0;
+    const fill = Math.round(pct / 5);
+    const bar = "█".repeat(fill) + "░".repeat(20 - fill);
+    el.innerHTML = pad(
+      `<span class="sb-bar">${bar}</span> <span class="sb-val">${String(pct).padStart(3)}%</span>`,
+    );
+  }
+
+  terminal.addEventListener("scroll", update);
+  // Store cleanup ref on window
+  window._postScrollHandler = update;
+}
+
 // ─────────────────────────────────────────────
 // Render a post (content pre-loaded in loadContent)
 // ─────────────────────────────────────────────
@@ -724,44 +1432,43 @@ function openPost(post) {
     printLine(`  ✗ content not available for: ${post.slug}`, "c-error");
     return;
   }
+
+  // ── Two-column layout: post content + post stats sidebar ──
   renderMarkdown(post.content, post);
-  printBlank();
 
-  // ── Integrated navigation bar ──
-  const nav = document.createElement("div");
-  nav.className = "post-nav";
+  // Collect all rendered elements and move them into a two-column wrap
+  const postWrap = document.createElement("div");
+  postWrap.className = "blog-wrap post-wrap";
 
-  const hasPrev = selectedPost > 0;
-  const hasNext = selectedPost < listItems.length - 1;
+  const postMain = document.createElement("div");
+  postMain.className = "blog-list-pane";
 
-  const prevBtn = document.createElement("button");
-  prevBtn.className = "post-nav-btn" + (hasPrev ? "" : " disabled");
-  prevBtn.textContent = "← prev";
-  if (hasPrev) {
-    prevBtn.addEventListener("click", () => {
-      selectedPost--;
-      openPost(listItems[selectedPost]);
-    });
+  // Move all children from output into postMain
+  while (output.firstChild) {
+    postMain.appendChild(output.firstChild);
   }
-  nav.appendChild(prevBtn);
 
-  const center = document.createElement("span");
-  center.className = "post-nav-center";
-  center.textContent = `${selectedPost + 1} / ${listItems.length}  ·  type 'blog' for list  ·  'home' to go back`;
-  nav.appendChild(center);
+  // Add hint line inside post column
+  const hintDiv = document.createElement("div");
+  hintDiv.className = "c-dim";
+  hintDiv.style.lineHeight = "1.75";
+  hintDiv.style.minHeight = "1.5em";
+  hintDiv.style.whiteSpace = "pre-wrap";
+  hintDiv.textContent =
+    "  ↑↓ prev/next  ·  type 'blog' for list  ·  'home' to go back";
+  postMain.appendChild(hintDiv);
 
-  const nextBtn = document.createElement("button");
-  nextBtn.className = "post-nav-btn" + (hasNext ? "" : " disabled");
-  nextBtn.textContent = "next →";
-  if (hasNext) {
-    nextBtn.addEventListener("click", () => {
-      selectedPost++;
-      openPost(listItems[selectedPost]);
-    });
-  }
-  nav.appendChild(nextBtn);
+  postWrap.appendChild(postMain);
 
-  output.appendChild(nav);
+  // Post stats sidebar
+  const postSb = buildPostSidebar(post);
+  postWrap.appendChild(postSb);
+
+  output.appendChild(postWrap);
+
+  // Start scroll progress tracking
+  startPostProgressUpdates(postSb);
+
   printBlank();
   // Scroll to top of post, not bottom
   terminal.scrollTop = 0;
@@ -808,7 +1515,7 @@ function renderMarkdown(md, post) {
     const div = document.createElement("div");
     if (cls) div.className = cls + " term-reveal";
     else div.className = "term-reveal";
-    div.style.animationDelay = (_revealIdx * 25) + "ms";
+    div.style.animationDelay = _revealIdx * 25 + "ms";
     _revealIdx++;
     div.innerHTML = html;
     output.appendChild(div);
@@ -827,7 +1534,7 @@ function renderMarkdown(md, post) {
   const category = post.category || "blog";
   const crumb = document.createElement("div");
   crumb.className = "post-breadcrumb term-reveal";
-  crumb.style.animationDelay = (_revealIdx * 25) + "ms";
+  crumb.style.animationDelay = _revealIdx * 25 + "ms";
   _revealIdx++;
   crumb.innerHTML =
     '<span class="bc-icon">📁</span> <span class="bc-seg">blog</span>' +
@@ -840,7 +1547,7 @@ function renderMarkdown(md, post) {
   // ── Post header card — date on top, no left border ──
   const headerBox = document.createElement("div");
   headerBox.className = "post-header-box term-reveal";
-  headerBox.style.animationDelay = (_revealIdx * 25) + "ms";
+  headerBox.style.animationDelay = _revealIdx * 25 + "ms";
   _revealIdx++;
 
   const titleEl = document.createElement("div");
@@ -1024,22 +1731,24 @@ function printHome() {
     ["  Welcome. This is my personal site — a space for writing,", "c-white"],
     ["  journalism and projects I build in the quiet hours.", "c-white"],
     ["", ""],
-    ["   ┌─ COMMANDS ────────────────────────────────────────┐", "c-dim"],
+    ["   ┌────────────────────────────────────────────────┐", "c-dim"],
     ["", ""],
   ];
 
   const cmds = [
     ["blog", "writing & journalism"],
     ["projects", "projects & repos"],
-    ["about", "a bit more about me"],
+    ["whoami", "a bit more about me"],
     ["fortune", "wisdom from the machine"],
+    ["config", "theme & font settings"],
+    ["cmatrix", "digital rain screensaver"],
     ["gui", "switch to desktop mode"],
     ["help", "all commands"],
   ];
 
   for (const [name, desc] of cmds) {
     lines.push([
-      `   │  <span class="hc-name">${name.padEnd(12)}</span> <span class="hc-arrow">→</span>  <span class="hc-desc">${desc}</span>`,
+      `   <span class="c-dim">│</span>  <span class="hc-name">${name.padEnd(12)}</span> <span class="hc-arrow">→</span>  <span class="hc-desc">${desc}</span>`,
       "home-cmd-line",
     ]);
   }
@@ -1065,13 +1774,54 @@ function printHome() {
       div.innerHTML = text;
     } else {
       div.textContent = text;
-      if (!text) { div.className = "spacer"; }
+      if (!text) {
+        div.className = "spacer";
+      }
     }
     homeMain.appendChild(div);
     i++;
     setTimeout(next, 35);
   }
   next();
+}
+
+// ─────────────────────────────────────────────
+// ASCII portrait colorizer
+// ─────────────────────────────────────────────
+function _colorizeAsciiPortrait(txt) {
+  const colors = {
+    " ": "var(--grey-dim)",
+    "-": "var(--grey-dim)",
+    ":": "var(--grey)",
+    ".": "var(--grey)",
+    "+": "var(--cyan-dim)",
+    "=": "var(--cyan-dim)",
+    "*": "var(--purple)",
+    "#": "var(--purple)",
+    "%": "var(--cyan)",
+    "&": "var(--cyan)",
+    "@": "var(--white)",
+  };
+  const bg = new Set([" ", "-"]);
+
+  return txt
+    .split("\n")
+    .map((line) => {
+      let html = "",
+        cur = null;
+      for (const ch of line) {
+        const c = colors[ch] || "var(--grey-dim)";
+        if (c !== cur) {
+          if (cur) html += "</span>";
+          html += `<span style="color:${c}">`;
+          cur = c;
+        }
+        html += bg.has(ch) ? "·" : ch;
+      }
+      if (cur) html += "</span>";
+      return html;
+    })
+    .join("\n");
 }
 
 // ─────────────────────────────────────────────
@@ -1082,7 +1832,7 @@ const commands = {
     description: "Show available commands",
     execute() {
       printLine(
-        "   ┌─ COMMANDS ────────────────────────────────────────┐",
+        "   ┌────────────────────────────────────────────────┐",
         "c-dim",
       );
       printBlank();
@@ -1097,7 +1847,7 @@ const commands = {
       printLine("   │  Content", "c-dim");
       for (const [n, d] of helpCmds) {
         printHTML(
-          `   │  <span class="hc-name">${n.padEnd(16)}</span> <span class="hc-arrow">→</span>  <span class="hc-desc">${d}</span>`,
+          `   <span class="c-dim">│</span>  <span class="hc-name">${n.padEnd(16)}</span> <span class="hc-arrow">→</span>  <span class="hc-desc">${d}</span>`,
           "home-cmd-line",
         );
       }
@@ -1106,13 +1856,15 @@ const commands = {
       const termCmds = [
         ["home / exit", "return home"],
         ["gui", "switch to desktop (XP) mode"],
+        ["config", "terminal settings — theme & font"],
         ["clear", "clear screen"],
+        ["cmatrix", "digital rain screensaver"],
         ["fortune", "wisdom from the machine"],
       ];
       printLine("   │  Terminal", "c-dim");
       for (const [n, d] of termCmds) {
         printHTML(
-          `   │  <span class="hc-name">${n.padEnd(16)}</span> <span class="hc-arrow">→</span>  <span class="hc-desc">${d}</span>`,
+          `   <span class="c-dim">│</span>  <span class="hc-name">${n.padEnd(16)}</span> <span class="hc-arrow">→</span>  <span class="hc-desc">${d}</span>`,
           "home-cmd-line",
         );
       }
@@ -1128,7 +1880,7 @@ const commands = {
       printLine("   │  Keys", "c-dim");
       for (const [n, d] of keyCmds) {
         printHTML(
-          `   │  <span class="hc-name">${n.padEnd(16)}</span> <span class="hc-arrow">→</span>  <span class="hc-desc">${d}</span>`,
+          `   <span class="c-dim">│</span>  <span class="hc-name">${n.padEnd(16)}</span> <span class="hc-arrow">→</span>  <span class="hc-desc">${d}</span>`,
           "home-cmd-line",
         );
       }
@@ -1163,7 +1915,9 @@ const commands = {
           heading = "BLOG / " + cat.toUpperCase();
         } else {
           printLine(`no entries found for category: ${cat}`, "c-error");
-          const cats = [...new Set(blogItems.map((p) => p.category).filter(Boolean))];
+          const cats = [
+            ...new Set(blogItems.map((p) => p.category).filter(Boolean)),
+          ];
           printLine(`available: ${cats.join(", ")}`, "c-info");
           return;
         }
@@ -1176,9 +1930,7 @@ const commands = {
     description: "Browse projects & repos",
     execute() {
       clearOutput();
-      const items = ALL.filter(
-        (p) => p.category === "project" || p.isRepo,
-      );
+      const items = ALL.filter((p) => p.category === "project" || p.isRepo);
       showList(byDate(items), "PROJECTS", "PROJECTS");
     },
   },
@@ -1189,47 +1941,110 @@ const commands = {
       clearOutput();
       printBlank();
 
-      const banner = [
-        "   ▄▀▄ █▀▄ █ ▄▀▄ █▄ █ ▄▀▄   █ █ █▀▀ █▄▀ █▀▄ ▄▀▄ █▄ █ ▄▀▀ █",
-        "   █▀█ █▀▄ █ █▀█ █ ▀█ █▀█   ▀▄▀ █▀▀ █ █ █▀▄ █▀█ █ ▀█ █ █ █",
-        "   ▀ ▀ ▀ ▀ ▀ ▀ ▀ ▀  ▀ ▀ ▀    ▀  ▀▀▀ ▀ ▀ ▀ ▀ ▀ ▀ ▀  ▀ ▀▀▀ ▀",
-      ];
-      for (const l of banner) printLine(l, "c-header");
-      printBlank();
+      const aboutWrap = document.createElement("div");
+      aboutWrap.className = "home-wrap";
+      const aboutMain = document.createElement("div");
+      aboutMain.className = "home-main";
 
-      const info = [
-        ["  Location", "Helsinki, Finland"],
-        ["  Role", "Journalist · Editor · Builder"],
-      ];
-      for (const [k, v] of info) {
-        printHTML(
-          `    <span class="c-green">${k.padEnd(14)}</span> <span class="c-dim">│</span>  <span class="c-white">${v}</span>`,
-        );
-      }
-      printBlank();
+      // ── helpers ──
+      const el = (tag, cls, text) => {
+        const e = document.createElement(tag);
+        if (cls) e.className = cls;
+        if (text != null) e.textContent = text;
+        return e;
+      };
+      const htmlDiv = (cls, html) => {
+        const d = document.createElement("div");
+        if (cls) d.className = cls;
+        d.innerHTML = html;
+        return d;
+      };
 
-      printLine("    ── INTERESTS ──", "c-info");
-      const interests = [
-        "global governance",
-        "systems design",
-        "quiet corners of the internet",
-      ];
-      for (const item of interests) {
-        printHTML(
-          `    <span class="c-green">▸</span>  <span class="c-white">${item}</span>`,
-        );
-      }
-      printBlank();
-
-      printLine("    ── CONTACT ──", "c-info");
-      printHTML(
-        '    <span class="c-green">▸</span>  <span class="c-white">ariana@example.com</span>',
+      // ── Name banner ──
+      const bannerPre = el(
+        "pre",
+        "ascii-glow",
+        "   ▄▀▄ █▀▄ █ ▄▀▄ █▄ █ ▄▀▄   █ █ █▀▀ █▄▀ █▀▄ ▄▀▄ █▄ █ ▄▀▀ █\n" +
+          "   █▀█ █▀▄ █ █▀█ █ ▀█ █▀█   ▀▄▀ █▀▀ █ █ █▀▄ █▀█ █ ▀█ █ █ █\n" +
+          "   ▀ ▀ ▀ ▀ ▀ ▀ ▀ ▀  ▀ ▀ ▀    ▀  ▀▀▀ ▀ ▀ ▀ ▀ ▀ ▀ ▀  ▀ ▀▀▀ ▀",
       );
-      printHTML(
-        '    <span class="c-green">▸</span>  <span class="c-white">github.com/arianayekrangi</span>',
+      aboutMain.appendChild(bannerPre);
+      aboutMain.appendChild(
+        el("pre", "c-dim", "   journalist · editor · builder"),
       );
-      printBlank();
-      printLine("    ░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░", "c-dim");
+      aboutMain.appendChild(el("div", "spacer"));
+
+      // ── Portrait + interests/contact ──
+      const bottom = el("div", "about-bottom");
+
+      const portraitPre = el("pre", "about-portrait", "loading...");
+      bottom.appendChild(portraitPre);
+
+      const info = el("div", "about-bottom-info");
+
+      info.appendChild(el("div", "c-info", "── INTERESTS ──"));
+      ["Human rights", "International law", "Computational journalism"].forEach(
+        (t) =>
+          info.appendChild(
+            htmlDiv(
+              null,
+              `<span class="c-green">▸</span>  <span class="c-white">${t}</span>`,
+            ),
+          ),
+      );
+      info.appendChild(el("div", "spacer"));
+      info.appendChild(el("div", "c-info", "── CONTACT ──"));
+      ["yekrangiariana@gmail.com", "github.com/arianayekrangi"].forEach((t) =>
+        info.appendChild(
+          htmlDiv(
+            null,
+            `<span class="c-green">▸</span>  <span class="c-white">${t}</span>`,
+          ),
+        ),
+      );
+
+      bottom.appendChild(info);
+      aboutMain.appendChild(bottom);
+      aboutMain.appendChild(el("div", "spacer"));
+
+      // ── Bio ──
+      const bio = el("div", "about-bio");
+      const paragraphs = [
+        "I am Ariana Yekrangi, an independent journalist and editor, based in Helsinki. From 2016 to 2025, I was the Chair of UN-aligned, a Finland-based NGO working to reform the United Nations, and also served as the Editor of The Gordian, the organisation\u2019s monthly publication. In this role, I led the publication of insightful pieces on world peace, human rights, animal welfare and environmental issues.",
+        "I specialise in research, fact-checking and shaping stories that are both meaningful and impactful. Over the years, I have worked across various media platforms, refining messages and overseeing editorial processes. I take pride in managing teams, and I have received awards for mentoring interns and helping them develop their skills and confidence.",
+        "In addition to my work in journalism, I have an interest in digital media and design, always looking for new ways to tell stories and engage audiences. Outside of work, I compose contemporary classical music, offering me a different way to express and shape ideas.",
+        "If you would like to get in touch, collaborate or discuss potential opportunities, feel free to reach out.",
+      ];
+      paragraphs.forEach((p, i) => {
+        if (i > 0) bio.appendChild(el("div", "spacer-half"));
+        bio.appendChild(el("div", "c-white", p));
+      });
+      aboutMain.appendChild(bio);
+      aboutMain.appendChild(el("div", "spacer"));
+      aboutMain.appendChild(
+        el("div", "c-dim", "    ░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░"),
+      );
+
+      aboutWrap.appendChild(aboutMain);
+
+      const sb = buildSidebar(ALL);
+      aboutWrap.appendChild(sb);
+      output.appendChild(aboutWrap);
+      startSidebarUpdates(sb);
+
+      fetch("assets/ariana-ascii.txt")
+        .then((r) => (r.ok ? r.text() : null))
+        .then((txt) => {
+          if (!txt) {
+            portraitPre.textContent = "";
+            return;
+          }
+          portraitPre.innerHTML = _colorizeAsciiPortrait(txt);
+        })
+        .catch(() => {
+          portraitPre.textContent = "";
+        });
+
       printBlank();
     },
   },
@@ -1246,6 +2061,13 @@ const commands = {
     execute() {
       clearOutput();
       printHome();
+    },
+  },
+
+  cmatrix: {
+    description: "Digital rain screensaver",
+    execute() {
+      if (window.cmatrix) window.cmatrix.start();
     },
   },
 
@@ -1353,11 +2175,61 @@ const commands = {
   },
 
   theme: {
-    description: "Switch theme",
+    description: "Open config (alias)",
     execute(args) {
-      if (args === "light")
-        printLine("  light theme? in this economy?", "c-warn");
-      else printLine("  usage: theme light", "c-info");
+      commands.config.execute(args);
+    },
+  },
+
+  config: {
+    description: "Terminal settings — theme & font",
+    execute(args) {
+      // Direct shortcut: config theme <name> / config font <name>
+      if (args) {
+        const parts = args.trim().split(/\s+/);
+        if (parts[0] === "theme" && parts[1]) {
+          const match = THEMES.find(
+            (t) =>
+              t.id === parts[1] ||
+              t.name.toLowerCase() === parts.slice(1).join(" ").toLowerCase(),
+          );
+          if (match) {
+            applyTheme(match.id);
+            printLine(`  theme → ${match.name}`, "c-info");
+            return;
+          }
+          printLine(`  unknown theme: ${parts[1]}`, "c-error");
+          printLine(
+            `  available: ${THEMES.map((t) => t.id).join(", ")}`,
+            "c-dim",
+          );
+          return;
+        }
+        if (parts[0] === "font" && parts[1]) {
+          const match = FONTS.find(
+            (f) =>
+              f.id === parts[1] ||
+              f.name.toLowerCase() === parts.slice(1).join(" ").toLowerCase(),
+          );
+          if (match) {
+            applyFont(match.id);
+            printLine(`  font → ${match.name}`, "c-info");
+            return;
+          }
+          printLine(`  unknown font: ${parts[1]}`, "c-error");
+          return;
+        }
+      }
+
+      // Interactive config menu
+      _openConfigMenu();
+    },
+  },
+
+  settings: {
+    description: "Open config (alias)",
+    execute(args) {
+      commands.config.execute(args);
     },
   },
 
@@ -1371,6 +2243,158 @@ const commands = {
     },
   },
 };
+
+// ─────────────────────────────────────────────
+// Interactive Config Menu
+// ─────────────────────────────────────────────
+let _configMode = false;
+let _configSection = 0; // 0 = theme, 1 = font
+let _configIdx = 0;
+let _configEl = null;
+
+function _openConfigMenu() {
+  _configMode = true;
+  _configSection = 0;
+  _configIdx = THEMES.findIndex((t) => t.id === getActiveTheme());
+  if (_configIdx < 0) _configIdx = 0;
+  if (sbMode) sbMode.textContent = "CONFIG";
+  if (sbStatus)
+    sbStatus.textContent = "↑↓ navigate  Enter=select  Tab=section  ESC=close";
+
+  _configEl = document.createElement("div");
+  _configEl.id = "config-menu";
+  output.appendChild(_configEl);
+  _renderConfig();
+  terminal.scrollTop = terminal.scrollHeight;
+}
+
+function _closeConfigMenu() {
+  _configMode = false;
+  _configEl = null;
+  if (sbMode) sbMode.textContent = "TERMINAL";
+  if (sbStatus) sbStatus.textContent = "ready";
+}
+
+function _renderConfig() {
+  if (!_configEl) return;
+  const activeTheme = getActiveTheme();
+  const activeFont = getActiveFont();
+
+  let html = "";
+  html += "\n";
+  html +=
+    '  <span class="c-cyan">┌─ CONFIG ─────────────────────────────────────────┐</span>\n';
+  html += '  <span class="c-cyan">│</span>\n';
+
+  // ── THEME section ──
+  const themeActive = _configSection === 0;
+  html +=
+    '  <span class="c-cyan">│</span>  <span class="cfg-section">' +
+    (themeActive ? "▸ " : "  ") +
+    "THEME</span>\n";
+  html += '  <span class="c-cyan">│</span>\n';
+  THEMES.forEach((t, i) => {
+    const isCurrent = t.id === activeTheme;
+    const isSelected = themeActive && i === _configIdx;
+    const cls = isSelected ? "cfg-option active" : "cfg-option";
+    const cursor = isSelected ? "▸" : " ";
+    const check = isCurrent ? "●" : "○";
+    const checkCls = isCurrent ? "cfg-check checked" : "cfg-check";
+    html += `  <span class="c-cyan">│</span>  <span class="${cls}"><span class="cfg-cursor">${cursor}</span><span class="${checkCls}">${check}</span> <span class="cfg-label">${t.name.padEnd(16)}</span><span class="c-dim">${t.desc}</span></span>\n`;
+  });
+
+  html += '  <span class="c-cyan">│</span>\n';
+
+  // ── FONT section ──
+  const fontActive = _configSection === 1;
+  html +=
+    '  <span class="c-cyan">│</span>  <span class="cfg-section">' +
+    (fontActive ? "▸ " : "  ") +
+    "FONT</span>\n";
+  html += '  <span class="c-cyan">│</span>\n';
+  FONTS.forEach((f, i) => {
+    const isCurrent = f.id === activeFont;
+    const isSelected = fontActive && i === _configIdx;
+    const cls = isSelected ? "cfg-option active" : "cfg-option";
+    const cursor = isSelected ? "▸" : " ";
+    const check = isCurrent ? "●" : "○";
+    const checkCls = isCurrent ? "cfg-check checked" : "cfg-check";
+    html += `  <span class="c-cyan">│</span>  <span class="${cls}"><span class="cfg-cursor">${cursor}</span><span class="${checkCls}">${check}</span> <span class="cfg-label">${f.name.padEnd(16)}</span><span class="c-dim">${f.desc}</span></span>\n`;
+  });
+
+  html += '  <span class="c-cyan">│</span>\n';
+  html +=
+    '  <span class="c-cyan">└──────────────────────────────────────────────────┘</span>\n';
+  html +=
+    '  <span class="c-dim">  ↑↓ navigate · Tab switch section · Enter apply · ESC close</span>';
+
+  _configEl.innerHTML = html;
+}
+
+function _configKeyHandler(e) {
+  if (!_configMode) return false;
+
+  const items = _configSection === 0 ? THEMES : FONTS;
+
+  if (e.key === "ArrowUp") {
+    e.preventDefault();
+    if (_configIdx > 0) {
+      _configIdx--;
+    } else if (_configSection === 1) {
+      // Jump up from first font → last theme
+      _configSection = 0;
+      _configIdx = THEMES.length - 1;
+    }
+    _renderConfig();
+    return true;
+  }
+  if (e.key === "ArrowDown") {
+    e.preventDefault();
+    if (_configIdx < items.length - 1) {
+      _configIdx++;
+    } else if (_configSection === 0) {
+      // Jump down from last theme → first font
+      _configSection = 1;
+      _configIdx = 0;
+    }
+    _renderConfig();
+    return true;
+  }
+  if (e.key === "Tab") {
+    e.preventDefault();
+    if (_configSection === 0) {
+      _configSection = 1;
+      _configIdx = FONTS.findIndex((f) => f.id === getActiveFont());
+      if (_configIdx < 0) _configIdx = 0;
+    } else {
+      _configSection = 0;
+      _configIdx = THEMES.findIndex((t) => t.id === getActiveTheme());
+      if (_configIdx < 0) _configIdx = 0;
+    }
+    _renderConfig();
+    return true;
+  }
+  if (e.key === "Enter") {
+    e.preventDefault();
+    const selected = items[_configIdx];
+    if (_configSection === 0) {
+      applyTheme(selected.id);
+      printLine(`  theme → ${selected.name}`, "c-info");
+    } else {
+      applyFont(selected.id);
+      printLine(`  font → ${selected.name}`, "c-info");
+    }
+    _renderConfig();
+    return true;
+  }
+  if (e.key === "Escape") {
+    e.preventDefault();
+    _closeConfigMenu();
+    printLine("  (config closed)", "c-dim");
+    return true;
+  }
+  return false;
+}
 
 // ─────────────────────────────────────────────
 // Tab Autocomplete
@@ -1517,6 +2541,16 @@ paletteInput.addEventListener("keydown", (e) => {
 // Main keyboard handler
 // ─────────────────────────────────────────────
 input.addEventListener("keydown", (e) => {
+  // Config menu: intercept nav keys, but let typed text + Enter through
+  if (_configMode) {
+    if (e.key === "Enter" && input.value.trim()) {
+      _closeConfigMenu();
+      // fall through to normal Enter handler below
+    } else if (_configKeyHandler(e)) {
+      return;
+    }
+  }
+
   // Tab autocomplete
   if (e.key === "Tab") {
     handleTab(e);

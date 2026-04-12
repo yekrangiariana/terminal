@@ -190,7 +190,7 @@ body {
   overflow: hidden;
   /* Sky layers */
   background:
-    /* clouds — soft white wisps */
+    /* clouds*/
     radial-gradient(
       ellipse 380px 90px at 30% 28%,
       rgba(255, 255, 255, 0.55) 0%,
@@ -735,7 +735,7 @@ body {
 .taskbar-btn.minimized {
   opacity: 0.65;
   font-style: italic;
-  box-shadow: inset 0 2px 3px rgba(0,0,0,0.3);
+  box-shadow: inset 0 2px 3px rgba(0, 0, 0, 0.3);
 }
 
 /* XP system tray / clock area */

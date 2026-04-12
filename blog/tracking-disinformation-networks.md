@@ -9,8 +9,6 @@ description: A six-month investigation mapping 340 websites and 1,200 accounts s
 image: 
 ---
 
-# Inside the Disinformation Networks Shaping Europe
-
 Over six months, we mapped a network of 340 websites and 1,200
 social media accounts coordinating inauthentic behaviour across
 seven European countries. What we found was not a single operation

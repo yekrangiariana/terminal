@@ -9,8 +9,6 @@ description: Maps citation networks between 500+ European news outlets across fi
 image: 
 ---
 
-# News Source Network Graph
-
 A network analysis of citation patterns between 500+ European
 news outlets in English, Finnish, Swedish, French, and German.
 Built to understand how information flows across the European

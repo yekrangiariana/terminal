@@ -9,10 +9,6 @@ description: Silence as a practice, not an absence — notes on attention, withd
 image: 
 ---
 
-# Notes on Silence
-
-**Published: 2024-02-28**
-
 I have been thinking about silence as a practice rather than an absence.
 
 Most of what passes for quiet in my life is just a reduction in noise —

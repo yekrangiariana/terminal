@@ -9,10 +9,6 @@ description: On how platform consolidation and algorithmic feeds have narrowed t
 image: 
 ---
 
-# Why the Internet Feels Smaller
-
-**Published: 2024-03-15**
-
 The internet used to feel infinite. You could wander into a forum about
 obscure Finnish architecture, end up reading someone’s personal diary
 written in HTML, and stumble sideways into a community of people who

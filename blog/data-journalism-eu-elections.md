@@ -9,8 +9,6 @@ description: How we built a data pipeline to ingest EU election results from 27 
 image: 
 ---
 
-# Mapping the EU Elections: A Data Story
-
 The 2024 European Parliament elections produced the most geographically
 fragmented result in the institution's history. To tell that story, we
 built a data pipeline that ingested results from 27 national electoral

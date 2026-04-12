@@ -1,0 +1,20 @@
+/* ─────────────────────────────────────────────
+   cmatrix — Matrix digital rain inside terminal
+───────────────────────────────────────────── */
+#cmatrix-rain {
+  flex: 1;
+  margin: 0;
+  padding: 0;
+  font-size: 14px;
+  line-height: 1.25;
+  letter-spacing: 0.05em;
+  overflow: hidden;
+  white-space: pre;
+  user-select: none;
+  cursor: none;
+  opacity: 0;
+  transition: opacity 0.3s ease;
+}
+#cmatrix-rain.visible {
+  opacity: 1;
+}

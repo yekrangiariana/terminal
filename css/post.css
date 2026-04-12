@@ -3,6 +3,14 @@
    Imported by terminal.css
 ───────────────────────────────────────────── */
 
+@font-face {
+  font-family: "Raster Forge";
+  src: url("../assets/RasterForgeRegular-JpBgm.ttf") format("truetype");
+  font-weight: 400;
+  font-style: normal;
+  font-display: swap;
+}
+
 /* Breadcrumb path with file icons */
 .post-breadcrumb {
   color: var(--grey);
@@ -45,10 +53,12 @@
 }
 .post-header-title {
   color: var(--cyan);
-  font-size: 1.15em;
-  font-weight: 700;
-  letter-spacing: 0.02em;
+  font-family: "Raster Forge", var(--font-mono);
+  font-size: 1.5em;
+  font-weight: 400;
+  letter-spacing: 0.04em;
   margin-bottom: 4px;
+  line-height: 22px;
 }
 .post-header-desc {
   color: var(--grey);
@@ -170,4 +180,22 @@
   margin: 4px 0;
   max-width: 72ch;
   opacity: 0.5;
+}
+
+/* ── Post sidebar (single post view) ── */
+.post-wrap {
+  align-items: flex-start;
+}
+.post-wrap .blog-list-pane {
+  min-width: 0;
+}
+.post-sidebar {
+  position: sticky;
+  top: 0;
+  align-self: flex-start;
+}
+@media (max-width: 900px) {
+  .post-sidebar {
+    display: none;
+  }
 }

@@ -9,10 +9,6 @@ description: Why I built a terminal-style personal site, and what that choice sa
 image: 
 ---
 
-# Building This Terminal
-
-**Published: 2024-01-10**
-
 I wanted a personal site that didn’t feel like a personal site.
 
 Every template I looked at assumed the same things: a hero section,

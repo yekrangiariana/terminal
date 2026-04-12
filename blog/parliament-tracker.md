@@ -9,8 +9,6 @@ description: Scrapes and visualises every European Parliament vote since 2019.
 image: 
 ---
 
-# EU Parliament Vote Tracker
-
 A tool that scrapes, stores, and visualises every European Parliament
 vote since the 2019 election. Built for journalists and researchers
 who need to track how MEPs vote on specific legislation.

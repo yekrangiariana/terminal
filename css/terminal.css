@@ -26,6 +26,225 @@
   --green: var(--cyan);
   --green-dim: var(--cyan-dim);
   --green-glow: var(--cyan-glow);
+  /* Font family token */
+  --font-mono: "Fira Code", "Courier New", monospace;
+}
+
+/* ─────────────────────────────────────────────
+   Theme: Bloodmoon
+───────────────────────────────────────────── */
+[data-theme="bloodmoon"] {
+  --cyan: #ff2244;
+  --cyan-dim: #aa1a30;
+  --cyan-glow: rgba(255, 34, 68, 0.2);
+  --cyan-subtle: rgba(255, 34, 68, 0.06);
+  --red: #ff0033;
+  --yellow: #ff6644;
+  --amber: #cc3300;
+  --blue: #ff4466;
+  --purple: #88001a;
+  --pink: #ff1155;
+  --white: #e8c8c8;
+  --grey: #5a2a2a;
+  --grey-dim: #2a0e0e;
+  --bg: #0a0000;
+  --bg-term: #0d0202;
+  --bg-surface: rgba(255, 34, 68, 0.03);
+  --border-subtle: rgba(255, 34, 68, 0.12);
+  --border-medium: rgba(255, 34, 68, 0.25);
+  --green: var(--cyan);
+  --green-dim: var(--cyan-dim);
+  --green-glow: var(--cyan-glow);
+}
+
+/* ─────────────────────────────────────────────
+   Theme: Acid
+───────────────────────────────────────────── */
+[data-theme="acid"] {
+  --cyan: #39ff14;
+  --cyan-dim: #22aa0d;
+  --cyan-glow: rgba(57, 255, 20, 0.25);
+  --cyan-subtle: rgba(57, 255, 20, 0.06);
+  --red: #ff003c;
+  --yellow: #ccff00;
+  --amber: #ffee00;
+  --blue: #00ff88;
+  --purple: #39ff14;
+  --pink: #ff003c;
+  --white: #b8ffb0;
+  --grey: #1a4a14;
+  --grey-dim: #0a1f08;
+  --bg: #000000;
+  --bg-term: #010201;
+  --bg-surface: rgba(57, 255, 20, 0.02);
+  --border-subtle: rgba(57, 255, 20, 0.1);
+  --border-medium: rgba(57, 255, 20, 0.22);
+  --green: var(--cyan);
+  --green-dim: var(--cyan-dim);
+  --green-glow: var(--cyan-glow);
+}
+
+/* ─────────────────────────────────────────────
+   Theme: Vaporwave
+───────────────────────────────────────────── */
+[data-theme="vaporwave"] {
+  --cyan: #ff71ce;
+  --cyan-dim: #b84f91;
+  --cyan-glow: rgba(255, 113, 206, 0.2);
+  --cyan-subtle: rgba(255, 113, 206, 0.06);
+  --red: #ff3399;
+  --yellow: #fffb96;
+  --amber: #ffc86b;
+  --blue: #01cdfe;
+  --purple: #b967ff;
+  --pink: #ff71ce;
+  --white: #f0d0ee;
+  --grey: #6b3a6b;
+  --grey-dim: #2d1a33;
+  --bg: #0d0221;
+  --bg-term: #100328;
+  --bg-surface: rgba(255, 113, 206, 0.025);
+  --border-subtle: rgba(185, 103, 255, 0.15);
+  --border-medium: rgba(185, 103, 255, 0.3);
+  --green: var(--cyan);
+  --green-dim: var(--cyan-dim);
+  --green-glow: var(--cyan-glow);
+}
+
+/* ─────────────────────────────────────────────
+   Theme: Monokai Pro
+───────────────────────────────────────────── */
+[data-theme="monokai"] {
+  --cyan: #a6e22e;
+  --cyan-dim: #7da622;
+  --cyan-glow: rgba(166, 226, 46, 0.15);
+  --cyan-subtle: rgba(166, 226, 46, 0.06);
+  --red: #f92672;
+  --yellow: #e6db74;
+  --amber: #fd971f;
+  --blue: #66d9ef;
+  --purple: #ae81ff;
+  --pink: #f92672;
+  --white: #f8f8f2;
+  --grey: #75715e;
+  --grey-dim: #3e3d32;
+  --bg: #1e1f1c;
+  --bg-term: #272822;
+  --bg-surface: rgba(166, 226, 46, 0.025);
+  --border-subtle: rgba(166, 226, 46, 0.1);
+  --border-medium: rgba(166, 226, 46, 0.2);
+  --green: var(--cyan);
+  --green-dim: var(--cyan-dim);
+  --green-glow: var(--cyan-glow);
+}
+
+/* ─────────────────────────────────────────────
+   Theme: Frozen
+───────────────────────────────────────────── */
+[data-theme="frozen"] {
+  --cyan: #e0f0ff;
+  --cyan-dim: #8ab4d4;
+  --cyan-glow: rgba(224, 240, 255, 0.2);
+  --cyan-subtle: rgba(224, 240, 255, 0.05);
+  --red: #a0c4e8;
+  --yellow: #c8e0f0;
+  --amber: #90b8d8;
+  --blue: #b0d0f0;
+  --purple: #a8c0e0;
+  --pink: #c0d8f0;
+  --white: #e8f4ff;
+  --grey: #3a5068;
+  --grey-dim: #1a2838;
+  --bg: #050a12;
+  --bg-term: #080e18;
+  --bg-surface: rgba(224, 240, 255, 0.02);
+  --border-subtle: rgba(224, 240, 255, 0.08);
+  --border-medium: rgba(224, 240, 255, 0.16);
+  --green: var(--cyan);
+  --green-dim: var(--cyan-dim);
+  --green-glow: var(--cyan-glow);
+}
+
+/* ─────────────────────────────────────────────
+   Theme: Paper (light)
+───────────────────────────────────────────── */
+[data-theme="paper"] {
+  --cyan: #1a6b4a;
+  --cyan-dim: #2d8a64;
+  --cyan-glow: rgba(26, 107, 74, 0.1);
+  --cyan-subtle: rgba(26, 107, 74, 0.05);
+  --red: #c0392b;
+  --yellow: #8a6d00;
+  --amber: #b45309;
+  --blue: #1a5276;
+  --purple: #6c3483;
+  --pink: #a93670;
+  --white: #2c2c2c;
+  --grey: #a8a8a0;
+  --grey-dim: #d8d4cc;
+  --bg: #f5f0e8;
+  --bg-term: #faf8f4;
+  --bg-surface: rgba(26, 107, 74, 0.03);
+  --border-subtle: rgba(0, 0, 0, 0.08);
+  --border-medium: rgba(0, 0, 0, 0.15);
+  --green: var(--cyan);
+  --green-dim: var(--cyan-dim);
+  --green-glow: var(--cyan-glow);
+}
+
+/* Paper overrides for hardcoded dark UI elements */
+[data-theme="paper"] #title-bar {
+  background: linear-gradient(to right, #5a7a5a, #7a9a7a);
+}
+[data-theme="paper"] #status-bar {
+  background: linear-gradient(to bottom, #e0dcd4, #d0ccc4);
+  color: #444;
+}
+[data-theme="paper"] #status-bar .sb-item {
+  border-right-color: rgba(255, 255, 255, 0.5);
+  border-bottom-color: rgba(255, 255, 255, 0.5);
+  border-left-color: #aaa;
+  border-top-color: #aaa;
+  background: rgba(255, 255, 255, 0.25);
+}
+[data-theme="paper"] #terminal::-webkit-scrollbar-thumb {
+  background: #c0bab0;
+}
+[data-theme="paper"] #terminal::-webkit-scrollbar-thumb:hover {
+  background: #a8a298;
+}
+[data-theme="paper"] #input-line {
+  border-top-color: rgba(0, 0, 0, 0.06);
+  background: var(--bg-term);
+}
+[data-theme="paper"] #input-line:focus-within {
+  border-top-color: rgba(26, 107, 74, 0.25);
+}
+[data-theme="paper"] body::after {
+  background: none;
+}
+[data-theme="paper"] #terminal-wrapper {
+  box-shadow:
+    inset 1px 1px rgba(255, 255, 255, 0.4),
+    inset -1px -1px rgba(0, 0, 0, 0.15),
+    0 12px 40px rgba(0, 0, 0, 0.15);
+  border-color: rgba(0, 0, 0, 0.12);
+}
+[data-theme="paper"] .win-btn {
+  text-shadow: none;
+}
+[data-theme="paper"] .about-portrait {
+  background: rgba(0, 0, 0, 0.06);
+  border-color: rgba(0, 0, 0, 0.15);
+}
+
+/* ─────────────────────────────────────────────
+   Font: System Mono
+───────────────────────────────────────────── */
+[data-font="system-mono"] {
+  --font-mono:
+    "SF Mono", "Cascadia Code", "Consolas", "Liberation Mono", "Menlo",
+    monospace;
 }
 
 /* ─────────────────────────────────────────────
@@ -87,7 +306,7 @@ body {
       #245a12 100%
     );
   color: var(--cyan);
-  font-family: "Fira Code", "Courier New", monospace;
+  font-family: var(--font-mono);
   font-size: 14px;
   line-height: 1.6;
   height: 100vh;
@@ -238,7 +457,7 @@ body::after {
   color: #000;
   letter-spacing: 0.04em;
   user-select: none;
-  font-family: "Fira Code", monospace;
+  font-family: var(--font-mono);
   min-height: 20px;
 }
 .sb-section {
@@ -297,7 +516,7 @@ body::after {
    Progress bar — boot sequence
 ───────────────────────────────────────────── */
 .progress-wrap {
-  font-family: "Fira Code", monospace;
+  font-family: var(--font-mono);
   display: flex;
   align-items: center;
   gap: 10px;
@@ -466,7 +685,7 @@ body::after {
 }
 .earth-globe {
   color: var(--cyan-dim);
-  font-size: 6px;
+  font-size: 3px;
   line-height: 1.1;
   white-space: pre;
   letter-spacing: 0;
@@ -482,8 +701,8 @@ body::after {
 }
 .home-hero-info pre {
   margin: 0;
-  font-family: "Fira Code", monospace;
-  font-size: 10px;
+  font-family: var(--font-mono);
+  font-size: 8px;
   line-height: 1.15;
   white-space: pre;
 }
@@ -540,6 +759,49 @@ body::after {
   }
 }
 
+/* ── About layout ── */
+.about-bio {
+  padding: 0 4px;
+  line-height: 1.55;
+  max-width: 72ch;
+}
+.spacer-half {
+  height: 6px;
+}
+.about-bottom {
+  display: flex;
+  gap: 28px;
+  align-items: flex-start;
+}
+.about-portrait {
+  font-size: 3.5px;
+  line-height: 1.15;
+  letter-spacing: 0.5px;
+  flex-shrink: 0;
+  user-select: none;
+  border: 1px solid var(--grey-dim);
+  padding: 6px 8px;
+  border-radius: 4px;
+  background: rgba(0, 0, 0, 0.25);
+}
+.about-bottom-info {
+  flex: 1;
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  padding-top: 4px;
+}
+@media (max-width: 600px) {
+  .about-bottom {
+    flex-direction: column;
+    align-items: center;
+  }
+  .about-portrait {
+    font-size: 3px;
+  }
+}
+
 /* ─────────────────────────────────────────────
    Post headings
 ───────────────────────────────────────────── */
@@ -557,6 +819,7 @@ body::after {
   font-weight: 600;
   padding-left: 0;
   display: block;
+  padding-top: 20px;
 }
 
 /* Category badges */
@@ -586,7 +849,7 @@ body::after {
 ───────────────────────────────────────────── */
 #entry-list {
   margin: 2px 0 10px;
-  font-family: "Fira Code", monospace;
+  font-family: var(--font-mono);
   font-size: 13px;
 }
 
@@ -601,7 +864,7 @@ body::after {
   text-shadow:
     0 0 20px rgba(0, 255, 213, 0.3),
     0 0 40px rgba(0, 255, 213, 0.1);
-  font-family: "Fira Code", monospace;
+  font-family: var(--font-mono);
 }
 .blog-filter-label {
   color: var(--cyan-dim);
@@ -633,11 +896,18 @@ body::after {
   font-size: 10px;
   line-height: 1.15;
   white-space: pre;
-  font-family: "Fira Code", monospace;
+  font-family: var(--font-mono);
   margin: 0;
   user-select: none;
   border-left: 1px solid var(--grey-dim);
   padding-left: 12px;
+}
+.blog-sidebar .sb-row {
+  display: flex;
+  gap: 0;
+}
+.blog-sidebar .sb-half {
+  white-space: pre;
 }
 .blog-sidebar .sb-frame {
   color: var(--grey-dim);
@@ -683,6 +953,10 @@ body::after {
   margin-right: 6px;
   font-weight: bold;
   text-shadow: 0 0 14px rgba(0, 255, 213, 0.7);
+}
+.blog-sidebar .sb-moon {
+  color: #ccc;
+  text-shadow: 0 0 5px rgba(200, 200, 220, 0.5);
 }
 .blog-sidebar .sb-nf-user {
   color: var(--cyan);
@@ -787,7 +1061,7 @@ body::after {
   align-items: flex-start;
   gap: 40px;
   padding: 6px 0 6px 16px;
-  font-family: "Fira Code", monospace;
+  font-family: var(--font-mono);
   font-size: 13px;
   line-height: 1.5;
 }
@@ -1103,4 +1377,65 @@ body::after {
   .neofetch-art {
     font-size: 9px;
   }
+}
+
+/* ─────────────────────────────────────────────
+   Config / Settings Menu
+───────────────────────────────────────────── */
+.cfg-section {
+  color: var(--cyan-dim);
+  font-size: 11px;
+  letter-spacing: 0.12em;
+  padding: 2px 0;
+}
+.cfg-option {
+  padding: 1px 0 1px 4px;
+  cursor: pointer;
+  border-left: 2px solid transparent;
+  transition:
+    background 0.1s,
+    border-left-color 0.1s;
+}
+.cfg-option:hover {
+  background: var(--cyan-subtle);
+  border-left-color: var(--grey);
+}
+.cfg-option.active {
+  background: rgba(0, 255, 213, 0.08);
+  border-left-color: var(--cyan);
+}
+.cfg-option .cfg-cursor {
+  color: transparent;
+  width: 2ch;
+  display: inline-block;
+}
+.cfg-option.active .cfg-cursor {
+  color: var(--cyan);
+}
+.cfg-option .cfg-label {
+  color: var(--white);
+}
+.cfg-option.active .cfg-label {
+  color: var(--cyan);
+  font-weight: 500;
+}
+.cfg-option .cfg-check {
+  color: var(--grey);
+  width: 3ch;
+  display: inline-block;
+  text-align: center;
+}
+.cfg-option .cfg-check.checked {
+  color: var(--cyan);
+}
+.cfg-preview {
+  display: inline-block;
+  margin-left: 2ch;
+}
+.cfg-preview-swatch {
+  display: inline-block;
+  width: 1.2ch;
+  height: 1em;
+  vertical-align: middle;
+  margin-right: 2px;
 }

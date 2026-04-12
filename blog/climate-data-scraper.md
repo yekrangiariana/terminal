@@ -9,8 +9,6 @@ description: How we scraped ten years of climate policy records to investigate t
 image: 
 ---
 
-# How We Scraped 10 Years of Climate Policy Records
-
 In 2023, Reuters commissioned an investigation into the gap between
 European countries' stated climate commitments and their actual
 legislative records. The dataset didn't exist. We built it.
