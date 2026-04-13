@@ -752,7 +752,7 @@ body::after {
   flex: 1;
   min-width: 0;
 }
-@media (max-width: 480px) {
+@media (max-width: 510px) {
   .home-wrap > .blog-sidebar {
     display: none;
   }
@@ -970,7 +970,19 @@ body::after {
   color: var(--cyan);
   font-weight: 600;
 }
-@media (max-width: 480px) {
+@media (max-width: 600px) {
+  /* Stack sidebar panels into a single column */
+  .blog-sidebar .sb-row {
+    flex-direction: column;
+  }
+  /* Neofetch is 48 chars vs 24-char half-panels — halve font to match width */
+  .blog-sidebar .sb-full {
+    font-size: 5px;
+    line-height: 1.2;
+    overflow: hidden;
+  }
+}
+@media (max-width: 510px) {
   .blog-sidebar {
     display: none;
   }

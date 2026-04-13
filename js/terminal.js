@@ -2205,16 +2205,10 @@ const commands = {
         el("pre", "c-dim", "   journalist · editor · builder"),
       );
       aboutMain.appendChild(
-        htmlDiv(
-          null,
-          '<span class="c-dim">   </span><span class="c-info">Occupation:</span> <span class="c-white">Journalist · Editor · Builder</span>',
-        ),
+        htmlDiv(null, '<span class="c-dim">   </span><span class="c-info">Occupation:</span> <span class="c-white">Journalist · Editor · Builder</span>'),
       );
       aboutMain.appendChild(
-        htmlDiv(
-          null,
-          '<span class="c-dim">   </span><span class="c-info">Location:</span> <span class="c-white">Helsinki, Finland</span>',
-        ),
+        htmlDiv(null, '<span class="c-dim">   </span><span class="c-info">Location:</span> <span class="c-white">Helsinki, Finland</span>'),
       );
       aboutMain.appendChild(el("div", "spacer"));
 

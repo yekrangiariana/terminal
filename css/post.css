@@ -203,11 +203,6 @@
   top: 0;
   align-self: flex-start;
 }
-@media (max-width: 900px) {
-  .post-sidebar {
-    display: none;
-  }
-}
 
 /* ── ASCII art in header box (cover, right side) ── */
 .post-header-ascii {
