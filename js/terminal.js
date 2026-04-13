@@ -1622,9 +1622,15 @@ function openPost(post, _skipPush) {
   // Start scroll progress tracking
   startPostProgressUpdates(postSb);
 
-  printBlank();
-  // Scroll to top of post, not bottom
-  terminal.scrollTop = 0;
+  // Add spacer without triggering auto-scroll-to-bottom
+  const spacer = document.createElement("div");
+  spacer.className = "spacer";
+  output.appendChild(spacer);
+
+  // Scroll to top of post — use rAF to run after any pending _scheduleScroll
+  requestAnimationFrame(() => {
+    terminal.scrollTop = 0;
+  });
 }
 
 // ─────────────────────────────────────────────
@@ -1650,12 +1656,12 @@ function inlineMarkdown(text) {
   );
   // inline images: ![alt](url) — must come before link regex
   text = text.replace(
-    /!\[([^\]]*)\]\(([^)]+)\)/g,
+    /!\[([^\]]*)\]\(([^)]*(?:\([^)]*\)[^)]*)*)\)/g,
     '<img class="post-inline-img" src="$2" alt="$1">',
   );
   // links: [text](url)
   text = text.replace(
-    /\[([^\]]+)\]\(([^)]+)\)/g,
+    /\[([^\]]+)\]\(([^)]*(?:\([^)]*\)[^)]*)*)\)/g,
     '<a class="post-link" href="$2" target="_blank" rel="noopener">$1</a>',
   );
   return text;
@@ -1690,12 +1696,168 @@ function _colorizeAsciiArt(txt) {
           html += `<span style="color:${c}">`;
           cur = c;
         }
-        html += light.has(ch) ? "·" : ch;
+        html += ch === " " ? " " : light.has(ch) ? "·" : ch;
       }
       if (cur) html += "</span>";
       return html;
     })
     .join("\n");
+}
+
+// Scramble-decode animation for header ASCII art
+// Characters start random and resolve into the real art
+function _scrambleReveal(container, txt, colorizer, charColorFn) {
+  const finalColorize = colorizer || _colorizeAsciiArt;
+  const getColor = charColorFn || _artCharColor;
+  const glyphs = "·:;-~+='`";
+  const glyphsLen = glyphs.length;
+  const lines = txt.split("\n");
+  const DIM = "var(--grey-dim)";
+
+  // Build a flat array for each non-space cell
+  const pending = [];
+  for (let r = 0; r < lines.length; r++) {
+    for (let c = 0; c < lines[r].length; c++) {
+      if (lines[r][c] !== " ") pending.push({ r, c, ch: lines[r][c] });
+    }
+  }
+  // Shuffle resolve order
+  for (let i = pending.length - 1; i > 0; i--) {
+    const j = (Math.random() * (i + 1)) | 0;
+    const tmp = pending[i];
+    pending[i] = pending[j];
+    pending[j] = tmp;
+  }
+
+  // Mutable grid of characters — spaces stay, rest start as random glyphs
+  const grid = lines.map((line) => {
+    const row = new Array(line.length);
+    for (let i = 0; i < line.length; i++) {
+      row[i] = line[i] === " " ? " " : glyphs[(Math.random() * glyphsLen) | 0];
+    }
+    return row;
+  });
+
+  // Pre-compute the final color for each cell (never changes)
+  const colorGrid = lines.map((line) => {
+    const row = new Array(line.length);
+    for (let i = 0; i < line.length; i++) {
+      row[i] = line[i] === " " ? null : getColor(line[i]);
+    }
+    return row;
+  });
+
+  // Track which cells are resolved
+  const resolvedGrid = lines.map((line) => {
+    const row = new Array(line.length);
+    for (let i = 0; i < line.length; i++) row[i] = false;
+    return row;
+  });
+
+  const duration = 900;
+  const resolvePerFrame = Math.ceil(pending.length / (duration / 16.7));
+  const mutationsPerFrame = Math.max(2, (pending.length / 10) | 0);
+  let resolved = 0;
+  let lastTime = 0;
+  const frameInterval = 33; // ~30fps cap
+
+  // Render with colors: resolved cells get theme color, unresolved get dim
+  function render() {
+    let html = "";
+    for (let r = 0; r < grid.length; r++) {
+      if (r > 0) html += "\n";
+      const row = grid[r];
+      const cRow = colorGrid[r];
+      const rRow = resolvedGrid[r];
+      let cur = null;
+      for (let c = 0; c < row.length; c++) {
+        const ch = row[c];
+        if (ch === " ") {
+          if (cur) {
+            html += "</span>";
+            cur = null;
+          }
+          html += " ";
+          continue;
+        }
+        const color = rRow[c] ? cRow[c] : DIM;
+        if (color !== cur) {
+          if (cur) html += "</span>";
+          html += '<span style="color:' + color + '">';
+          cur = color;
+        }
+        html += ch;
+      }
+      if (cur) html += "</span>";
+    }
+    container.innerHTML = html;
+  }
+
+  render();
+
+  function tick(now) {
+    if (now - lastTime < frameInterval) {
+      requestAnimationFrame(tick);
+      return;
+    }
+    lastTime = now;
+
+    // Resolve a batch of cells to their real character
+    const batch = Math.min(resolvePerFrame, pending.length - resolved);
+    for (let i = 0; i < batch; i++) {
+      const cell = pending[resolved++];
+      grid[cell.r][cell.c] = cell.ch;
+      resolvedGrid[cell.r][cell.c] = true;
+    }
+    // Mutate some still-scrambled cells
+    const remaining = pending.length - resolved;
+    const mutations = Math.min(mutationsPerFrame, remaining);
+    for (let i = 0; i < mutations; i++) {
+      const cell = pending[resolved + ((Math.random() * remaining) | 0)];
+      grid[cell.r][cell.c] = glyphs[(Math.random() * glyphsLen) | 0];
+    }
+
+    if (resolved >= pending.length) {
+      // Final frame: apply full colorizer for any special replacements (e.g. · for dots)
+      container.innerHTML = finalColorize(txt);
+      return;
+    }
+
+    render();
+    requestAnimationFrame(tick);
+  }
+
+  requestAnimationFrame(tick);
+}
+
+// Per-character color lookup for generic ASCII art (matches _colorizeAsciiArt)
+function _artCharColor(ch) {
+  if (".·\u00B7".includes(ch)) return "var(--grey-dim)";
+  if ("-~:;,`'".includes(ch)) return "var(--grey)";
+  if ("+=#%&@*^".includes(ch)) return "var(--cyan)";
+  const code = ch.charCodeAt(0) | 32; // lowercase
+  if (code >= 97 && code <= 109) return "var(--cyan-dim)"; // a-m
+  if (code >= 110 && code <= 122) return "var(--cyan)"; // n-z
+  if (ch >= "0" && ch <= "9") return "var(--purple)";
+  return "var(--grey)";
+}
+
+// Per-character color lookup for the portrait (matches _colorizeAsciiPortrait)
+function _portraitCharColor(ch) {
+  const map = {
+    " ": "var(--grey-dim)",
+    "-": "var(--grey-dim)",
+    ":": "var(--grey)",
+    ".": "var(--grey)",
+    "+": "var(--cyan-dim)",
+    "=": "var(--cyan-dim)",
+    "*": "var(--purple)",
+    "#": "var(--purple)",
+    "%": "var(--cyan)",
+    "&": "var(--cyan)",
+    "@": "var(--white)",
+  };
+  return map[ch] || "var(--grey-dim)";
 }
 
 // Fetch a .txt file and render as themed ASCII art into a container element
@@ -1705,10 +1867,30 @@ function _renderAsciiArtInto(container, src) {
     .then((r) => (r.ok ? r.text() : Promise.reject()))
     .then((txt) => {
       container.textContent = "";
-      container.innerHTML = _colorizeAsciiArt(txt);
-      // Auto-fit font size only for body art, not header cover
-      if (container.classList.contains("post-ascii-art")) {
-        _fitAsciiArt(container, txt);
+      // Header cover art: scramble-reveal animation
+      if (container.classList.contains("post-header-ascii")) {
+        if (window.matchMedia("(max-width: 768px)").matches) {
+          _fitAsciiArt(container, txt);
+        }
+        _scrambleReveal(container, txt);
+      }
+      // Body inline art: animate when scrolled into view
+      else if (container.classList.contains("post-ascii-art")) {
+        const observer = new IntersectionObserver(
+          (entries) => {
+            for (const entry of entries) {
+              if (entry.isIntersecting) {
+                observer.disconnect();
+                _fitAsciiArt(container, txt);
+                _scrambleReveal(container, txt);
+              }
+            }
+          },
+          { threshold: 0.1 },
+        );
+        observer.observe(container);
+      } else {
+        container.innerHTML = _colorizeAsciiArt(txt);
       }
     })
     .catch(() => {
@@ -1902,11 +2084,11 @@ function renderMarkdown(md, post) {
           ".</span> " +
           inlineMarkdown(raw.replace(/^\d+\. /, "")),
       );
-    } else if (/^!\[([^\]]*)\]\(([^)]+)\)\s*$/.test(raw.trim())) {
-      // Block-level image: ![alt](url)
+    } else if (/^!\[([^\]]*)\]\((.+)\)\s*$/.test(raw.trim())) {
+      // Block-level image: ![alt](url) — greedy to support parens in filenames
       flushPara(paraBuf);
       paraBuf = [];
-      const imgMatch = raw.trim().match(/^!\[([^\]]*)\]\(([^)]+)\)$/);
+      const imgMatch = raw.trim().match(/^!\[([^\]]*)\]\((.+)\)$/);
       const imgAlt = imgMatch[1];
       const imgSrc = imgMatch[2];
       if (imgSrc.endsWith(".txt")) {
@@ -2006,7 +2188,7 @@ function printHome() {
 
   const sub = document.createElement("pre");
   sub.className = "c-dim";
-  sub.textContent = "   journalist · editor · builder";
+  sub.textContent = "Dad · Journalist · Builder of things";
   info.appendChild(sub);
 
   hero.appendChild(info);
@@ -2036,7 +2218,6 @@ function printHome() {
     ["whoami", "a bit more about me"],
     ["fortune", "wisdom from the machine"],
     ["config", "theme & font settings"],
-    ["cmatrix", "digital rain screensaver"],
     ["gui", "switch to desktop mode"],
     ["help", "all commands"],
   ];
@@ -2134,8 +2315,9 @@ const commands = {
 
       const helpCmds = [
         ["blog", "writing & journalism"],
-        ["blog [category]", "filter by category"],
+        ["blog category", "filter by category"],
         ["projects", "projects & repos"],
+        ["cmatrix", "digital rain screensaver"],
         ["ls", "quick text listing by category"],
         ["about / whoami", "about me"],
       ];
@@ -2229,7 +2411,10 @@ const commands = {
     execute() {
       clearOutput();
       pushRoute("/blog/projects");
-      const items = ALL.filter((p) => p.category === "project" || p.isRepo);
+      const items = ALL.filter(
+        (p) =>
+          p.category === "project" || p.category === "projects" || p.isRepo,
+      );
       showList(byDate(items), "PROJECTS", "PROJECTS");
     },
   },
@@ -2260,14 +2445,13 @@ const commands = {
         return d;
       };
 
-      // ── Neofetch layout: portrait left, info right ──
+      // ── Neofetch layout: info on top, portrait below ──
       const neoWrap = el("div", "neofetch-wrap");
       const portraitPre = el(
         "pre",
         "about-portrait neofetch-art",
         "loading...",
       );
-      neoWrap.appendChild(portraitPre);
 
       const info = el("div", "neofetch-info");
 
@@ -2283,12 +2467,14 @@ const commands = {
       // Key-value pairs
       const fields = [
         ["Name", "Ariana Yekrangi"],
-        ["Role", "Journalist · Editor · Builder"],
+        ["Role", "Dad · Journalist · Builder of things"],
         ["Location", "Helsinki, Finland"],
-        ["Interests", "Human rights, Intl. law, Computational journalism"],
-        ["Editor", "The Gordian (2016–2025)"],
+        [
+          "Interests",
+          "Human rights, Intl. law, journalism, contemporary classical music, design",
+        ],
         ["Email", "yekrangiariana@gmail.com"],
-        ["GitHub", "github.com/arianayekrangi"],
+        ["GitHub", "github.com/yekrangiariana"],
       ];
       fields.forEach(([key, val]) => {
         info.appendChild(
@@ -2323,8 +2509,10 @@ const commands = {
       aboutMain.appendChild(neoWrap);
       aboutMain.appendChild(el("div", "spacer"));
 
-      // ── Bio ──
+      // ── Bio with portrait floated inside ──
       const bio = el("div", "about-bio");
+      portraitPre.className = "about-portrait neofetch-art bio-portrait";
+      bio.appendChild(portraitPre);
       const paragraphs = [
         "Independent journalist and editor based in Helsinki. From 2016 to 2025, I chaired UN-aligned, a Finland-based NGO working to reform the United Nations, and served as Editor of The Gordian, its monthly publication. I led the publication of works on world peace, human rights, animal welfare and environmental issues.",
         "I specialise in research, fact-checking and shaping stories that are both meaningful and impactful. Over the years I have worked across various media platforms, refining messages and overseeing editorial processes. I take pride in managing teams, and have received awards for mentoring interns.",
@@ -2354,7 +2542,12 @@ const commands = {
             portraitPre.textContent = "";
             return;
           }
-          portraitPre.innerHTML = _colorizeAsciiPortrait(txt);
+          _scrambleReveal(
+            portraitPre,
+            txt,
+            _colorizeAsciiPortrait,
+            _portraitCharColor,
+          );
         })
         .catch(() => {
           portraitPre.textContent = "";
@@ -2431,19 +2624,16 @@ const commands = {
     description: "Wisdom from the machine",
     execute() {
       const fortunes = [
-        "The network is the computer. The computer is the network.",
+        "Israel is a terrorist state.",
         "There is no cloud, only other people's computers.",
         "chmod 777 is not a solution. It is a prayer.",
-        "The best documentation is the code that doesn't need it.",
         "If it works, don't grep it.",
+        "Donald Trump is a wanker",
         "In the beginning was the command line.",
         "All happy terminals are alike; every unhappy terminal is unhappy in its own way.",
         "The truth is out there. It is in /var/log/syslog.",
-        "Simplicity is a great virtue but it requires hard work to achieve it.",
-        "Real programmers count from zero.",
-        "Israel is a terrorist state.",
-        "Donald Trump is a wanker",
         "Your partner never makes sense. Just accept it.",
+        "Real programmers count from zero.",
       ];
       const f = fortunes[Math.floor(Math.random() * fortunes.length)];
       printLine("  ░▒▓━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━▓▒░", "c-dim");

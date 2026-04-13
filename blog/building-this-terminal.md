@@ -5,7 +5,7 @@ date: 2026-01-10
 category: projects
 tags: design
 url: building-this-terminal
-description: Why I built a terminal-style personal site
+description: Why and how I built a terminal-style personal site
 image: images/terminal.txt
 ---
 
@@ -20,8 +20,6 @@ What started as a modest idea turned into roughly 3,500 lines of code across fiv
 ## The command system
 
 The entire terminal runs on a command registry — a plain JavaScript object where each key is a command name and each value has a `description` string and an `execute` function. When you type something and hit Enter, the input is split, the first token is looked up in that object, and if it exists, its executor runs. If it doesn't, the terminal computes the Levenshtein distance between what you typed and every registered command, and suggests the closest match within an edit distance of two. That "did you mean?" feature cost about fifteen lines of code but makes the interface feel dramatically more forgiving.
-
-![macos terminal icon](images/macos-terminal-logo.txt)
 
 There are over twenty commands. Some render content — `blog`, `projects`, `about`. Some are utilities — `clear`, `help`, `config`. Some are jokes — `sudo` tells you you're not in the sudoers file, `rm -rf /` pretends to wipe the system. The `fortune` command prints a random quote. There is a `gui` command that takes you to a completely separate desktop interface.
 
@@ -107,11 +105,11 @@ The terminal window itself has an outer `box-shadow` with four inset layers — 
 
 There's a second entry point: `desktop.html`. It's a Windows XP-style graphical desktop with draggable windows, a taskbar, a start menu, desktop icons, and rubber-band selection. When you drag on an empty area of the desktop, a selection rectangle appears and highlights any icons it intersects, calculated by comparing bounding rectangles in real time during the `mousemove` event.
 
-![]()
+![windows xp lgo](images/xp-logo.txt)
 
 Each window has a title bar that supports drag-to-move by tracking the offset between the cursor and the window's top-left corner at `mousedown`, then repositioning the window on every `mousemove`. Clicking a window brings it to the front by setting its `z-index` higher than all others.
 
-There's a gate. Before you see the desktop, you're prompted with a text field and a question. You have to type "free palestine" to proceed. It's a political statement baked into the software, gated by `sessionStorage` so you only see it once per browser session. If you click Cancel instead, you're redirected back to the terminal.
+There's a gate. Before you see the desktop, you're prompted with a text field and a question. You have to type "free palestine" to proceed. It's a statement spoken only by real humans and baked into the software, gated by `sessionStorage` so you only see it once per browser session. If you click Cancel instead, you're redirected back to the terminal.
 
 ## No build step
 
