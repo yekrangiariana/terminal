@@ -110,17 +110,6 @@ html {
     overflow-x: hidden;
     max-width: 100vw;
   }
-  /* Fallback name for mobile — shown when ASCII banner is hidden */
-  .mobile-name-fallback {
-    display: block !important;
-    font-size: 16px;
-    font-weight: bold;
-    color: var(--fg);
-  }
-  /* Hide ASCII name on about page when it's too wide */
-  .about-banner-ascii {
-    display: none;
-  }
 
   /* Home hero — stack vertically, left-aligned */
   .home-hero {
@@ -243,21 +232,9 @@ html {
   }
 
   /* About section — flush left */
-  .about-bottom {
-    flex-direction: column;
-    align-items: flex-start;
-    gap: 12px;
-  }
-  .about-portrait {
-    font-size: 2.5px;
-    margin-left: 0;
-  }
   .about-bio {
     font-size: 12px;
     max-width: 100%;
-    padding: 0;
-  }
-  .about-bottom-info {
     padding: 0;
   }
 
@@ -411,9 +388,6 @@ html {
   }
   .neofetch-art {
     font-size: 5.5px;
-  }
-  .about-portrait {
-    font-size: 2px;
   }
 }
 

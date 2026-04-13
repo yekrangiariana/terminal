@@ -151,12 +151,12 @@ const THEMES = [
   {
     id: "cinnamon",
     name: "Cinnamon",
-    desc: "blazing spice",
+    desc: "warm spice on dark",
   },
   {
     id: "barbie",
     name: "Barbie",
-    desc: "hot pink overload",
+    desc: "pink on dark pink",
   },
 ];
 
@@ -2260,75 +2260,47 @@ const commands = {
         return d;
       };
 
-      // ── Name banner ──
-      const bannerPre = el(
-        "pre",
-        "ascii-glow about-banner-ascii",
-        "   ▄▀▄ █▀▄ █ ▄▀▄ █▄ █ ▄▀▄   █ █ █▀▀ █▄▀ █▀▄ ▄▀▄ █▄ █ ▄▀▀ █\n" +
-          "   █▀█ █▀▄ █ █▀█ █ ▀█ █▀█   ▀▄▀ █▀▀ █ █ █▀▄ █▀█ █ ▀█ █ █ █\n" +
-          "   ▀ ▀ ▀ ▀ ▀ ▀ ▀ ▀  ▀ ▀ ▀    ▀  ▀▀▀ ▀ ▀ ▀ ▀ ▀ ▀ ▀  ▀ ▀▀▀ ▀",
-      );
-      aboutMain.appendChild(bannerPre);
-      const nameFallback = el("div", "mobile-name-fallback", "Ariana Yekrangi");
-      nameFallback.style.display = "none";
-      aboutMain.appendChild(nameFallback);
-      aboutMain.appendChild(
-        el("pre", "c-dim", "   journalist · editor · builder"),
-      );
-      aboutMain.appendChild(
-        htmlDiv(
-          null,
-          '<span class="c-dim">   </span><span class="c-info">Occupation:</span> <span class="c-white">Journalist · Editor · Builder</span>',
-        ),
-      );
-      aboutMain.appendChild(
-        htmlDiv(
-          null,
-          '<span class="c-dim">   </span><span class="c-info">Location:</span> <span class="c-white">Helsinki, Finland</span>',
-        ),
-      );
-      aboutMain.appendChild(el("div", "spacer"));
+      // ── Neofetch layout: portrait left, info right ──
+      const neoWrap = el("div", "neofetch-wrap");
+      const portraitPre = el("pre", "about-portrait neofetch-art", "loading...");
+      neoWrap.appendChild(portraitPre);
 
-      // ── Portrait + interests/contact ──
-      const bottom = el("div", "about-bottom");
+      const info = el("div", "neofetch-info");
 
-      const portraitPre = el("pre", "about-portrait", "loading...");
-      bottom.appendChild(portraitPre);
+      // Title line
+      info.appendChild(htmlDiv("nf-title", '<span class="c-green">ariana</span><span class="c-white">@</span><span class="c-green">yekrangi</span>'));
+      info.appendChild(el("div", "nf-sep", "─────────────────────────────"));
 
-      const info = el("div", "about-bottom-info");
+      // Key-value pairs
+      const fields = [
+        ["Name", "Ariana Yekrangi"],
+        ["Role", "Journalist · Editor · Builder"],
+        ["Location", "Helsinki, Finland"],
+        ["Interests", "Human rights, Intl. law, Computational journalism"],
+        ["Editor", "The Gordian (2016–2025)"],
+        ["Email", "yekrangiariana@gmail.com"],
+        ["GitHub", "github.com/arianayekrangi"],
+      ];
+      fields.forEach(([key, val]) => {
+        info.appendChild(htmlDiv("nf-row", `<span class="nf-key c-info">${key}</span><span class="c-white">${val}</span>`));
+      });
 
-      info.appendChild(el("div", "c-info", "── INTERESTS ──"));
-      ["Human rights", "International law", "Computational journalism"].forEach(
-        (t) =>
-          info.appendChild(
-            htmlDiv(
-              null,
-              `<span class="c-green">▸</span>  <span class="c-white">${t}</span>`,
-            ),
-          ),
-      );
-      info.appendChild(el("div", "spacer"));
-      info.appendChild(el("div", "c-info", "── CONTACT ──"));
-      ["yekrangiariana@gmail.com", "github.com/arianayekrangi"].forEach((t) =>
-        info.appendChild(
-          htmlDiv(
-            null,
-            `<span class="c-green">▸</span>  <span class="c-white">${t}</span>`,
-          ),
-        ),
-      );
+      // Color blocks (like neofetch)
+      info.appendChild(el("div", "spacer-half"));
+      info.appendChild(htmlDiv("nf-colors", [
+        "c-red", "c-yellow", "c-green", "c-info", "c-blue", "c-purple", "c-pink", "c-white"
+      ].map(c => `<span class="${c}">███</span>`).join("")));
 
-      bottom.appendChild(info);
-      aboutMain.appendChild(bottom);
+      neoWrap.appendChild(info);
+      aboutMain.appendChild(neoWrap);
       aboutMain.appendChild(el("div", "spacer"));
 
       // ── Bio ──
       const bio = el("div", "about-bio");
       const paragraphs = [
-        "I am Ariana Yekrangi, an independent journalist and editor, based in Helsinki. From 2016 to 2025, I was the Chair of UN-aligned, a Finland-based NGO working to reform the United Nations, and also served as the Editor of The Gordian, the organisation\u2019s monthly publication. In this role, I led the publication of insightful pieces on world peace, human rights, animal welfare and environmental issues.",
-        "I specialise in research, fact-checking and shaping stories that are both meaningful and impactful. Over the years, I have worked across various media platforms, refining messages and overseeing editorial processes. I take pride in managing teams, and I have received awards for mentoring interns and helping them develop their skills and confidence.",
-        "In addition to my work in journalism, I have an interest in digital media and design, always looking for new ways to tell stories and engage audiences. Outside of work, I compose contemporary classical music, offering me a different way to express and shape ideas.",
-        "If you would like to get in touch, collaborate or discuss potential opportunities, feel free to reach out.",
+        "Independent journalist and editor based in Helsinki. From 2016 to 2025, I chaired UN-aligned, a Finland-based NGO working to reform the United Nations, and served as Editor of The Gordian, its monthly publication. I led the publication of works on world peace, human rights, animal welfare and environmental issues.",
+        "I specialise in research, fact-checking and shaping stories that are both meaningful and impactful. Over the years I have worked across various media platforms, refining messages and overseeing editorial processes. I take pride in managing teams, and have received awards for mentoring interns.",
+        "Beyond journalism, I explore digital media and design, always looking for new ways to tell stories and engage audiences. Outside of work, I compose contemporary classical music.",
       ];
       paragraphs.forEach((p, i) => {
         if (i > 0) bio.appendChild(el("div", "spacer-half"));
