@@ -320,7 +320,11 @@
   border-top-color: rgba(255, 140, 66, 0.3);
 }
 [data-theme="cinnamon"] body::after {
-  background: radial-gradient(ellipse at center, rgba(255, 100, 20, 0.04) 0%, transparent 70%);
+  background: radial-gradient(
+    ellipse at center,
+    rgba(255, 100, 20, 0.04) 0%,
+    transparent 70%
+  );
 }
 [data-theme="cinnamon"] #terminal-wrapper {
   box-shadow:
@@ -365,7 +369,11 @@
   border-top-color: rgba(255, 92, 184, 0.35);
 }
 [data-theme="barbie"] body::after {
-  background: radial-gradient(ellipse at center, rgba(255, 50, 150, 0.04) 0%, transparent 70%);
+  background: radial-gradient(
+    ellipse at center,
+    rgba(255, 50, 150, 0.04) 0%,
+    transparent 70%
+  );
 }
 [data-theme="barbie"] #terminal-wrapper {
   box-shadow:

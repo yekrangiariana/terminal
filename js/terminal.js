@@ -2262,13 +2262,22 @@ const commands = {
 
       // ── Neofetch layout: portrait left, info right ──
       const neoWrap = el("div", "neofetch-wrap");
-      const portraitPre = el("pre", "about-portrait neofetch-art", "loading...");
+      const portraitPre = el(
+        "pre",
+        "about-portrait neofetch-art",
+        "loading...",
+      );
       neoWrap.appendChild(portraitPre);
 
       const info = el("div", "neofetch-info");
 
       // Title line
-      info.appendChild(htmlDiv("nf-title", '<span class="c-green">ariana</span><span class="c-white">@</span><span class="c-green">yekrangi</span>'));
+      info.appendChild(
+        htmlDiv(
+          "nf-title",
+          '<span class="c-green">ariana</span><span class="c-white">@</span><span class="c-green">yekrangi</span>',
+        ),
+      );
       info.appendChild(el("div", "nf-sep", "─────────────────────────────"));
 
       // Key-value pairs
@@ -2282,14 +2291,33 @@ const commands = {
         ["GitHub", "github.com/arianayekrangi"],
       ];
       fields.forEach(([key, val]) => {
-        info.appendChild(htmlDiv("nf-row", `<span class="nf-key c-info">${key}</span><span class="c-white">${val}</span>`));
+        info.appendChild(
+          htmlDiv(
+            "nf-row",
+            `<span class="nf-key c-info">${key}</span><span class="c-white">${val}</span>`,
+          ),
+        );
       });
 
       // Color blocks (like neofetch)
       info.appendChild(el("div", "spacer-half"));
-      info.appendChild(htmlDiv("nf-colors", [
-        "c-red", "c-yellow", "c-green", "c-info", "c-blue", "c-purple", "c-pink", "c-white"
-      ].map(c => `<span class="${c}">███</span>`).join("")));
+      info.appendChild(
+        htmlDiv(
+          "nf-colors",
+          [
+            "c-red",
+            "c-yellow",
+            "c-green",
+            "c-info",
+            "c-blue",
+            "c-purple",
+            "c-pink",
+            "c-white",
+          ]
+            .map((c) => `<span class="${c}">███</span>`)
+            .join(""),
+        ),
+      );
 
       neoWrap.appendChild(info);
       aboutMain.appendChild(neoWrap);
