@@ -57,7 +57,12 @@
     container.style.height = h + "px";
     ctx = container.getContext("2d");
     ctx.scale(dpr, dpr);
-    ctx.font = FONT_SIZE + "px " + getComputedStyle(document.documentElement).getPropertyValue("--font-mono").trim();
+    ctx.font =
+      FONT_SIZE +
+      "px " +
+      getComputedStyle(document.documentElement)
+        .getPropertyValue("--font-mono")
+        .trim();
     ctx.textBaseline = "top";
 
     grid = [];
