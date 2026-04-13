@@ -39,9 +39,17 @@
   background: transparent;
   max-width: 72ch;
   position: relative;
+  display: flex;
+  align-items: center;
+  gap: 16px;
+  overflow: visible;
+}
+.post-header-text {
+  flex: 1;
+  min-width: 0;
 }
 .post-header-box::before {
-  content: "[ POST ]";
+  content: attr(data-label);
   position: absolute;
   top: -8px;
   left: 12px;
@@ -50,6 +58,7 @@
   color: var(--cyan-dim);
   font-size: 10px;
   letter-spacing: 0.1em;
+  z-index: 1;
 }
 .post-header-title {
   color: var(--cyan);
@@ -84,7 +93,7 @@
 .post-para {
   max-width: 72ch;
   line-height: 1.9;
-  margin-bottom: 0;
+  margin-bottom: 20px;
   color: var(--white);
 }
 
@@ -198,4 +207,50 @@
   .post-sidebar {
     display: none;
   }
+}
+
+/* ── ASCII art in header box (cover, right side) ── */
+.post-header-ascii {
+  font-family: var(--font-mono);
+  font-size: 3.5px;
+  line-height: 1;
+  white-space: pre;
+  color: var(--cyan);
+  margin: 0;
+  padding: 0;
+  background: transparent;
+  overflow: visible;
+  flex-shrink: 0;
+  opacity: 0.7;
+}
+.post-header-img {
+  display: block;
+  max-height: 80px;
+  object-fit: contain;
+  flex-shrink: 0;
+  margin: 0;
+  opacity: 0.7;
+}
+
+/* ── ASCII art (inline .txt images in post body) ── */
+.post-ascii-art {
+  margin: 4px 0;
+  padding: 8px 0;
+  font-family: var(--font-mono);
+  font-size: 5px; /* fallback; overridden by JS auto-fit */
+  line-height: 1.05;
+  overflow: hidden;
+  width: 100%;
+  white-space: pre;
+  color: var(--cyan);
+  background: transparent;
+}
+
+/* ── Inline images in post body ── */
+.post-inline-img {
+  display: block;
+  max-width: 72ch;
+  max-height: 400px;
+  object-fit: contain;
+  margin: 8px 0;
 }

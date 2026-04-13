@@ -6,7 +6,7 @@ category: journalism
 tags: data, Python, FOIA
 url: climate-data-scraper
 description: How we scraped ten years of climate policy records to investigate the gap between government commitments and action.
-image: 
+image: images/macos-terminal-logo.txt
 ---
 
 In 2023, Reuters commissioned an investigation into the gap between

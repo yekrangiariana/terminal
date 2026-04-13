@@ -27,6 +27,73 @@ let listEl = null;
 const startTime = Date.now();
 
 // ─────────────────────────────────────────────
+// URL routing helpers (hash-based)
+// ─────────────────────────────────────────────
+let _suppressPush = false;
+
+function pushRoute(path) {
+  if (_suppressPush) return;
+  const target = path === "/" ? "" : path;
+  if (location.hash.replace(/^#/, "") !== target) {
+    location.hash = target ? "#" + target : "";
+  }
+}
+
+function getRoutePath() {
+  return (location.hash.replace(/^#\/?/, "/").replace(/\/+$/, "")) || "/";
+}
+
+function handleRoute(path) {
+  path = (path || getRoutePath()).replace(/\/+$/, "") || "/";
+  _suppressPush = true;
+  try {
+    if (path === "/about") {
+      commands.about.execute();
+      return true;
+    }
+
+    // /blog or /blog/[category]
+    if (path === "/blog") {
+      commands.blog.execute();
+      return true;
+    }
+    const blogCat = path.match(/^\/blog\/([^\/]+)$/);
+    if (blogCat) {
+      const cat = blogCat[1];
+      if (cat === "projects") {
+        commands.projects.execute();
+      } else {
+        commands.blog.execute(cat);
+      }
+      return true;
+    }
+
+    // /category/slug (post)
+    const m = path.match(/^\/([^\/]+)\/([^\/]+)$/);
+    if (m) {
+      const [, cat, slug] = m;
+      const post = ALL.find((p) => p.slug === slug && p.category === cat);
+      if (post) {
+        clearOutput();
+        const blogItems = ALL.filter((p) => !p.isRepo);
+        listItems = byDate(blogItems);
+        selectedPost = listItems.indexOf(post);
+        if (selectedPost === -1) selectedPost = 0;
+        openPost(post, true);
+        return true;
+      }
+    }
+
+    // Default → home
+    clearOutput();
+    printHome();
+    return false;
+  } finally {
+    _suppressPush = false;
+  }
+}
+
+// ─────────────────────────────────────────────
 // Settings — themes & fonts (persisted in localStorage)
 // ─────────────────────────────────────────────
 const THEMES = [
@@ -1081,19 +1148,46 @@ function renderNewspaper(heading) {
     row.dataset.idx = idx;
 
     const cursor = isSelected ? "▸" : " ";
-    const num = String(idx + 1).padStart(2, " ");
     const date = (item.date || "").slice(0, 10);
     const title = item.title || "—";
     const isRepo = item.isRepo ? " ↗" : "";
-    const catTag = (CAT_LABELS[cat] || cat || "").slice(0, 5).toLowerCase();
+    const catLabel = (CAT_LABELS[cat] || cat || "").toLowerCase();
     const catCls = CAT_COLORS[cat] || "c-info";
 
     row.innerHTML =
       `<span class="elr-cursor">${cursor}</span>` +
-      `<span class="elr-idx">${num}</span>` +
-      `<span class="elr-cat ${catCls}">${catTag}</span>` +
+      (item.image
+        ? `<span class="elr-thumb" data-src="${item.image}"></span>`
+        : `<span class="elr-thumb elr-thumb-empty"></span>`) +
       `<span class="elr-title">${title}${isRepo}</span>` +
+      `<span class="elr-cat ${catCls}">${catLabel}</span>` +
       `<span class="elr-date">${date}</span>`;
+
+    // Load ASCII art thumbnail asynchronously
+    if (item.image && item.image.endsWith(".txt")) {
+      const thumb = row.querySelector(".elr-thumb");
+      fetch(item.image)
+        .then((r) => (r.ok ? r.text() : null))
+        .then((txt) => {
+          if (txt && thumb) {
+            const pre = document.createElement("pre");
+            pre.className = "elr-thumb-art";
+            pre.style.fontSize = "10px";
+            pre.textContent = txt;
+            thumb.appendChild(pre);
+            // Scale to fit the thumbnail box after render
+            requestAnimationFrame(() => {
+              const natW = pre.scrollWidth;
+              const natH = pre.scrollHeight;
+              if (natW && natH) {
+                const scale = Math.min(28 / natW, 20 / natH);
+                pre.style.transform = `scale(${scale})`;
+              }
+            });
+          }
+        })
+        .catch(() => {});
+    }
 
     row.addEventListener("click", () => {
       selectedPost = idx;
@@ -1254,7 +1348,7 @@ function buildPostSidebar(post) {
   );
   ST.push(
     hpad(
-      `<span class="sb-dim">🔗 links</span> <span class="sb-val">${links}</span>`,
+      `<span class="sb-dim">~ links</span>  <span class="sb-val">${links}</span>`,
     ),
   );
   ST.push(
@@ -1418,7 +1512,7 @@ function startPostProgressUpdates(postSb) {
 // ─────────────────────────────────────────────
 // Render a post (content pre-loaded in loadContent)
 // ─────────────────────────────────────────────
-function openPost(post) {
+function openPost(post, _skipPush) {
   if (post.isRepo) {
     printLine("↗ " + post.title + "  —  opening on GitHub…", "c-info");
     window.open(post.url, "_blank");
@@ -1427,6 +1521,9 @@ function openPost(post) {
   blogMode = false;
   clearOutput(); // resets readerMode; set it back below
   readerMode = true;
+  if (!_skipPush && post.category && post.slug) {
+    pushRoute("/" + post.category + "/" + post.slug);
+  }
   if (sbMode) sbMode.textContent = "READING";
   if (sbStatus) sbStatus.textContent = post.title || "";
   if (titleText && listItems.length) {
@@ -1499,12 +1596,97 @@ function inlineMarkdown(text) {
     /(?<!\*)\*(?!\*)([^*]+)(?<!\*)\*(?!\*)/g,
     '<span class="c-info">$1</span>',
   );
+  // inline images: ![alt](url) — must come before link regex
+  text = text.replace(
+    /!\[([^\]]*)\]\(([^)]+)\)/g,
+    '<img class="post-inline-img" src="$2" alt="$1">',
+  );
   // links: [text](url)
   text = text.replace(
     /\[([^\]]+)\]\(([^)]+)\)/g,
     '<a class="post-link" href="$2" target="_blank" rel="noopener">$1</a>',
   );
   return text;
+}
+
+// ─────────────────────────────────────────────
+// Generic ASCII art colorizer — theme-aware
+// Maps character density to CSS color variables
+// ─────────────────────────────────────────────
+function _colorizeAsciiArt(txt) {
+  // Group characters by visual "weight" → theme color
+  const light = new Set(" .·\u00B7");
+  const mid = new Set("-~:;,`'");
+  const heavy = new Set("+=#%&@*^");
+  // Letters: A-M = mid-heavy, N-Z = heavy
+  return txt
+    .split("\n")
+    .map((line) => {
+      let html = "",
+        cur = null;
+      for (const ch of line) {
+        let c;
+        if (light.has(ch)) c = "var(--grey-dim)";
+        else if (mid.has(ch)) c = "var(--grey)";
+        else if (heavy.has(ch)) c = "var(--cyan)";
+        else if (/[a-mA-M]/.test(ch)) c = "var(--cyan-dim)";
+        else if (/[n-zN-Z]/.test(ch)) c = "var(--cyan)";
+        else if (/[0-9]/.test(ch)) c = "var(--purple)";
+        else c = "var(--grey)";
+        if (c !== cur) {
+          if (cur) html += "</span>";
+          html += `<span style="color:${c}">`;
+          cur = c;
+        }
+        html += light.has(ch) ? "·" : ch;
+      }
+      if (cur) html += "</span>";
+      return html;
+    })
+    .join("\n");
+}
+
+// Fetch a .txt file and render as themed ASCII art into a container element
+function _renderAsciiArtInto(container, src) {
+  container.textContent = "loading…";
+  fetch(src)
+    .then((r) => (r.ok ? r.text() : Promise.reject()))
+    .then((txt) => {
+      container.textContent = "";
+      container.innerHTML = _colorizeAsciiArt(txt);
+      // Auto-fit font size only for body art, not header cover
+      if (container.classList.contains("post-ascii-art")) {
+        _fitAsciiArt(container, txt);
+      }
+    })
+    .catch(() => {
+      container.textContent = "[ascii art not found]";
+    });
+}
+
+// Scale ASCII art font-size so the widest line fills the container
+function _fitAsciiArt(el, txt) {
+  const lines = txt.split("\n");
+  const maxCols = Math.max(...lines.map((l) => l.length));
+  if (!maxCols) return;
+  // Measure with a probe span at 10px to get char width ratio
+  const probe = document.createElement("span");
+  probe.style.cssText =
+    "position:absolute;visibility:hidden;white-space:pre;font-family:" +
+    getComputedStyle(el).fontFamily +
+    ";font-size:10px";
+  probe.textContent = "M";
+  document.body.appendChild(probe);
+  const charW = probe.getBoundingClientRect().width;
+  document.body.removeChild(probe);
+  // Container width
+  const containerW = el.parentElement
+    ? el.parentElement.getBoundingClientRect().width
+    : el.getBoundingClientRect().width;
+  if (!containerW || !charW) return;
+  // fontSize = containerW / (maxCols * charWidthPerPx)
+  const fontSize = containerW / (maxCols * (charW / 10));
+  el.style.fontSize = Math.min(fontSize, 14) + "px";
 }
 
 // ─────────────────────────────────────────────
@@ -1541,9 +1723,9 @@ function renderMarkdown(md, post) {
   crumb.style.animationDelay = _revealIdx * 25 + "ms";
   _revealIdx++;
   crumb.innerHTML =
-    '<span class="bc-icon">📁</span> <span class="bc-seg">blog</span>' +
+    '<span class="bc-seg">blog</span>' +
     ' <span class="bc-seg">/</span> ' +
-    '<span class="bc-icon">📂</span> <span class="bc-seg">' +
+    '<span class="bc-seg">' +
     category +
     "</span>";
   output.appendChild(crumb);
@@ -1554,34 +1736,50 @@ function renderMarkdown(md, post) {
   headerBox.style.animationDelay = _revealIdx * 25 + "ms";
   _revealIdx++;
 
+  // Set label from first tag, fallback to "POST"
+  const tagsArr = Array.isArray(post.tags)
+    ? post.tags
+    : post.tags
+      ? [post.tags]
+      : [];
+  const labelTag = tagsArr.length ? tagsArr[0].toUpperCase() : "POST";
+  headerBox.setAttribute("data-label", `[ ${labelTag} ]`);
+
+  // ── Header text column (left) ──
+  const headerText = document.createElement("div");
+  headerText.className = "post-header-text";
+
   const titleEl = document.createElement("div");
   titleEl.className = "post-header-title";
   titleEl.textContent = post.title || "";
-  headerBox.appendChild(titleEl);
+  headerText.appendChild(titleEl);
 
   if (post.description) {
     const descEl = document.createElement("div");
     descEl.className = "post-header-desc";
     descEl.textContent = post.description;
-    headerBox.appendChild(descEl);
+    headerText.appendChild(descEl);
   }
-  if (post.tags && post.tags.length) {
-    const tagsEl = document.createElement("div");
-    tagsEl.className = "post-header-tags";
-    const tagsArr = Array.isArray(post.tags) ? post.tags : [post.tags];
-    tagsEl.innerHTML = tagsArr.map((t) => `<span>${t}</span>`).join("");
-    headerBox.appendChild(tagsEl);
+  headerBox.appendChild(headerText);
+
+  // ── Cover art (right) ──
+  if (post.image) {
+    if (post.image.endsWith(".txt")) {
+      const artPre = document.createElement("pre");
+      artPre.className = "post-header-ascii";
+      headerBox.appendChild(artPre);
+      _renderAsciiArtInto(artPre, post.image);
+    } else {
+      const img = document.createElement("img");
+      img.className = "post-header-img";
+      img.src = post.image;
+      img.alt = post.title || "";
+      headerBox.appendChild(img);
+    }
   }
   output.appendChild(headerBox);
 
   printBlank();
-  if (post.image) {
-    const imgDiv = document.createElement("div");
-    imgDiv.className = "post-image";
-    imgDiv.innerHTML = `<img src="${post.image}" alt="${post.title || ""}">`;
-    output.appendChild(imgDiv);
-    printBlank();
-  }
 
   // ── Normalize title for h1 de-duplication ──
   const normTitle = (post.title || "").trim().toLowerCase();
@@ -1639,6 +1837,28 @@ function renderMarkdown(md, post) {
           ".</span> " +
           inlineMarkdown(raw.replace(/^\d+\. /, "")),
       );
+    } else if (/^!\[([^\]]*)\]\(([^)]+)\)\s*$/.test(raw.trim())) {
+      // Block-level image: ![alt](url)
+      flushPara(paraBuf);
+      paraBuf = [];
+      const imgMatch = raw.trim().match(/^!\[([^\]]*)\]\(([^)]+)\)$/);
+      const imgAlt = imgMatch[1];
+      const imgSrc = imgMatch[2];
+      if (imgSrc.endsWith(".txt")) {
+        const artPre = document.createElement("pre");
+        artPre.className = "post-ascii-art term-reveal";
+        artPre.style.animationDelay = _revealIdx * 25 + "ms";
+        _revealIdx++;
+        output.appendChild(artPre);
+        _renderAsciiArtInto(artPre, imgSrc);
+      } else {
+        const imgDiv = document.createElement("div");
+        imgDiv.className = "post-image term-reveal";
+        imgDiv.style.animationDelay = _revealIdx * 25 + "ms";
+        _revealIdx++;
+        imgDiv.innerHTML = `<img src="${imgSrc}" alt="${imgAlt}">`;
+        output.appendChild(imgDiv);
+      }
     } else if (
       raw.match(/^[-*_]{3,}$/) &&
       raw
@@ -1917,6 +2137,7 @@ const commands = {
         if (filtered.length) {
           items = byDate(filtered);
           heading = "BLOG / " + cat.toUpperCase();
+          pushRoute("/blog/" + cat);
         } else {
           printLine(`no entries found for category: ${cat}`, "c-error");
           const cats = [
@@ -1925,6 +2146,8 @@ const commands = {
           printLine(`available: ${cats.join(", ")}`, "c-info");
           return;
         }
+      } else {
+        pushRoute("/blog");
       }
       showList(items, heading, "BLOG");
     },
@@ -1934,6 +2157,7 @@ const commands = {
     description: "Browse projects & repos",
     execute() {
       clearOutput();
+      pushRoute("/blog/projects");
       const items = ALL.filter((p) => p.category === "project" || p.isRepo);
       showList(byDate(items), "PROJECTS", "PROJECTS");
     },
@@ -1943,6 +2167,7 @@ const commands = {
     description: "About me",
     execute() {
       clearOutput();
+      pushRoute("/about");
       printBlank();
 
       const aboutWrap = document.createElement("div");
@@ -2064,6 +2289,7 @@ const commands = {
     description: "Return to home screen",
     execute() {
       clearOutput();
+      pushRoute("/");
       printHome();
     },
   },
@@ -2088,6 +2314,7 @@ const commands = {
     description: "Return to home",
     execute() {
       clearOutput();
+      pushRoute("/");
       printHome();
     },
   },
@@ -2708,7 +2935,20 @@ function closeWindow() {
   await loadContent();
   fetchAndInjectRepos();
   fetchRealWeather();
-  printHome();
+
+  // Route based on hash, fallback to home
+  const path = getRoutePath();
+  if (path !== "/") {
+    handleRoute(path);
+  } else {
+    printHome();
+  }
+
   terminal.scrollTop = 0;
   input.focus();
 })();
+
+// Browser back/forward
+window.addEventListener("hashchange", () => {
+  handleRoute();
+});

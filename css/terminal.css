@@ -772,6 +772,7 @@ body::after {
   display: flex;
   gap: 28px;
   align-items: flex-start;
+  padding-bottom: 25px;
 }
 .about-portrait {
   font-size: 3.5px;
@@ -979,7 +980,7 @@ body::after {
 /* ── Row styles ── */
 .elist-row {
   display: flex;
-  align-items: baseline;
+  align-items: center;
   padding: 2px 8px;
   cursor: pointer;
   white-space: nowrap;
@@ -1011,19 +1012,35 @@ body::after {
   color: transparent;
   flex-shrink: 0;
 }
-.elr-idx {
-  width: 3ch;
-  text-align: right;
-  color: var(--grey);
+.elr-thumb {
+  width: 28px;
+  height: 20px;
   flex-shrink: 0;
+  overflow: hidden;
+  position: relative;
+  margin-right: 6px;
+}
+.elr-thumb-empty {
+  width: 28px;
+}
+.elr-thumb-art {
+  position: absolute;
+  top: 0;
+  left: 0;
+  margin: 0;
+  line-height: 1;
+  white-space: pre;
+  color: var(--cyan);
+  pointer-events: none;
+  transform-origin: top left;
 }
 .elr-cat {
-  width: 7ch;
-  padding: 0 4px;
-  margin-right: 4px;
+  padding: 0 2px;
+  margin-right: 0;
   font-size: 10px;
   flex-shrink: 0;
   letter-spacing: 0.04em;
+  opacity: 0.6;
 }
 .post-image {
   margin: 4px 0 4px 8px;
