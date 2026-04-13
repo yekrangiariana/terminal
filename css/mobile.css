@@ -1,0 +1,547 @@
+/* ═══════════════════════════════════════════
+   MOBILE.CSS — Optimisations for small screens
+   Imported by index.html and desktop.html
+   ═══════════════════════════════════════════ */
+
+/* ── Visual viewport fix for mobile keyboard ── */
+html {
+  height: 100%;
+}
+
+/* ═══════════════════════════════════════════
+   TERMINAL — Mobile adjustments
+   ═══════════════════════════════════════════ */
+@media (max-width: 768px) {
+  body {
+    font-size: 12px;
+    line-height: 1.5;
+  }
+
+  /* Fill entire screen, no rounded corners or gap */
+  #terminal-wrapper {
+    width: 100%;
+    max-width: 100%;
+    height: 100vh;
+    height: 100dvh;
+    border: none;
+    border-radius: 0;
+    box-shadow: none;
+  }
+
+  /* Remove all padding/indentation from terminal content */
+  #terminal {
+    padding: 8px 8px 6px;
+    font-size: 12px;
+  }
+
+  /* Tighter title bar */
+  #title-bar {
+    padding: 4px 8px;
+    font-size: 10px;
+    gap: 6px;
+  }
+  #title-bar-controls {
+    gap: 1px;
+  }
+  .win-btn {
+    width: 18px;
+    height: 16px;
+    font-size: 9px;
+  }
+
+  /* Output text — smaller, no extra indentation */
+  #output > div {
+    line-height: 1.6;
+    font-size: 12px;
+    padding-left: 0;
+    margin-left: 0;
+  }
+
+  /* Command input should stick to the bottom firmly */
+  #input-line {
+    position: sticky;
+    bottom: 0;
+    z-index: 100;
+    background: var(--bg-term);
+    padding: 6px 0;
+    margin-top: 4px;
+    flex-shrink: 0;
+  }
+
+  #command-input {
+    font-size: 14px; /* slightly larger for touch usability */
+  }
+
+  /* Prompt shorter on mobile */
+  .p-user, .p-host {
+    font-size: 12px;
+  }
+
+  /* ASCII art — scale down to fit */
+  .ascii-art,
+  .ascii-glow {
+    font-size: 7px;
+    line-height: 1.1;
+  }
+
+  /* Home hero — stack vertically */
+  .home-hero {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 8px;
+  }
+  .earth-globe {
+    font-size: 2.5px;
+  }
+  .home-hero-info pre {
+    font-size: 6px;
+  }
+
+  /* Post content */
+  .post-para {
+    max-width: 100%;
+    font-size: 12px;
+    line-height: 1.75;
+    margin-bottom: 14px;
+  }
+  .post-header-box {
+    padding: 8px 10px;
+    flex-direction: column;
+    gap: 8px;
+    max-width: 100%;
+  }
+  .post-header-title {
+    font-size: 1.2em;
+  }
+  .post-breadcrumb {
+    font-size: 10px;
+  }
+  .post-blockquote {
+    padding-left: 10px;
+    max-width: 100%;
+    font-size: 12px;
+  }
+  .post-nav {
+    max-width: 100%;
+    font-size: 11px;
+  }
+  .post-divider {
+    max-width: 100%;
+  }
+
+  /* Blog list rows — compact */
+  .elist-row {
+    padding: 3px 4px;
+    font-size: 12px;
+  }
+  .elr-date {
+    width: 8ch;
+    font-size: 10px;
+  }
+  .elr-thumb {
+    display: none;
+  }
+  .elr-cursor {
+    width: 1.5ch;
+  }
+  .blog-title {
+    font-size: 9px;
+    line-height: 1.1;
+  }
+
+  /* Neofetch should stack */
+  .neofetch-wrap {
+    flex-direction: column;
+    gap: 10px;
+    padding-left: 0;
+    font-size: 11px;
+  }
+  .neofetch-art {
+    font-size: 7px;
+  }
+  .nf-key {
+    min-width: 72px;
+    font-size: 11px;
+  }
+  .nf-row {
+    font-size: 11px;
+  }
+
+  /* About section */
+  .about-bottom {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 12px;
+  }
+  .about-portrait {
+    font-size: 2.5px;
+  }
+  .about-bio {
+    font-size: 12px;
+    max-width: 100%;
+    padding: 0;
+  }
+
+  /* Status bar — compact */
+  #status-bar {
+    font-size: 9px;
+    min-height: 18px;
+  }
+  .sb-item {
+    padding: 1px 6px;
+    font-size: 9px;
+  }
+
+  /* Command palette — full width */
+  #palette {
+    width: 96vw;
+  }
+  .palette-item {
+    padding: 8px 12px;
+  }
+  .palette-cmd {
+    min-width: 80px;
+    font-size: 12px;
+  }
+
+  /* Tab hints */
+  #tab-hints {
+    font-size: 11px;
+  }
+
+  /* Config menu */
+  .cfg-option {
+    font-size: 12px;
+    padding: 3px 0 3px 4px;
+  }
+
+  /* Entry grid — single column on mobile */
+  .entry-grid {
+    grid-template-columns: 1fr;
+  }
+
+  /* Post image */
+  .post-image img {
+    max-height: 180px;
+  }
+
+  /* Blog sidebar — hide on mobile (already done but reinforce) */
+  .blog-sidebar {
+    display: none !important;
+  }
+
+  /* Scanlines — lighter on mobile for readability */
+  body::after {
+    background: repeating-linear-gradient(
+      0deg,
+      transparent,
+      transparent 2px,
+      rgba(0, 0, 0, 0.015) 2px,
+      rgba(0, 0, 0, 0.015) 4px
+    );
+  }
+
+  /* Progress bar */
+  .progress-wrap {
+    font-size: 11px;
+    gap: 6px;
+  }
+  .progress-label {
+    font-size: 10px;
+  }
+
+  /* GitHub repo boxes */
+  .entry-box {
+    padding: 6px 8px;
+  }
+  .entry-title {
+    font-size: 11px;
+  }
+  .entry-meta {
+    font-size: 9px;
+  }
+
+  /* c-header etc */
+  .c-header {
+    font-size: 1em;
+  }
+}
+
+/* Smaller phones */
+@media (max-width: 400px) {
+  body {
+    font-size: 11px;
+  }
+  #terminal {
+    padding: 6px 6px 4px;
+    font-size: 11px;
+  }
+  #output > div {
+    font-size: 11px;
+  }
+  .ascii-art,
+  .ascii-glow {
+    font-size: 5.5px;
+  }
+  .home-hero-info pre {
+    font-size: 5px;
+  }
+  .earth-globe {
+    font-size: 2px;
+  }
+  .neofetch-art {
+    font-size: 5.5px;
+  }
+  .about-portrait {
+    font-size: 2px;
+  }
+}
+
+
+/* ═══════════════════════════════════════════
+   DESKTOP (GUI) — Mobile adjustments
+   ═══════════════════════════════════════════ */
+@media (max-width: 768px) {
+  /* Desktop fills entire viewport */
+  html, body {
+    width: 100%;
+    height: 100%;
+    overflow: hidden;
+    touch-action: manipulation;
+  }
+
+  #desktop {
+    inset: 0 0 40px 0;
+  }
+
+  /* Larger icons for touch */
+  .desktop-icon {
+    width: 80px;
+    gap: 6px;
+    padding: 8px 6px;
+  }
+  .desktop-icon img {
+    width: 40px;
+    height: 40px;
+  }
+  .desktop-icon span {
+    font-size: 12px;
+  }
+
+  /* Icon area — center better on mobile */
+  #icon-area {
+    padding: 12px;
+    gap: 14px;
+  }
+
+  /* Captcha overlay — fit on mobile */
+  #captcha-box {
+    width: 90vw;
+    max-width: 360px;
+  }
+  .captcha-phrase {
+    font-size: 14px;
+  }
+  #captcha-input {
+    font-size: 14px;
+    padding: 8px;
+  }
+
+  /* XP Windows — full width on mobile, stacked */
+  .xp-window {
+    position: absolute;
+    left: 2vw !important;
+    top: 4vh !important;
+    width: 96vw !important;
+    height: auto !important;
+    max-height: 80vh;
+    min-width: unset;
+    min-height: unset;
+    resize: none;
+  }
+
+  /* Title bar — bigger touch targets */
+  .win-titlebar {
+    padding: 8px 8px 6px 10px;
+    font-size: 13px;
+  }
+  .win-icon {
+    font-size: 16px;
+  }
+  .win-controls {
+    gap: 4px;
+  }
+  .win-controls button {
+    width: 28px;
+    height: 24px;
+    font-size: 13px;
+  }
+
+  /* Window body — scrollable, sized to content */
+  .win-body {
+    max-height: 60vh;
+    overflow-y: auto;
+    -webkit-overflow-scrolling: touch;
+    padding: 6px;
+  }
+
+  /* File items — larger for touch */
+  .file-item {
+    padding: 8px 4px 6px;
+    font-size: 12px;
+  }
+  .file-item img {
+    width: 36px;
+    height: 36px;
+  }
+
+  /* File list — fewer columns, bigger items */
+  .file-list {
+    grid-template-columns: repeat(auto-fill, minmax(90px, 1fr));
+    gap: 6px;
+    padding: 6px;
+  }
+
+  /* Reader body — larger text */
+  .reader-body {
+    padding: 12px 14px;
+    font-size: 14px;
+    line-height: 1.7;
+  }
+  .reader-body h1 {
+    font-size: 16px;
+  }
+  .reader-body h2 {
+    font-size: 14px;
+  }
+  .reader-body .reader-meta {
+    font-size: 11px;
+  }
+  .reader-body .reader-image {
+    max-height: 160px;
+  }
+
+  /* About window */
+  .about-body {
+    flex-direction: column;
+    padding: 14px;
+    gap: 12px;
+    font-size: 12px;
+  }
+  .about-avatar {
+    width: 48px;
+    height: 48px;
+    font-size: 16px;
+  }
+
+  /* Taskbar — taller for touch */
+  #taskbar {
+    height: 40px;
+    padding: 3px 6px;
+  }
+
+  /* Start button — bigger */
+  .start-btn {
+    height: 34px;
+    font-size: 13px;
+    padding: 0 12px 0 8px;
+  }
+  .start-logo-img {
+    width: 20px;
+    height: 20px;
+  }
+
+  /* Taskbar buttons — larger */
+  .taskbar-btn {
+    height: 28px;
+    min-width: 80px;
+    max-width: 120px;
+    font-size: 11px;
+    padding: 0 6px;
+  }
+
+  /* Clock area */
+  #taskbar-clock {
+    font-size: 12px;
+    padding: 0 8px;
+    min-width: 52px;
+    height: 28px;
+  }
+
+  /* Start menu — full width on small screens */
+  #start-menu {
+    width: 80vw;
+    max-width: 310px;
+    bottom: 40px;
+  }
+  .start-left .start-item,
+  .start-right .start-item {
+    height: 36px;
+    font-size: 13px;
+    padding: 6px 14px;
+  }
+  .start-right {
+    width: 100px;
+  }
+
+  /* Context menu — larger touch targets */
+  #desktop-ctx-menu {
+    font-size: 13px;
+  }
+  .ctx-item {
+    padding: 8px 22px 8px 28px;
+  }
+
+  /* Status bars */
+  .win-status-bar {
+    font-size: 11px;
+    padding: 4px 8px;
+  }
+  .win-menu span {
+    padding: 4px 10px;
+    font-size: 12px;
+  }
+
+  /* XP Scrollbar — wider for touch */
+  ::-webkit-scrollbar {
+    width: 10px;
+    height: 10px;
+  }
+
+  /* No selection rect on mobile (rubber-band doesn't work well on touch) */
+  #selection-rect {
+    display: none !important;
+  }
+}
+
+/* Very small phones */
+@media (max-width: 400px) {
+  .xp-window {
+    left: 0 !important;
+    top: 0 !important;
+    width: 100vw !important;
+    max-height: calc(100vh - 40px);
+  }
+
+  .desktop-icon {
+    width: 68px;
+  }
+  .desktop-icon img {
+    width: 36px;
+    height: 36px;
+  }
+  .desktop-icon span {
+    font-size: 11px;
+  }
+
+  #start-menu {
+    width: 100vw;
+    max-width: 100vw;
+    border-radius: 0;
+  }
+
+  .taskbar-btn {
+    min-width: 60px;
+    font-size: 10px;
+  }
+}

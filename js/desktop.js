@@ -92,7 +92,12 @@ function renderFileList(listId, countId, items, icon, kind) {
     div.className = "file-item";
     div.innerHTML = `<img src="${icon}" alt=""><span>${post.title}</span>`;
     div.addEventListener("click", () => selectFile(div));
-    div.addEventListener("dblclick", () => openReader(post));
+    // On mobile: single click opens; on desktop: dblclick opens
+    if (_isMobile) {
+      div.addEventListener("click", () => openReader(post));
+    } else {
+      div.addEventListener("dblclick", () => openReader(post));
+    }
     el.appendChild(div);
   });
 
@@ -284,6 +289,10 @@ function updateTaskbar() {
   });
 }
 
+// ── Mobile detection ─────────────────────────────────────────────────────────
+const _isMobile = /Android|iPhone|iPad|iPod|webOS|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent) ||
+  (navigator.maxTouchPoints > 0 && window.innerWidth <= 768);
+
 // ── Drag (windows) + Rubber-band selection ────────────────────────────────────────────
 let _drag = null;
 let _sel = null;
@@ -292,7 +301,9 @@ function dragStart(e, id) {
   bringToFront(id);
   const win = document.getElementById(id);
   const rect = win.getBoundingClientRect();
-  _drag = { id, ox: e.clientX - rect.left, oy: e.clientY - rect.top };
+  const clientX = e.touches ? e.touches[0].clientX : e.clientX;
+  const clientY = e.touches ? e.touches[0].clientY : e.clientY;
+  _drag = { id, ox: clientX - rect.left, oy: clientY - rect.top };
   e.preventDefault();
 }
 
@@ -332,6 +343,19 @@ document.addEventListener("mousemove", (e) => {
   }
 });
 
+// Touch drag support for windows
+document.addEventListener("touchmove", (e) => {
+  if (_drag) {
+    const t = e.touches[0];
+    const win = document.getElementById(_drag.id);
+    if (win) {
+      win.style.left = t.clientX - _drag.ox + "px";
+      win.style.top = t.clientY - _drag.oy + "px";
+    }
+    e.preventDefault();
+  }
+}, { passive: false });
+
 document.addEventListener("mouseup", () => {
   _drag = null;
   if (_sel) {
@@ -339,6 +363,10 @@ document.addEventListener("mouseup", () => {
     const sr = document.getElementById("selection-rect");
     if (sr) sr.hidden = true;
   }
+});
+
+document.addEventListener("touchend", () => {
+  _drag = null;
 });
 
 // ── Desktop mousedown: deactivate titlebars + rubber-band selection ───────────────
@@ -408,6 +436,7 @@ document.addEventListener("mousedown", (e) => {
 
 // ── Escape to terminal ────────────────────────────────────────────────────────
 function goTerminal() {
+  sessionStorage.setItem("preferTerminal", "1");
   window.location.href = "index.html";
 }
 
@@ -438,7 +467,11 @@ async function fetchGitHubRepos() {
       div.className = "file-item";
       div.innerHTML = `<img src="${ICON_REPO}" alt=""><span>${esc(repo.name)}</span>`;
       div.addEventListener("click", () => selectFile(div));
-      div.addEventListener("dblclick", () => openRepoReader(repo));
+      if (_isMobile) {
+        div.addEventListener("click", () => openRepoReader(repo));
+      } else {
+        div.addEventListener("dblclick", () => openRepoReader(repo));
+      }
       listEl.appendChild(div);
     });
 
@@ -580,6 +613,27 @@ document.getElementById("captcha-input")?.addEventListener("keydown", (e) => {
 updateClock();
 loadContent();
 fetchGitHubRepos();
+
+// Add touch support for window title bar dragging
+document.querySelectorAll(".win-titlebar").forEach((tb) => {
+  tb.addEventListener("touchstart", (e) => {
+    const win = tb.closest(".xp-window");
+    if (win) dragStart(e, win.id);
+  }, { passive: false });
+});
+
+// On mobile: desktop icons open with a single tap (not double-click)
+if (_isMobile) {
+  document.querySelectorAll(".desktop-icon").forEach((icon) => {
+    const origDbl = icon.getAttribute("ondblclick");
+    if (origDbl) {
+      icon.removeAttribute("ondblclick");
+      icon.addEventListener("click", () => {
+        new Function(origDbl)();
+      });
+    }
+  });
+}
 
 // Skip captcha if already passed this session
 if (sessionStorage.getItem("captchaPassed") === "1") {

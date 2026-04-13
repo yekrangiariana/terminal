@@ -2932,6 +2932,14 @@ function closeWindow() {
 // Boot sequence → home
 // ─────────────────────────────────────────────
 (async function boot() {
+  // On mobile, default to GUI mode unless user explicitly came from desktop
+  const _isMobileDevice = /Android|iPhone|iPad|iPod|webOS|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent) ||
+    (navigator.maxTouchPoints > 0 && window.innerWidth <= 768);
+  if (_isMobileDevice && !sessionStorage.getItem("preferTerminal") && !location.hash) {
+    window.location.href = "desktop.html";
+    return;
+  }
+
   await loadContent();
   fetchAndInjectRepos();
   fetchRealWeather();
@@ -2946,6 +2954,24 @@ function closeWindow() {
 
   terminal.scrollTop = 0;
   input.focus();
+
+  // Mobile keyboard viewport fix: keep input visible when virtual keyboard opens
+  if (window.visualViewport) {
+    const vv = window.visualViewport;
+    function onViewportResize() {
+      const offsetY = window.innerHeight - vv.height;
+      if (offsetY > 50) {
+        // Keyboard is open — scroll input into view
+        terminal.style.paddingBottom = offsetY + "px";
+        requestAnimationFrame(() => {
+          input.scrollIntoView({ block: "nearest", behavior: "smooth" });
+        });
+      } else {
+        terminal.style.paddingBottom = "";
+      }
+    }
+    vv.addEventListener("resize", onViewportResize);
+  }
 })();
 
 // Browser back/forward
