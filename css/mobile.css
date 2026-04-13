@@ -342,10 +342,7 @@ html {
     max-height: 180px;
   }
 
-  /* Blog sidebar — hide on mobile (already done but reinforce) */
-  .blog-sidebar {
-    display: none !important;
-  }
+  /* Blog sidebar — only hide on phones, keep on tablets */
 
   /* Scanlines — lighter on mobile for readability */
   body::after {
