@@ -626,6 +626,8 @@ document.querySelectorAll(".win-titlebar").forEach((tb) => {
   tb.addEventListener(
     "touchstart",
     (e) => {
+      // Don't intercept taps on buttons (close, minimize, etc.)
+      if (e.target.closest("button") || e.target.closest(".win-controls")) return;
       const win = tb.closest(".xp-window");
       if (win) dragStart(e, win.id);
     },
@@ -643,6 +645,15 @@ if (_isMobile) {
         new Function(origDbl)();
       });
     }
+  });
+
+  // Ensure window control buttons respond to touch
+  document.querySelectorAll(".win-controls button").forEach((btn) => {
+    btn.addEventListener("touchend", (e) => {
+      e.preventDefault();
+      e.stopPropagation();
+      btn.click();
+    }, { passive: false });
   });
 }
 

@@ -30,7 +30,7 @@ html {
 
   /* Remove all padding/indentation from terminal content */
   #terminal {
-    padding: 8px 8px 6px;
+    padding: 4px 2px 4px;
     font-size: 12px;
   }
 
@@ -49,12 +49,39 @@ html {
     font-size: 9px;
   }
 
-  /* Output text — smaller, no extra indentation */
+  /* Output text — smaller, flush left, no extra indentation */
+  #output {
+    padding: 0;
+    margin: 0;
+  }
   #output > div {
     line-height: 1.6;
     font-size: 12px;
+    padding-left: 0 !important;
+    margin-left: 0 !important;
+    text-indent: 0 !important;
+  }
+
+  /* All preformatted text (ASCII art boxes, banners) — allow horizontal scroll */
+  #output pre,
+  #output .home-cmd-line,
+  #output .c-dim {
     padding-left: 0;
     margin-left: 0;
+  }
+
+  /* Help & config box — horizontally scrollable, not clipped */
+  #config-menu,
+  #output {
+    overflow-x: auto;
+    -webkit-overflow-scrolling: touch;
+  }
+
+  /* Scale box-drawing content to fit mobile */
+  #config-menu {
+    font-size: 10px;
+    white-space: pre;
+    overflow-x: auto;
   }
 
   /* Command input should stick to the bottom firmly */
@@ -85,7 +112,7 @@ html {
     line-height: 1.1;
   }
 
-  /* Home hero — stack vertically */
+  /* Home hero — stack vertically, left-aligned */
   .home-hero {
     flex-direction: column;
     align-items: flex-start;
@@ -97,30 +124,54 @@ html {
   .home-hero-info pre {
     font-size: 6px;
   }
+  .home-hero-info {
+    align-items: flex-start;
+  }
 
-  /* Post content */
+  /* Post header — left-aligned, stacked vertically */
+  .post-header-box {
+    padding: 8px 8px;
+    flex-direction: column;
+    align-items: flex-start !important;
+    gap: 6px;
+    max-width: 100%;
+  }
+  .post-header-title {
+    font-size: 1.1em;
+    text-align: left;
+  }
+  .post-header-desc {
+    text-align: left;
+  }
+  .post-header-ascii {
+    align-self: flex-start;
+    font-size: 2.5px;
+  }
+  .post-header-img {
+    align-self: flex-start;
+    max-height: 60px;
+  }
+  .post-header-text {
+    width: 100%;
+  }
+
+  /* Post content — flush left */
   .post-para {
     max-width: 100%;
     font-size: 12px;
     line-height: 1.75;
     margin-bottom: 14px;
-  }
-  .post-header-box {
-    padding: 8px 10px;
-    flex-direction: column;
-    gap: 8px;
-    max-width: 100%;
-  }
-  .post-header-title {
-    font-size: 1.2em;
+    padding-left: 0;
   }
   .post-breadcrumb {
     font-size: 10px;
+    padding-left: 0;
   }
   .post-blockquote {
-    padding-left: 10px;
+    padding-left: 8px;
     max-width: 100%;
     font-size: 12px;
+    margin-left: 0;
   }
   .post-nav {
     max-width: 100%;
@@ -128,6 +179,17 @@ html {
   }
   .post-divider {
     max-width: 100%;
+  }
+  .post-code {
+    font-size: 10px;
+  }
+  /* Post subheaders — left aligned */
+  .c-header,
+  .c-sub,
+  .c-blue {
+    padding-left: 0 !important;
+    margin-left: 0 !important;
+    text-align: left;
   }
 
   /* Blog list rows — compact */
@@ -150,15 +212,17 @@ html {
     line-height: 1.1;
   }
 
-  /* Neofetch should stack */
+  /* Neofetch should stack, flush left */
   .neofetch-wrap {
     flex-direction: column;
     gap: 10px;
     padding-left: 0;
+    padding: 4px 0;
     font-size: 11px;
   }
   .neofetch-art {
     font-size: 7px;
+    margin-left: 0;
   }
   .nf-key {
     min-width: 72px;
@@ -168,7 +232,7 @@ html {
     font-size: 11px;
   }
 
-  /* About section */
+  /* About section — flush left */
   .about-bottom {
     flex-direction: column;
     align-items: flex-start;
@@ -176,11 +240,37 @@ html {
   }
   .about-portrait {
     font-size: 2.5px;
+    margin-left: 0;
   }
   .about-bio {
     font-size: 12px;
     max-width: 100%;
     padding: 0;
+  }
+  .about-bottom-info {
+    padding: 0;
+  }
+
+  /* Home layout — flush left */
+  .home-wrap {
+    gap: 0;
+    padding: 0;
+  }
+  .home-main {
+    padding: 0;
+  }
+  .home-cmd-line {
+    font-size: 11px;
+  }
+
+  /* Entry meta — flush left */
+  .entry-meta {
+    padding-left: 8px;
+  }
+
+  /* All whitespace-pre content: allow side-scroll on mobile */
+  #output > div {
+    overflow-x: auto;
   }
 
   /* Status bar — compact */
@@ -210,10 +300,19 @@ html {
     font-size: 11px;
   }
 
-  /* Config menu */
+  /* Config menu — scrollable, touch-friendly */
   .cfg-option {
-    font-size: 12px;
-    padding: 3px 0 3px 4px;
+    font-size: 11px;
+    padding: 6px 2px 6px 4px;
+    min-height: 32px;
+    display: flex;
+    align-items: center;
+  }
+  .cfg-section {
+    font-size: 10px;
+  }
+  .cfg-label {
+    font-size: 11px;
   }
 
   /* Entry grid — single column on mobile */
@@ -370,12 +469,18 @@ html {
     font-size: 16px;
   }
   .win-controls {
-    gap: 4px;
+    gap: 6px;
+    margin-left: auto;
   }
   .win-controls button {
-    width: 28px;
-    height: 24px;
-    font-size: 13px;
+    width: 32px;
+    height: 28px;
+    font-size: 15px;
+    touch-action: manipulation;
+    cursor: pointer;
+    -webkit-tap-highlight-color: rgba(0,0,0,0.1);
+    position: relative;
+    z-index: 10;
   }
 
   /* Window body — scrollable, sized to content */
