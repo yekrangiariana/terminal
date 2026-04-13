@@ -1,4 +1,4 @@
-@import url("post.css");
+/* post.css is loaded via <link> in HTML to avoid blocking @import chain */
 
 /* ─────────────────────────────────────────────
    Design Tokens — Modern Phosphor Terminal
@@ -166,6 +166,60 @@
 }
 
 /* ─────────────────────────────────────────────
+   Theme: Cinnamon
+───────────────────────────────────────────── */
+[data-theme="cinnamon"] {
+  --cyan: #b8420a;
+  --cyan-dim: #d45a1a;
+  --cyan-glow: rgba(184, 66, 10, 0.12);
+  --cyan-subtle: rgba(184, 66, 10, 0.05);
+  --red: #cc2200;
+  --yellow: #a86800;
+  --amber: #c45200;
+  --blue: #b85c00;
+  --purple: #8b3a00;
+  --pink: #d44020;
+  --white: #3a1a08;
+  --grey: #c4a888;
+  --grey-dim: #e8d8c8;
+  --bg: #fdf4e8;
+  --bg-term: #fff8f0;
+  --bg-surface: rgba(184, 66, 10, 0.03);
+  --border-subtle: rgba(184, 66, 10, 0.1);
+  --border-medium: rgba(184, 66, 10, 0.2);
+  --green: var(--cyan);
+  --green-dim: var(--cyan-dim);
+  --green-glow: var(--cyan-glow);
+}
+
+/* ─────────────────────────────────────────────
+   Theme: Barbie
+───────────────────────────────────────────── */
+[data-theme="barbie"] {
+  --cyan: #d6006f;
+  --cyan-dim: #e83890;
+  --cyan-glow: rgba(214, 0, 111, 0.12);
+  --cyan-subtle: rgba(214, 0, 111, 0.05);
+  --red: #e0005a;
+  --yellow: #cc2288;
+  --amber: #d4007a;
+  --blue: #aa00cc;
+  --purple: #c020e0;
+  --pink: #e83890;
+  --white: #4a0028;
+  --grey: #e0a0c4;
+  --grey-dim: #f0d0e4;
+  --bg: #fff0f8;
+  --bg-term: #fff5fa;
+  --bg-surface: rgba(214, 0, 111, 0.03);
+  --border-subtle: rgba(214, 0, 111, 0.1);
+  --border-medium: rgba(214, 0, 111, 0.2);
+  --green: var(--cyan);
+  --green-dim: var(--cyan-dim);
+  --green-glow: var(--cyan-glow);
+}
+
+/* ─────────────────────────────────────────────
    Theme: Paper (light)
 ───────────────────────────────────────────── */
 [data-theme="paper"] {
@@ -238,13 +292,103 @@
   border-color: rgba(0, 0, 0, 0.15);
 }
 
+/* Cinnamon overrides for hardcoded dark UI elements */
+[data-theme="cinnamon"] #title-bar {
+  background: linear-gradient(to right, #8b4513, #b8620a);
+}
+[data-theme="cinnamon"] #status-bar {
+  background: linear-gradient(to bottom, #f0e0d0, #e0d0c0);
+  color: #5a3010;
+}
+[data-theme="cinnamon"] #status-bar .sb-item {
+  border-right-color: rgba(255, 255, 255, 0.5);
+  border-bottom-color: rgba(255, 255, 255, 0.5);
+  border-left-color: #c0a080;
+  border-top-color: #c0a080;
+  background: rgba(255, 255, 255, 0.25);
+}
+[data-theme="cinnamon"] #terminal::-webkit-scrollbar-thumb {
+  background: #d0b8a0;
+}
+[data-theme="cinnamon"] #terminal::-webkit-scrollbar-thumb:hover {
+  background: #b89878;
+}
+[data-theme="cinnamon"] #input-line {
+  border-top-color: rgba(0, 0, 0, 0.06);
+  background: var(--bg-term);
+}
+[data-theme="cinnamon"] #input-line:focus-within {
+  border-top-color: rgba(184, 66, 10, 0.25);
+}
+[data-theme="cinnamon"] body::after {
+  background: none;
+}
+[data-theme="cinnamon"] #terminal-wrapper {
+  box-shadow:
+    inset 1px 1px rgba(255, 255, 255, 0.4),
+    inset -1px -1px rgba(0, 0, 0, 0.1),
+    0 12px 40px rgba(0, 0, 0, 0.12);
+  border-color: rgba(0, 0, 0, 0.1);
+}
+[data-theme="cinnamon"] .win-btn {
+  text-shadow: none;
+}
+[data-theme="cinnamon"] .about-portrait {
+  background: rgba(0, 0, 0, 0.05);
+  border-color: rgba(0, 0, 0, 0.12);
+}
+
+/* Barbie overrides for hardcoded dark UI elements */
+[data-theme="barbie"] #title-bar {
+  background: linear-gradient(to right, #c0007a, #e040a0);
+}
+[data-theme="barbie"] #status-bar {
+  background: linear-gradient(to bottom, #f8e0f0, #f0d0e4);
+  color: #80205a;
+}
+[data-theme="barbie"] #status-bar .sb-item {
+  border-right-color: rgba(255, 255, 255, 0.5);
+  border-bottom-color: rgba(255, 255, 255, 0.5);
+  border-left-color: #e0a0c4;
+  border-top-color: #e0a0c4;
+  background: rgba(255, 255, 255, 0.25);
+}
+[data-theme="barbie"] #terminal::-webkit-scrollbar-thumb {
+  background: #e8b0d0;
+}
+[data-theme="barbie"] #terminal::-webkit-scrollbar-thumb:hover {
+  background: #d090b8;
+}
+[data-theme="barbie"] #input-line {
+  border-top-color: rgba(0, 0, 0, 0.06);
+  background: var(--bg-term);
+}
+[data-theme="barbie"] #input-line:focus-within {
+  border-top-color: rgba(214, 0, 111, 0.25);
+}
+[data-theme="barbie"] body::after {
+  background: none;
+}
+[data-theme="barbie"] #terminal-wrapper {
+  box-shadow:
+    inset 1px 1px rgba(255, 255, 255, 0.4),
+    inset -1px -1px rgba(0, 0, 0, 0.1),
+    0 12px 40px rgba(0, 0, 0, 0.12);
+  border-color: rgba(0, 0, 0, 0.1);
+}
+[data-theme="barbie"] .win-btn {
+  text-shadow: none;
+}
+[data-theme="barbie"] .about-portrait {
+  background: rgba(0, 0, 0, 0.05);
+  border-color: rgba(0, 0, 0, 0.12);
+}
+
 /* ─────────────────────────────────────────────
-   Font: System Mono
+   Font: Inconsolata
 ───────────────────────────────────────────── */
-[data-font="system-mono"] {
-  --font-mono:
-    "SF Mono", "Cascadia Code", "Consolas", "Liberation Mono", "Menlo",
-    monospace;
+[data-font="inconsolata"] {
+  --font-mono: "Inconsolata", "Courier New", monospace;
 }
 
 /* ─────────────────────────────────────────────
@@ -494,6 +638,7 @@ body::after {
   border: none;
   padding: 22px 28px 16px;
   overflow-y: auto;
+  overflow-x: hidden;
   display: flex;
   flex-direction: column;
 }
@@ -752,7 +897,7 @@ body::after {
   flex: 1;
   min-width: 0;
 }
-@media (max-width: 510px) {
+@media (max-width: 679px) {
   .home-wrap > .blog-sidebar {
     display: none;
   }
@@ -970,7 +1115,7 @@ body::after {
   color: var(--cyan);
   font-weight: 600;
 }
-@media (max-width: 510px) {
+@media (max-width: 679px) {
   .blog-sidebar {
     display: none;
   }

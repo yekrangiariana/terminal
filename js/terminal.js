@@ -26,6 +26,30 @@ let listItems = [];
 let listEl = null;
 const startTime = Date.now();
 
+// Lazy-loaded earth frames (loaded on first home screen visit)
+let _earthFramesCache = null;
+function _getEarthFrames() {
+  if (_earthFramesCache) return Promise.resolve(_earthFramesCache);
+  if (typeof EARTH_FRAMES !== "undefined") {
+    _earthFramesCache = EARTH_FRAMES;
+    return Promise.resolve(_earthFramesCache);
+  }
+  return new Promise((resolve) => {
+    const s = document.createElement("script");
+    s.src = "js/earth.js";
+    s.onload = () => {
+      _earthFramesCache =
+        typeof EARTH_FRAMES !== "undefined" ? EARTH_FRAMES : [];
+      resolve(_earthFramesCache);
+    };
+    s.onerror = () => {
+      _earthFramesCache = [];
+      resolve(_earthFramesCache);
+    };
+    document.head.appendChild(s);
+  });
+}
+
 // ─────────────────────────────────────────────
 // URL routing helpers (hash-based)
 // ─────────────────────────────────────────────
@@ -100,38 +124,48 @@ const THEMES = [
   {
     id: "phosphor",
     name: "Phosphor",
-    desc: "cyan on deep black — the default",
+    desc: "cyan on black",
   },
-  { id: "monokai", name: "Monokai Pro", desc: "vibrant green & orange" },
+  { id: "monokai", name: "Monokai Pro", desc: "green & orange" },
   {
     id: "bloodmoon",
     name: "Bloodmoon",
-    desc: "crimson on void — all red everything",
+    desc: "crimson on void",
   },
-  { id: "acid", name: "Acid", desc: "neon green on pure black — hacker mode" },
+  { id: "acid", name: "Acid", desc: "neon green" },
   {
     id: "vaporwave",
     name: "Vaporwave",
-    desc: "hot pink & purple — aesthetic overload",
+    desc: "pink & purple",
   },
   {
     id: "frozen",
     name: "Frozen",
-    desc: "ice white on abyss blue — monochrome cold",
+    desc: "ice white on blue",
   },
   {
     id: "paper",
     name: "Paper",
-    desc: "dark ink on warm white — the light one",
+    desc: "ink on white",
+  },
+  {
+    id: "cinnamon",
+    name: "Cinnamon",
+    desc: "blazing spice",
+  },
+  {
+    id: "barbie",
+    name: "Barbie",
+    desc: "hot pink overload",
   },
 ];
 
 const FONTS = [
   { id: "fira-code", name: "Fira Code", desc: "ligatures, designed for code" },
   {
-    id: "system-mono",
-    name: "System Mono",
-    desc: "SF Mono / Cascadia / Consolas",
+    id: "inconsolata",
+    name: "Inconsolata",
+    desc: "clean, open-source",
   },
 ];
 
@@ -240,19 +274,30 @@ async function fetchAndInjectRepos() {
 // ─────────────────────────────────────────────
 // Output helpers
 // ─────────────────────────────────────────────
+let _scrollRafPending = false;
+function _scheduleScroll() {
+  if (!_scrollRafPending) {
+    _scrollRafPending = true;
+    requestAnimationFrame(() => {
+      terminal.scrollTop = terminal.scrollHeight;
+      _scrollRafPending = false;
+    });
+  }
+}
+
 function printLine(text = "", cls = "") {
   const div = document.createElement("div");
   if (cls) div.className = cls;
   div.textContent = text;
   output.appendChild(div);
-  terminal.scrollTop = terminal.scrollHeight;
+  _scheduleScroll();
 }
 
 function printBlank() {
   const div = document.createElement("div");
   div.className = "spacer";
   output.appendChild(div);
-  terminal.scrollTop = terminal.scrollHeight;
+  _scheduleScroll();
 }
 
 function printBox(lines) {
@@ -342,7 +387,7 @@ async function fetchVisitorIP() {
     /* silently fail */
   }
 }
-fetchVisitorIP();
+// IP fetch is deferred to boot — see end of file
 
 // ── Real weather via geolocation + Open-Meteo (free, no API key) ────
 window._weatherData = null;
@@ -978,9 +1023,7 @@ function buildSidebar(items) {
 function startSidebarUpdates(sb) {
   if (window._sidebarInterval) clearInterval(window._sidebarInterval);
 
-  const W = 48;
   const H = 24;
-  const LW = 16;
   const fr = (s) => `<span class="sb-frame">${s}</span>`;
   const strip = (s) => s.replace(/<[^>]*>/g, "");
   const mkPad = (w, inner) => {
@@ -989,44 +1032,59 @@ function startSidebarUpdates(sb) {
     return fr("│") + " " + inner + " ".repeat(gap) + " " + fr("│");
   };
   const hpad = (inner) => mkPad(H, inner);
-  const pad = (inner) => mkPad(W, inner);
-
-  // Build a full neofetch info line (logo col + key: val) with correct padding
-  // (Not needed — values are fixed-width padded in their spans)
 
   let orbitStep = 0;
   let tickCount = 0;
 
+  // Pre-compute orbit ellipse points once (never changes)
+  const OW = 19,
+    OH = 7,
+    cx = 9,
+    cy = 3,
+    rx = 8,
+    ry = 3;
+  const _orbitDots = [];
+  for (let a = 0; a < 360; a += 4) {
+    const rad = (a * Math.PI) / 180;
+    const px = Math.round(cx + rx * Math.cos(rad));
+    const py = Math.round(cy + ry * Math.sin(rad));
+    if (px >= 0 && px < OW && py >= 0 && py < OH) _orbitDots.push([px, py]);
+  }
+
+  // Cache DOM lookups
+  const _uptimeEl = sb.querySelector("#sb-uptime-val");
+  const _ipEl = sb.querySelector("#sb-ip-val");
+  const _clockEl = sb.querySelector("#sb-clock-line");
+  const _orbitEl = sb.querySelector("#sb-orbit-lines");
+
   window._sidebarInterval = setInterval(() => {
+    // Skip all work when tab is hidden
+    if (document.hidden) return;
+
     tickCount++;
 
     // Refresh weather every 10 minutes
     if (tickCount % 600 === 0) fetchRealWeather();
 
     // Update uptime — value is padEnd(16) so line width stays constant
-    const uptimeEl = sb.querySelector("#sb-uptime-val");
-    if (uptimeEl) {
+    if (_uptimeEl) {
       const sec = Math.floor((Date.now() - startTime) / 1000);
       const h = Math.floor(sec / 3600);
       const m = Math.floor((sec % 3600) / 60);
       const s = sec % 60;
       const uptimeStr =
         h > 0 ? `${h}h ${m}m ${s}s` : m > 0 ? `${m}m ${s}s` : `${s}s`;
-      uptimeEl.textContent = uptimeStr.padEnd(16);
+      _uptimeEl.textContent = uptimeStr.padEnd(16);
     }
 
     // Update IP — value is padEnd(16) so line width stays constant
-    if (window._visitorIP) {
-      const ipEl = sb.querySelector("#sb-ip-val");
-      if (ipEl && !ipEl._done) {
-        ipEl.textContent = window._visitorIP.padEnd(16);
-        ipEl._done = true;
-      }
+    if (window._visitorIP && _ipEl && !_ipEl._done) {
+      _ipEl.textContent = window._visitorIP.padEnd(16);
+      _ipEl._done = true;
     }
 
     // Update clock
-    const clockEl = sb.querySelector("#sb-clock-line");
-    if (clockEl) {
+    if (_clockEl) {
       const now = new Date();
       const timeStr = now.toLocaleTimeString("en-GB", {
         hour: "2-digit",
@@ -1034,40 +1092,26 @@ function startSidebarUpdates(sb) {
         second: "2-digit",
         timeZone: "Europe/Helsinki",
       });
-      clockEl.innerHTML = hpad(`<span class="sb-val">${timeStr}</span>`);
+      _clockEl.innerHTML = hpad(`<span class="sb-val">${timeStr}</span>`);
     }
 
-    // Animate orbit — advance earth position
+    // Animate orbit — advance earth position using pre-computed ellipse
     orbitStep++;
-    const orbitEl = sb.querySelector("#sb-orbit-lines");
-    if (orbitEl) {
+    if (_orbitEl) {
       const now = new Date();
       const startOfYear = new Date(now.getFullYear(), 0, 1);
       const dayOfYear = Math.floor((now - startOfYear) / 864e5) + 1;
       const totalDays = now.getFullYear() % 4 === 0 ? 366 : 365;
-      // Base angle from real day + slow animated offset
       const baseAngle = (dayOfYear / totalDays) * 2 * Math.PI - Math.PI / 2;
       const animAngle = baseAngle + orbitStep * 0.05;
 
-      const OW = 19,
-        OH = 7;
-      const cx = 9,
-        cy = 3,
-        rx = 8,
-        ry = 3;
+      // Build grid from pre-computed dots
       let grid = [];
       for (let y = 0; y < OH; y++) {
-        let row = [];
-        for (let x = 0; x < OW; x++) row.push(" ");
-        grid.push(row);
+        grid[y] = new Array(OW).fill(" ");
       }
-      for (let a = 0; a < 360; a += 4) {
-        const rad = (a * Math.PI) / 180;
-        const px = Math.round(cx + rx * Math.cos(rad));
-        const py = Math.round(cy + ry * Math.sin(rad));
-        if (px >= 0 && px < OW && py >= 0 && py < OH && grid[py][px] === " ") {
-          grid[py][px] = "·";
-        }
+      for (const [px, py] of _orbitDots) {
+        if (grid[py][px] === " ") grid[py][px] = "·";
       }
       grid[cy][cx] = "S";
       const ex = Math.round(cx + rx * Math.cos(animAngle));
@@ -1075,7 +1119,6 @@ function startSidebarUpdates(sb) {
       if (ex >= 0 && ex < OW && ey >= 0 && ey < OH) {
         grid[ey][ex] = "E";
       }
-      // Moon orbiting earth — spins ~12× faster than earth
       const moonAngle = animAngle * 12;
       const mxPos = Math.max(
         0,
@@ -1098,12 +1141,15 @@ function startSidebarUpdates(sb) {
           return hpad(colored);
         })
         .join("\n");
-      orbitEl.innerHTML = html;
+      _orbitEl.innerHTML = html;
     }
   }, 1000);
 }
 
 // ── Render the full blog page ──────────────────
+// Cache for ASCII art thumbnails so they don't re-fetch on every render
+const _thumbCache = {};
+
 function renderNewspaper(heading) {
   if (!listEl) return;
   if (titleText)
@@ -1163,30 +1209,36 @@ function renderNewspaper(heading) {
       `<span class="elr-cat ${catCls}">${catLabel}</span>` +
       `<span class="elr-date">${date}</span>`;
 
-    // Load ASCII art thumbnail asynchronously
+    // Load ASCII art thumbnail (cached to prevent blink on re-render)
     if (item.image && item.image.endsWith(".txt")) {
       const thumb = row.querySelector(".elr-thumb");
-      fetch(item.image)
-        .then((r) => (r.ok ? r.text() : null))
-        .then((txt) => {
-          if (txt && thumb) {
-            const pre = document.createElement("pre");
-            pre.className = "elr-thumb-art";
-            pre.style.fontSize = "10px";
-            pre.textContent = txt;
-            thumb.appendChild(pre);
-            // Scale to fit the thumbnail box after render
-            requestAnimationFrame(() => {
-              const natW = pre.scrollWidth;
-              const natH = pre.scrollHeight;
-              if (natW && natH) {
-                const scale = Math.min(28 / natW, 20 / natH);
-                pre.style.transform = `scale(${scale})`;
-              }
-            });
+      const _applyThumb = (txt) => {
+        if (!txt || !thumb) return;
+        const pre = document.createElement("pre");
+        pre.className = "elr-thumb-art";
+        pre.style.fontSize = "10px";
+        pre.textContent = txt;
+        thumb.appendChild(pre);
+        requestAnimationFrame(() => {
+          const natW = pre.scrollWidth;
+          const natH = pre.scrollHeight;
+          if (natW && natH) {
+            const scale = Math.min(28 / natW, 20 / natH);
+            pre.style.transform = `scale(${scale})`;
           }
-        })
-        .catch(() => {});
+        });
+      };
+      if (_thumbCache[item.image]) {
+        _applyThumb(_thumbCache[item.image]);
+      } else {
+        fetch(item.image)
+          .then((r) => (r.ok ? r.text() : null))
+          .then((txt) => {
+            if (txt) _thumbCache[item.image] = txt;
+            _applyThumb(txt);
+          })
+          .catch(() => {});
+      }
     }
 
     row.addEventListener("click", () => {
@@ -1696,13 +1748,24 @@ function renderMarkdown(md, post) {
   let isFirstPara = true;
 
   let _revealIdx = 0;
+  const _REVEAL_CAP = 10; // max elements that animate; rest appear instantly
+
+  function _revealDelay() {
+    const delay = _revealIdx < _REVEAL_CAP ? _revealIdx * 25 + "ms" : "0ms";
+    _revealIdx++;
+    return delay;
+  }
 
   function appendEl(cls, html) {
     const div = document.createElement("div");
-    if (cls) div.className = cls + " term-reveal";
-    else div.className = "term-reveal";
-    div.style.animationDelay = _revealIdx * 25 + "ms";
-    _revealIdx++;
+    if (_revealIdx < _REVEAL_CAP) {
+      if (cls) div.className = cls + " term-reveal";
+      else div.className = "term-reveal";
+      div.style.animationDelay = _revealDelay();
+    } else {
+      if (cls) div.className = cls;
+      _revealIdx++;
+    }
     div.innerHTML = html;
     output.appendChild(div);
   }
@@ -1719,9 +1782,10 @@ function renderMarkdown(md, post) {
   // ── Breadcrumb path with file icons ──
   const category = post.category || "blog";
   const crumb = document.createElement("div");
-  crumb.className = "post-breadcrumb term-reveal";
-  crumb.style.animationDelay = _revealIdx * 25 + "ms";
-  _revealIdx++;
+  crumb.className =
+    "post-breadcrumb" + (_revealIdx < _REVEAL_CAP ? " term-reveal" : "");
+  if (_revealIdx < _REVEAL_CAP) crumb.style.animationDelay = _revealDelay();
+  else _revealIdx++;
   crumb.innerHTML =
     '<span class="bc-seg">blog</span>' +
     ' <span class="bc-seg">/</span> ' +
@@ -1732,9 +1796,10 @@ function renderMarkdown(md, post) {
 
   // ── Post header card — date on top, no left border ──
   const headerBox = document.createElement("div");
-  headerBox.className = "post-header-box term-reveal";
-  headerBox.style.animationDelay = _revealIdx * 25 + "ms";
-  _revealIdx++;
+  headerBox.className =
+    "post-header-box" + (_revealIdx < _REVEAL_CAP ? " term-reveal" : "");
+  if (_revealIdx < _REVEAL_CAP) headerBox.style.animationDelay = _revealDelay();
+  else _revealIdx++;
 
   // Set label from first tag, fallback to "POST"
   const tagsArr = Array.isArray(post.tags)
@@ -1846,16 +1911,20 @@ function renderMarkdown(md, post) {
       const imgSrc = imgMatch[2];
       if (imgSrc.endsWith(".txt")) {
         const artPre = document.createElement("pre");
-        artPre.className = "post-ascii-art term-reveal";
-        artPre.style.animationDelay = _revealIdx * 25 + "ms";
-        _revealIdx++;
+        artPre.className =
+          "post-ascii-art" + (_revealIdx < _REVEAL_CAP ? " term-reveal" : "");
+        if (_revealIdx < _REVEAL_CAP)
+          artPre.style.animationDelay = _revealDelay();
+        else _revealIdx++;
         output.appendChild(artPre);
         _renderAsciiArtInto(artPre, imgSrc);
       } else {
         const imgDiv = document.createElement("div");
-        imgDiv.className = "post-image term-reveal";
-        imgDiv.style.animationDelay = _revealIdx * 25 + "ms";
-        _revealIdx++;
+        imgDiv.className =
+          "post-image" + (_revealIdx < _REVEAL_CAP ? " term-reveal" : "");
+        if (_revealIdx < _REVEAL_CAP)
+          imgDiv.style.animationDelay = _revealDelay();
+        else _revealIdx++;
         imgDiv.innerHTML = `<img src="${imgSrc}" alt="${imgAlt}">`;
         output.appendChild(imgDiv);
       }
@@ -1888,7 +1957,7 @@ function printHTML(html, cls = "") {
   if (cls) div.className = cls;
   div.innerHTML = html;
   output.appendChild(div);
-  terminal.scrollTop = terminal.scrollHeight;
+  _scheduleScroll();
 }
 
 function printHome() {
@@ -1905,13 +1974,23 @@ function printHome() {
   const hero = document.createElement("div");
   hero.className = "home-hero";
 
-  // Earth globe (animated)
+  // Earth globe (animated — lazy-loaded)
   const earthPre = document.createElement("pre");
   earthPre.className = "earth-globe";
-  earthPre.textContent = EARTH_FRAMES[0].join("\n");
+  earthPre.textContent = ""; // placeholder until frames load
   hero.appendChild(earthPre);
 
-  // Right side: name + subtitle
+  // Load earth frames async, then start animation
+  _getEarthFrames().then((frames) => {
+    if (!frames.length) return;
+    earthPre.textContent = frames[0].join("\n");
+    let earthFrame = 0;
+    const earthInterval = setInterval(() => {
+      earthFrame = (earthFrame + 1) % frames.length;
+      earthPre.textContent = frames[earthFrame].join("\n");
+    }, 250);
+    window._earthInterval = earthInterval;
+  });
   const info = document.createElement("div");
   info.className = "home-hero-info";
 
@@ -1938,14 +2017,6 @@ function printHome() {
   homeWrap.appendChild(homeMain);
   homeWrap.appendChild(sb);
   output.appendChild(homeWrap);
-
-  // Start earth animation
-  let earthFrame = 0;
-  const earthInterval = setInterval(() => {
-    earthFrame = (earthFrame + 1) % EARTH_FRAMES.length;
-    earthPre.textContent = EARTH_FRAMES[earthFrame].join("\n");
-  }, 250);
-  window._earthInterval = earthInterval;
 
   // Start sidebar live updates (clock tick + orbit animation)
   startSidebarUpdates(sb);
@@ -2371,6 +2442,7 @@ const commands = {
         "Simplicity is a great virtue but it requires hard work to achieve it.",
         "Real programmers count from zero.",
         "Israel is a terrorist state.",
+        "Donald Trump is a wanker",
         "Your partner never makes sense. Just accept it.",
       ];
       const f = fortunes[Math.floor(Math.random() * fortunes.length)];
@@ -2983,8 +3055,6 @@ function closeWindow() {
   }
 
   await loadContent();
-  fetchAndInjectRepos();
-  fetchRealWeather();
 
   // Route based on hash, fallback to home
   const path = getRoutePath();
@@ -2996,6 +3066,18 @@ function closeWindow() {
 
   terminal.scrollTop = 0;
   input.focus();
+
+  // Defer non-critical network calls until after first paint
+  const _deferNetworkCalls = () => {
+    fetchVisitorIP();
+    fetchAndInjectRepos();
+    fetchRealWeather();
+  };
+  if (typeof requestIdleCallback === "function") {
+    requestIdleCallback(_deferNetworkCalls);
+  } else {
+    setTimeout(_deferNetworkCalls, 200);
+  }
 
   // Mobile keyboard viewport fix: keep input visible when virtual keyboard opens
   if (window.visualViewport) {

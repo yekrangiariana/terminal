@@ -1,6 +1,6 @@
 // ─────────────────────────────────────────────
 // cmatrix — Matrix digital rain (theme-aware)
-// Renders inside #terminal using a monospaced character grid
+// Canvas-based renderer for high performance
 // ─────────────────────────────────────────────
 (function () {
   "use strict";
@@ -15,11 +15,15 @@
   let grid = []; // 2D array [row][col] = { ch, age }
   let columns = 0;
   let rows = 0;
+  let charW = 0;
   let drops = []; // per-column state
-  let intervalId = null;
-  let container = null; // the <pre> we render into
+  let rafId = null;
+  let container = null; // the <canvas> we render into
+  let ctx = null;
   let idleTimer = null;
   let active = false;
+  let lastTick = 0;
+  let cachedColors = null;
 
   function randChar() {
     return CHARS[Math.floor(Math.random() * CHARS.length)];
@@ -38,10 +42,23 @@
 
   function setup() {
     const terminal = document.getElementById("terminal");
-    const rect = terminal.getBoundingClientRect();
-    const charW = FONT_SIZE * 0.6; // monospace approx
-    columns = Math.floor(rect.width / charW);
-    rows = Math.floor(rect.height / CELL_H);
+    const dpr = window.devicePixelRatio || 1;
+    // Use clientWidth/clientHeight to exclude padding and scrollbar
+    const w = terminal.clientWidth;
+    const h = terminal.clientHeight;
+    charW = FONT_SIZE * 0.6; // monospace approx
+    columns = Math.floor(w / charW);
+    rows = Math.floor(h / CELL_H);
+
+    // Size canvas to match terminal, accounting for device pixel ratio
+    container.width = w * dpr;
+    container.height = h * dpr;
+    container.style.width = w + "px";
+    container.style.height = h + "px";
+    ctx = container.getContext("2d");
+    ctx.scale(dpr, dpr);
+    ctx.font = FONT_SIZE + "px " + getComputedStyle(document.documentElement).getPropertyValue("--font-mono").trim();
+    ctx.textBaseline = "top";
 
     grid = [];
     for (let r = 0; r < rows; r++) {
@@ -60,6 +77,8 @@
         tick: 0,
       };
     }
+
+    cachedColors = getColors();
   }
 
   function tick() {
@@ -102,35 +121,55 @@
         d.len = 6 + Math.floor(Math.random() * 14);
       }
     }
-
-    render();
   }
 
   function render() {
-    const colors = getColors();
-    const lines = [];
+    const colors = cachedColors;
+
+    // Clear canvas
+    ctx.fillStyle = colors.bg;
+    ctx.fillRect(0, 0, container.width, container.height);
 
     for (let r = 0; r < rows; r++) {
-      let line = "";
       for (let c = 0; c < columns; c++) {
         const cell = grid[r][c];
-        if (cell.age < 0) {
-          line += " ";
-        } else if (cell.age === 0) {
-          // Head — brightest
-          line += `<span style="color:${colors.white};text-shadow:0 0 8px ${colors.bright}">${cell.ch}</span>`;
-        } else if (cell.age < 4) {
-          line += `<span style="color:${colors.bright}">${cell.ch}</span>`;
-        } else if (cell.age < 10) {
-          line += `<span style="color:${colors.mid}">${cell.ch}</span>`;
-        } else {
-          line += `<span style="color:${colors.dim}">${cell.ch}</span>`;
-        }
-      }
-      lines.push(line);
-    }
+        if (cell.age < 0) continue; // skip empty cells
 
-    container.innerHTML = lines.join("\n");
+        const x = c * charW;
+        const y = r * CELL_H;
+
+        if (cell.age === 0) {
+          // Head — brightest with glow
+          ctx.shadowColor = colors.bright;
+          ctx.shadowBlur = 8;
+          ctx.fillStyle = colors.white;
+        } else if (cell.age < 4) {
+          ctx.shadowBlur = 0;
+          ctx.fillStyle = colors.bright;
+        } else if (cell.age < 10) {
+          ctx.shadowBlur = 0;
+          ctx.fillStyle = colors.mid;
+        } else {
+          ctx.shadowBlur = 0;
+          ctx.fillStyle = colors.dim;
+        }
+
+        ctx.fillText(cell.ch, x, y);
+      }
+    }
+    // Reset shadow after drawing
+    ctx.shadowBlur = 0;
+  }
+
+  // ── Animation loop using rAF ──
+  function animLoop(timestamp) {
+    if (!active) return;
+    if (timestamp - lastTick >= TICK_MS) {
+      tick();
+      render();
+      lastTick = timestamp;
+    }
+    rafId = requestAnimationFrame(animLoop);
   }
 
   // ── Public: start ──
@@ -148,8 +187,8 @@
     if (inputLine) inputLine.style.display = "none";
     if (tabHints) tabHints.style.display = "none";
 
-    // Create render container
-    container = document.createElement("pre");
+    // Create canvas render container
+    container = document.createElement("canvas");
     container.id = "cmatrix-rain";
     terminal.appendChild(container);
 
@@ -159,7 +198,8 @@
     render();
     requestAnimationFrame(() => container.classList.add("visible"));
 
-    intervalId = setInterval(tick, TICK_MS);
+    lastTick = performance.now();
+    rafId = requestAnimationFrame(animLoop);
 
     window._cmatrixResize = () => {
       if (!active) return;
@@ -173,9 +213,9 @@
     if (!active) return;
     active = false;
 
-    if (intervalId) {
-      clearInterval(intervalId);
-      intervalId = null;
+    if (rafId) {
+      cancelAnimationFrame(rafId);
+      rafId = null;
     }
 
     if (container) {
@@ -184,6 +224,7 @@
         if (container) {
           container.remove();
           container = null;
+          ctx = null;
         }
       }, 300);
     }

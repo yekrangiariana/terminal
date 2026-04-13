@@ -325,6 +325,9 @@ html {
     min-height: unset;
     display: inline;
   }
+  .cfg-option .c-dim {
+    display: none;
+  }
   .cfg-section {
     font-size: 12px;
   }
