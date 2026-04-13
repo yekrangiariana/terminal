@@ -2933,9 +2933,16 @@ function closeWindow() {
 // ─────────────────────────────────────────────
 (async function boot() {
   // On mobile, default to GUI mode unless user explicitly came from desktop
-  const _isMobileDevice = /Android|iPhone|iPad|iPod|webOS|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent) ||
+  const _isMobileDevice =
+    /Android|iPhone|iPad|iPod|webOS|BlackBerry|IEMobile|Opera Mini/i.test(
+      navigator.userAgent,
+    ) ||
     (navigator.maxTouchPoints > 0 && window.innerWidth <= 768);
-  if (_isMobileDevice && !sessionStorage.getItem("preferTerminal") && !location.hash) {
+  if (
+    _isMobileDevice &&
+    !sessionStorage.getItem("preferTerminal") &&
+    !location.hash
+  ) {
     window.location.href = "desktop.html";
     return;
   }

@@ -290,7 +290,10 @@ function updateTaskbar() {
 }
 
 // ── Mobile detection ─────────────────────────────────────────────────────────
-const _isMobile = /Android|iPhone|iPad|iPod|webOS|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent) ||
+const _isMobile =
+  /Android|iPhone|iPad|iPod|webOS|BlackBerry|IEMobile|Opera Mini/i.test(
+    navigator.userAgent,
+  ) ||
   (navigator.maxTouchPoints > 0 && window.innerWidth <= 768);
 
 // ── Drag (windows) + Rubber-band selection ────────────────────────────────────────────
@@ -344,17 +347,21 @@ document.addEventListener("mousemove", (e) => {
 });
 
 // Touch drag support for windows
-document.addEventListener("touchmove", (e) => {
-  if (_drag) {
-    const t = e.touches[0];
-    const win = document.getElementById(_drag.id);
-    if (win) {
-      win.style.left = t.clientX - _drag.ox + "px";
-      win.style.top = t.clientY - _drag.oy + "px";
+document.addEventListener(
+  "touchmove",
+  (e) => {
+    if (_drag) {
+      const t = e.touches[0];
+      const win = document.getElementById(_drag.id);
+      if (win) {
+        win.style.left = t.clientX - _drag.ox + "px";
+        win.style.top = t.clientY - _drag.oy + "px";
+      }
+      e.preventDefault();
     }
-    e.preventDefault();
-  }
-}, { passive: false });
+  },
+  { passive: false },
+);
 
 document.addEventListener("mouseup", () => {
   _drag = null;
@@ -616,10 +623,14 @@ fetchGitHubRepos();
 
 // Add touch support for window title bar dragging
 document.querySelectorAll(".win-titlebar").forEach((tb) => {
-  tb.addEventListener("touchstart", (e) => {
-    const win = tb.closest(".xp-window");
-    if (win) dragStart(e, win.id);
-  }, { passive: false });
+  tb.addEventListener(
+    "touchstart",
+    (e) => {
+      const win = tb.closest(".xp-window");
+      if (win) dragStart(e, win.id);
+    },
+    { passive: false },
+  );
 });
 
 // On mobile: desktop icons open with a single tap (not double-click)
