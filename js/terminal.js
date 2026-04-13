@@ -40,7 +40,7 @@ function pushRoute(path) {
 }
 
 function getRoutePath() {
-  return (location.hash.replace(/^#\/?/, "/").replace(/\/+$/, "")) || "/";
+  return location.hash.replace(/^#\/?/, "/").replace(/\/+$/, "") || "/";
 }
 
 function handleRoute(path) {
