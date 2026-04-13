@@ -441,7 +441,6 @@ body {
     #d85858 100%
   );
   color: #fff;
-  width: 23px;
 }
 .win-controls button:hover {
   filter: brightness(1.15);

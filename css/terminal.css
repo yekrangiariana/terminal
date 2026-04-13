@@ -436,7 +436,6 @@ body::after {
     #c02828 51%,
     #d85858 100%
   );
-  width: 23px;
 }
 .win-btn:hover {
   filter: brightness(1.15);

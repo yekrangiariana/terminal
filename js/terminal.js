@@ -2192,14 +2192,23 @@ const commands = {
       // ── Name banner ──
       const bannerPre = el(
         "pre",
-        "ascii-glow",
+        "ascii-glow about-banner-ascii",
         "   ▄▀▄ █▀▄ █ ▄▀▄ █▄ █ ▄▀▄   █ █ █▀▀ █▄▀ █▀▄ ▄▀▄ █▄ █ ▄▀▀ █\n" +
           "   █▀█ █▀▄ █ █▀█ █ ▀█ █▀█   ▀▄▀ █▀▀ █ █ █▀▄ █▀█ █ ▀█ █ █ █\n" +
           "   ▀ ▀ ▀ ▀ ▀ ▀ ▀ ▀  ▀ ▀ ▀    ▀  ▀▀▀ ▀ ▀ ▀ ▀ ▀ ▀ ▀  ▀ ▀▀▀ ▀",
       );
       aboutMain.appendChild(bannerPre);
+      const nameFallback = el("div", "mobile-name-fallback", "Ariana Yekrangi");
+      nameFallback.style.display = "none";
+      aboutMain.appendChild(nameFallback);
       aboutMain.appendChild(
         el("pre", "c-dim", "   journalist · editor · builder"),
+      );
+      aboutMain.appendChild(
+        htmlDiv(null, '<span class="c-dim">   </span><span class="c-info">Occupation:</span> <span class="c-white">Journalist · Editor · Builder</span>'),
+      );
+      aboutMain.appendChild(
+        htmlDiv(null, '<span class="c-dim">   </span><span class="c-info">Location:</span> <span class="c-white">Helsinki, Finland</span>'),
       );
       aboutMain.appendChild(el("div", "spacer"));
 
@@ -2560,6 +2569,26 @@ function _renderConfig() {
     '  <span class="c-dim">  ↑↓ navigate · Tab switch section · Enter apply · ESC close</span>';
 
   _configEl.innerHTML = html;
+
+  // ── Touch/click support for config options ──
+  const opts = _configEl.querySelectorAll(".cfg-option");
+  opts.forEach((el, i) => {
+    el.style.cursor = "pointer";
+    el.addEventListener("click", () => {
+      if (i < THEMES.length) {
+        _configSection = 0;
+        _configIdx = i;
+        applyTheme(THEMES[i].id);
+        printLine(`  theme → ${THEMES[i].name}`, "c-info");
+      } else {
+        _configSection = 1;
+        _configIdx = i - THEMES.length;
+        applyFont(FONTS[_configIdx].id);
+        printLine(`  font → ${FONTS[_configIdx].name}`, "c-info");
+      }
+      _renderConfig();
+    });
+  });
 }
 
 function _configKeyHandler(e) {
