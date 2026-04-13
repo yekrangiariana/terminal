@@ -478,7 +478,7 @@ html {
     font-size: 15px;
     touch-action: manipulation;
     cursor: pointer;
-    -webkit-tap-highlight-color: rgba(0,0,0,0.1);
+    -webkit-tap-highlight-color: rgba(0, 0, 0, 0.1);
     position: relative;
     z-index: 10;
   }
