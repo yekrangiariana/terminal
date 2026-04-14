@@ -723,16 +723,16 @@ function buildSidebar(items) {
     osName = "Android";
     const g = "var(--cyan)";
     osLogo = [
-      c(g, "  ;,           ,;"),
-      c(g, "  ';,.-----.,;' "),
-      c(g, "  ,'           ',"),
-      c(g, "  /  ") +
+      c(g, "   ;,    ,;     "),
+      c(g, "  ';.-----.;'   "),
+      c(g, "  | ") +
         c("var(--white)", "O") +
-        c(g, "       ") +
+        c(g, "     ") +
         c("var(--white)", "O") +
-        c(g, "  \\"),
-      c(g, "  |               |"),
-      c(g, "  '-----------'   "),
+        c(g, " |   "),
+      c(g, "  |         |   "),
+      c(g, "  |         |   "),
+      c(g, "  '---------'   "),
     ];
   } else if (
     uaLower.includes("iphone") ||
@@ -833,9 +833,12 @@ function buildSidebar(items) {
 
   const maxNF = Math.max(osLogo.length, infoLines.length);
   for (let i = 0; i < maxNF; i++) {
-    const logo = i < osLogo.length ? osLogo[i] : " ".repeat(LW);
+    const logoRaw = i < osLogo.length ? osLogo[i] : " ".repeat(LW);
+    const logo = `<span class="nf-logo-col">${logoRaw}</span>`;
     const inf = i < infoLines.length ? infoLines[i] : "";
-    NF.push(pad(logo + " " + inf));
+    const infoVis = strip(inf).length;
+    const gap = Math.max(0, W - 4 - LW - 1 - infoVis);
+    NF.push(fr("│") + " " + logo + " " + inf + " ".repeat(gap) + " " + fr("│"));
   }
 
   NF.push(sep());

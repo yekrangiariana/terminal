@@ -1091,6 +1091,12 @@ body::after {
 .blog-sidebar .sb-frame {
   color: var(--grey-dim);
 }
+.nf-logo-col {
+  display: inline-block;
+  width: 16ch;
+  overflow: hidden;
+  vertical-align: top;
+}
 .blog-sidebar .sb-heading {
   color: var(--cyan);
   font-weight: 600;
