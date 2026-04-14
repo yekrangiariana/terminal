@@ -2,7 +2,7 @@
 slug: building-this-terminal
 title: Building This Terminal
 date: 2026-01-10
-category: projects
+category: project
 tags: design
 url: building-this-terminal
 description: Why and how I built a terminal-style personal site

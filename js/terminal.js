@@ -214,7 +214,7 @@ const _savedTheme = getActiveTheme();
 applyTheme(_validThemeIds.includes(_savedTheme) ? _savedTheme : "phosphor");
 applyFont(getActiveFont());
 
-// Content registry is in js/shared.js (SLUGS array)
+// Content registry is in js/manifest.js (SLUGS array)
 
 let ALL = [];
 

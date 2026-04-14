@@ -1,11 +1,10 @@
 /* ════════════════════════════════════════
    desktop.js — Desktop UI logic
-   Depends on: js/shared.js (SLUGS, parseFrontmatter, byDate)
+   Depends on: js/manifest.js (SLUGS, IMAGE_FILES, SOURCE_TREE)
+              js/shared.js (parseFrontmatter, byDate)
    ════════════════════════════════════════ */
 
 "use strict";
-
-// Content registry (SLUGS) is in js/shared.js
 
 let ALL_POSTS = [];
 
@@ -18,8 +17,51 @@ const ICON_PROJ =
   "data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'%3E%3Crect x='2' y='10' width='28' height='20' rx='1' fill='%23fff' stroke='%23888'/%3E%3Crect x='2' y='6' width='12' height='6' rx='1' fill='%23fff' stroke='%23888'/%3E%3Ctext x='8' y='25' font-size='10' font-family='monospace' fill='%23333'%3E%7B%7D%3C/text%3E%3C/svg%3E";
 const ICON_REPO =
   "data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'%3E%3Ccircle cx='16' cy='16' r='14' fill='%23fff' stroke='%23888'/%3E%3Cpath fill='%23333' d='M16 5.4a10.6 10.6 0 0 0-3.35 20.66c.53.1.72-.23.72-.51v-1.8c-2.94.64-3.56-1.42-3.56-1.42a2.8 2.8 0 0 0-1.17-1.54c-.96-.65.07-.64.07-.64a2.22 2.22 0 0 1 1.62 1.09 2.25 2.25 0 0 0 3.08.88 2.26 2.26 0 0 1 .67-1.41c-2.35-.27-4.82-1.17-4.82-5.22a4.09 4.09 0 0 1 1.09-2.84 3.8 3.8 0 0 1 .1-2.8s.89-.28 2.9 1.08a10 10 0 0 1 5.28 0c2.02-1.36 2.9-1.08 2.9-1.08a3.8 3.8 0 0 1 .1 2.8 4.08 4.08 0 0 1 1.09 2.84c0 4.06-2.48 4.95-4.84 5.21a2.53 2.53 0 0 1 .72 1.96v2.9c0 .29.19.62.73.51A10.6 10.6 0 0 0 16 5.4z'/%3E%3C/svg%3E";
+const ICON_PIC =
+  "data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'%3E%3Crect x='4' y='4' width='24' height='22' rx='1' fill='%23fff' stroke='%23888'/%3E%3Crect x='6' y='6' width='20' height='18' fill='%23c5e8f7'/%3E%3Ccircle cx='12' cy='12' r='3' fill='%23ffd966'/%3E%3Cpath d='M6 24 l8-10 4 4 4-3 4 9z' fill='%235aad3a'/%3E%3C/svg%3E";
+const ICON_FOLDER =
+  "data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'%3E%3Cdefs%3E%3ClinearGradient id='mf' x1='0' y1='0' x2='0' y2='1'%3E%3Cstop offset='0' stop-color='%23ffe680'/%3E%3Cstop offset='1' stop-color='%23f5c518'/%3E%3C/linearGradient%3E%3C/defs%3E%3Crect x='2' y='10' width='28' height='18' rx='1' fill='url(%23mf)' stroke='%23c48a00'/%3E%3Crect x='2' y='7' width='12' height='5' rx='1' fill='url(%23mf)' stroke='%23c48a00'/%3E%3C/svg%3E";
+const DESKTOP_FOLDER_SVG =
+  "data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 48 48'%3E%3Cdefs%3E%3ClinearGradient id='fldr' x1='0' y1='0' x2='0' y2='1'%3E%3Cstop offset='0' stop-color='%23ffd966'/%3E%3Cstop offset='1' stop-color='%23e6a817'/%3E%3C/linearGradient%3E%3ClinearGradient id='fldrf' x1='0' y1='0' x2='0' y2='1'%3E%3Cstop offset='0' stop-color='%23ffe680'/%3E%3Cstop offset='1' stop-color='%23f5c518'/%3E%3C/linearGradient%3E%3C/defs%3E%3Crect x='4' y='16' width='40' height='28' rx='2' fill='url(%23fldr)' stroke='%23c48a00' stroke-width='1'/%3E%3Crect x='4' y='12' width='18' height='6' rx='2' fill='url(%23fldrf)' stroke='%23c48a00' stroke-width='1'/%3E%3Crect x='4' y='16' width='40' height='28' rx='2' fill='url(%23fldrf)'/%3E%3Cpath d='M4 20 Q24 16 44 20' stroke='%23c48a00' stroke-width='0.5' fill='none' opacity='0.5'/%3E%3C/svg%3E";
 
 // parseFrontmatter is in js/shared.js
+
+// ── Category config ─────────────────────────────────────────────────────────
+const CATEGORY_CONFIG = {
+  writing: {
+    label: "Writing",
+    winId: "win-writing",
+    listId: "writing-list",
+    countId: "writing-count",
+    itemIcon: ICON_DOC,
+    countWord: "essay",
+  },
+  journalism: {
+    label: "Journalism",
+    winId: "win-journalism",
+    listId: "journalism-list",
+    countId: "journalism-count",
+    itemIcon: ICON_NEWS,
+    countWord: "article",
+  },
+  project: {
+    label: "Projects",
+    winId: "win-projects",
+    listId: "projects-list",
+    countId: "projects-count",
+    itemIcon: ICON_PROJ,
+    countWord: "project",
+  },
+};
+
+function normalizeCategory(raw) {
+  const c = (raw || "writing").toLowerCase().trim();
+  if (c === "projects") return "project";
+  if (c === "essays" || c === "essay") return "writing";
+  if (c === "articles" || c === "investigations" || c === "news")
+    return "journalism";
+  return c;
+}
 
 // ── Load all content on boot ────────────────────────────────────────────────
 async function loadContent() {
@@ -40,7 +82,7 @@ async function loadContent() {
         slug: meta.slug || SLUGS[i],
         title: meta.title || SLUGS[i],
         date: meta.date || "",
-        category: meta.category || "writing",
+        category: normalizeCategory(meta.category),
         tags: meta.tags || [],
         url: meta.url || "",
         description: meta.description || "",
@@ -56,29 +98,561 @@ async function loadContent() {
 
 // ── Populate file-explorer lists ────────────────────────────────────────────
 function populateLists() {
-  const writing = byDate(ALL_POSTS.filter((p) => p.category === "writing"));
-  const journalism = byDate(
-    ALL_POSTS.filter(
-      (p) => p.category && p.category !== "writing" && p.category !== "project",
-    ),
-  );
-  const projects = byDate(ALL_POSTS.filter((p) => p.category === "project"));
+  const groups = {};
+  ALL_POSTS.forEach((p) => {
+    if (!groups[p.category]) groups[p.category] = [];
+    groups[p.category].push(p);
+  });
 
-  renderFileList("writing-list", "writing-count", writing, ICON_DOC, "essay");
-  renderFileList(
-    "journalism-list",
-    "journalism-count",
-    journalism,
-    ICON_NEWS,
-    "article",
+  Object.entries(CATEGORY_CONFIG).forEach(([cat, cfg]) => {
+    const items = byDate(groups[cat] || []);
+    renderFileList(cfg.listId, cfg.countId, items, cfg.itemIcon, cfg.countWord);
+  });
+
+  buildCategoryIcons(groups);
+  populateExplorer();
+}
+
+// ═══════════════════════════════════════════════════════════════════════════
+// EXPLORER — XP-style in-window navigation
+// ═══════════════════════════════════════════════════════════════════════════
+let _explorerHistory = [];
+let _explorerHistoryIdx = -1;
+let _explorerCurrent = "mycomputer";
+let _thumbnailCache = {};
+
+const EXPLORER_PAGES = {
+  mycomputer: { title: "My Computer", icon: "💻", address: "My Computer" },
+  mydocs: { title: "My Documents", icon: "📁", address: "C:\\My Documents" },
+  mypics: { title: "My Pictures", icon: "🌄", address: "C:\\My Pictures" },
+  source: { title: "Source Code", icon: "💾", address: "C:\\ariana.exe" },
+  "source/js": { title: "js", icon: "📂", address: "C:\\ariana.exe\\js" },
+  "source/css": { title: "css", icon: "📂", address: "C:\\ariana.exe\\css" },
+  "source/blog": { title: "blog", icon: "📂", address: "C:\\ariana.exe\\blog" },
+  "source/images": {
+    title: "images",
+    icon: "📂",
+    address: "C:\\ariana.exe\\images",
+  },
+  "source/assets": {
+    title: "assets",
+    icon: "📂",
+    address: "C:\\ariana.exe\\assets",
+  },
+};
+
+// SOURCE_TREE lives in js/manifest.js (auto-generated by ./generate.sh)
+
+const SOURCE_ICON_MAP = {
+  html: "🌐",
+  js: "📜",
+  css: "🎨",
+  md: "📝",
+  txt: "📄",
+  svg: "🖼️",
+  mp3: "🔊",
+  file: "📄",
+};
+
+function explorerNavigate(page) {
+  openWindow("win-mycomputer");
+
+  // If user double-clicks same page link, don't re-push
+  if (_explorerCurrent !== page) {
+    // Trim forward history
+    _explorerHistory = _explorerHistory.slice(0, _explorerHistoryIdx + 1);
+    _explorerHistory.push(page);
+    _explorerHistoryIdx = _explorerHistory.length - 1;
+  }
+
+  _explorerCurrent = page;
+  renderExplorerPage(page);
+}
+
+function explorerBack() {
+  if (_explorerHistoryIdx > 0) {
+    _explorerHistoryIdx--;
+    _explorerCurrent = _explorerHistory[_explorerHistoryIdx];
+    renderExplorerPage(_explorerCurrent);
+  }
+}
+
+function populateExplorer() {
+  // Initial load
+  if (_explorerHistory.length === 0) {
+    _explorerHistory = ["mycomputer"];
+    _explorerHistoryIdx = 0;
+  }
+  renderExplorerPage(_explorerCurrent);
+}
+
+function renderExplorerPage(page) {
+  const info = EXPLORER_PAGES[page] || EXPLORER_PAGES.mycomputer;
+  document.getElementById("explorer-title").textContent = info.title;
+  document.getElementById("explorer-icon").textContent = info.icon;
+  document.getElementById("explorer-address").textContent = info.address;
+
+  // Update taskbar label
+  WINDOW_LABELS["win-mycomputer"] = `${info.icon} ${info.title}`;
+  updateTaskbar();
+
+  const backBtn = document.getElementById("explorer-back-btn");
+  if (backBtn) backBtn.disabled = _explorerHistoryIdx <= 0;
+
+  const sidebar = document.getElementById("explorer-sidebar");
+  const main = document.getElementById("explorer-main");
+  const countEl = document.getElementById("explorer-count");
+
+  if (page === "mycomputer") renderMyComputer(sidebar, main, countEl);
+  else if (page === "mydocs") renderMyDocs(sidebar, main, countEl);
+  else if (page === "mypics") renderMyPics(sidebar, main, countEl);
+  else if (page === "source" || page.startsWith("source/"))
+    renderSourceCode(sidebar, main, countEl, page);
+}
+
+// ── Sidebar builder ─────────────────────────────────────────────────────────
+function buildSidebar(sections) {
+  return sections
+    .map((s) => {
+      const items = s.items
+        .map(
+          (i) =>
+            `<div class="sidebar-link" onclick="${i.onclick}">${i.icon ? `<span class="sidebar-link-icon">${i.icon}</span>` : ""}${i.label}</div>`,
+        )
+        .join("");
+      return `<div class="sidebar-section">
+      <div class="sidebar-header">${s.title}</div>
+      <div class="sidebar-items">${items}</div>
+    </div>`;
+    })
+    .join("");
+}
+
+// ── My Computer page ────────────────────────────────────────────────────────
+function renderMyComputer(sidebar, main, countEl) {
+  sidebar.innerHTML = buildSidebar([
+    {
+      title: "System Tasks",
+      items: [
+        {
+          icon: "ℹ️",
+          label: "View system information",
+          onclick: "openWindow('win-about')",
+        },
+      ],
+    },
+    {
+      title: "Other Places",
+      items: [
+        {
+          icon: "📁",
+          label: "My Documents",
+          onclick: "explorerNavigate('mydocs')",
+        },
+        {
+          icon: "🌄",
+          label: "My Pictures",
+          onclick: "explorerNavigate('mypics')",
+        },
+      ],
+    },
+  ]);
+
+  let html = "";
+
+  // Files Stored on This Computer
+  html += `<div class="explorer-section-header">Files Stored on This Computer</div>`;
+  html += `<div class="explorer-file-grid">`;
+  html += explorerFolderItem(
+    "📁",
+    "My Documents",
+    "explorerNavigate('mydocs')",
   );
-  renderFileList(
-    "projects-list",
-    "projects-count",
-    projects,
-    ICON_PROJ,
-    "project",
+  html += explorerFolderItem("🌄", "My Pictures", "explorerNavigate('mypics')");
+  html += `</div>`;
+
+  // Hard Disk Drives
+  html += `<div class="explorer-section-header">Hard Disk Drives</div>`;
+  html += `<div class="explorer-file-grid">`;
+  html += explorerFolderItem(
+    "💾",
+    "Local Disk (C:) — ariana.exe",
+    "explorerNavigate('source')",
   );
+  html += `</div>`;
+
+  // Category folders as Hard Disk sections
+  const groups = {};
+  ALL_POSTS.forEach((p) => {
+    if (!groups[p.category]) groups[p.category] = [];
+    groups[p.category].push(p);
+  });
+
+  const activeCats = Object.entries(CATEGORY_CONFIG).filter(
+    ([cat]) => groups[cat] && groups[cat].length > 0,
+  );
+  if (activeCats.length > 0) {
+    html += `<div class="explorer-section-header">Content Folders</div>`;
+    html += `<div class="explorer-file-grid">`;
+    activeCats.forEach(([cat, cfg]) => {
+      html += explorerFolderItem("📂", cfg.label, `openWindow('${cfg.winId}')`);
+    });
+    html += `</div>`;
+  }
+
+  main.innerHTML = html;
+  if (countEl) countEl.textContent = `${3 + activeCats.length} items`;
+}
+
+function explorerFolderItem(icon, name, onclick) {
+  return `<div class="explorer-item" onclick="${_isMobile ? onclick : ""}" ondblclick="${onclick}">
+    <div class="explorer-item-icon">${icon}</div>
+    <div class="explorer-item-name">${name}</div>
+  </div>`;
+}
+
+// ── My Documents page ───────────────────────────────────────────────────────
+function renderMyDocs(sidebar, main, countEl) {
+  sidebar.innerHTML = buildSidebar([
+    {
+      title: "File and Folder Tasks",
+      items: [
+        { icon: "🔍", label: "Search for files or folders", onclick: "" },
+      ],
+    },
+    {
+      title: "Other Places",
+      items: [
+        {
+          icon: "💻",
+          label: "My Computer",
+          onclick: "explorerNavigate('mycomputer')",
+        },
+        {
+          icon: "🌄",
+          label: "My Pictures",
+          onclick: "explorerNavigate('mypics')",
+        },
+      ],
+    },
+  ]);
+
+  const items = byDate(ALL_POSTS);
+  let html = `<div class="explorer-file-grid">`;
+  items.forEach((post) => {
+    html += `<div class="explorer-item" onclick="${_isMobile ? "" : "selectExplorerItem(this)"}" ondblclick="openReader(ALL_POSTS.find(p=>p.slug==='${post.slug}'))">
+      <div class="explorer-item-icon"><img src="${ICON_DOC}" alt="" style="width:32px;height:32px;"></div>
+      <div class="explorer-item-name">${post.title}</div>
+    </div>`;
+    if (_isMobile) {
+      // handled via event delegation below
+    }
+  });
+  html += `</div>`;
+  main.innerHTML = html;
+
+  // Mobile: single click opens
+  if (_isMobile) {
+    main.querySelectorAll(".explorer-item").forEach((el, i) => {
+      el.addEventListener("click", () => openReader(items[i]));
+    });
+  }
+
+  if (countEl)
+    countEl.textContent = `${items.length} document${items.length !== 1 ? "s" : ""}`;
+}
+
+// ── My Pictures page ────────────────────────────────────────────────────────
+function renderMyPics(sidebar, main, countEl) {
+  sidebar.innerHTML = buildSidebar([
+    {
+      title: "Picture Tasks",
+      items: [{ icon: "🖼️", label: "View as a slide show", onclick: "" }],
+    },
+    {
+      title: "File and Folder Tasks",
+      items: [
+        { icon: "🔍", label: "Search for files or folders", onclick: "" },
+      ],
+    },
+    {
+      title: "Other Places",
+      items: [
+        {
+          icon: "💻",
+          label: "My Computer",
+          onclick: "explorerNavigate('mycomputer')",
+        },
+        {
+          icon: "📁",
+          label: "My Documents",
+          onclick: "explorerNavigate('mydocs')",
+        },
+      ],
+    },
+  ]);
+
+  const allImages = [];
+  IMAGE_FILES.forEach((img) =>
+    allImages.push({ name: img.name, path: img.path }),
+  );
+  ALL_POSTS.forEach((p) => {
+    if (p.image && !allImages.find((i) => i.path === p.image)) {
+      allImages.push({ name: p.image.split("/").pop(), path: p.image });
+    }
+  });
+
+  let html = `<div class="explorer-pic-grid">`;
+  allImages.forEach((img, idx) => {
+    html += `<div class="explorer-pic-item" data-pic-idx="${idx}" ondblclick="openExplorerImage(${idx})">
+      <div class="pic-thumbnail" id="thumb-${idx}"></div>
+      <div class="explorer-item-name">${img.name}</div>
+    </div>`;
+  });
+  html += `</div>`;
+  main.innerHTML = html;
+
+  if (_isMobile) {
+    main.querySelectorAll(".explorer-pic-item").forEach((el) => {
+      el.addEventListener("click", () =>
+        openExplorerImage(parseInt(el.dataset.picIdx)),
+      );
+    });
+  }
+
+  // Render thumbnails
+  allImages.forEach((img, idx) => renderThumbnail(img, idx));
+
+  if (countEl)
+    countEl.textContent = `${allImages.length} picture${allImages.length !== 1 ? "s" : ""}`;
+}
+
+// ── Source Code explorer ──────────────────────────────────
+function renderSourceCode(sidebar, main, countEl, page) {
+  const subFolder = page === "source" ? null : page.replace("source/", "");
+
+  sidebar.innerHTML = buildSidebar([
+    {
+      title: "System Tasks",
+      items: [
+        {
+          icon: "💻",
+          label: "My Computer",
+          onclick: "explorerNavigate('mycomputer')",
+        },
+      ],
+    },
+    {
+      title: "Source Folders",
+      items: [
+        { icon: "📂", label: "js", onclick: "explorerNavigate('source/js')" },
+        { icon: "📂", label: "css", onclick: "explorerNavigate('source/css')" },
+        {
+          icon: "📂",
+          label: "blog",
+          onclick: "explorerNavigate('source/blog')",
+        },
+        {
+          icon: "📂",
+          label: "images",
+          onclick: "explorerNavigate('source/images')",
+        },
+        {
+          icon: "📂",
+          label: "assets",
+          onclick: "explorerNavigate('source/assets')",
+        },
+      ],
+    },
+  ]);
+
+  if (!subFolder) {
+    // Root: show folders + root files
+    let html = `<div class="explorer-section-header">Folders</div><div class="explorer-file-grid">`;
+    ["js", "css", "blog", "images", "assets"].forEach((f) => {
+      html += explorerFolderItem("📂", f, `explorerNavigate('source/${f}')`);
+    });
+    html += `</div>`;
+
+    html += `<div class="explorer-section-header">Root Files</div><div class="explorer-file-grid">`;
+    SOURCE_TREE.root.forEach((f) => {
+      html += `<div class="explorer-item" ${_isMobile ? `onclick="openSourceFile('${f.path}')"` : ""} ondblclick="openSourceFile('${f.path}')" style="cursor:pointer;">
+        <span style="font-size:24px;">${SOURCE_ICON_MAP[f.type] || "📄"}</span>
+        <div class="explorer-item-name">${f.name}</div>
+      </div>`;
+    });
+    html += `</div>`;
+    main.innerHTML = html;
+
+    const total = SOURCE_TREE.root.length + 5;
+    if (countEl)
+      countEl.textContent = `${total} object${total !== 1 ? "s" : ""}`;
+  } else {
+    const files = SOURCE_TREE[subFolder] || [];
+    let html = `<div class="explorer-section-header">${subFolder}/</div><div class="explorer-file-grid">`;
+    files.forEach((f) => {
+      html += `<div class="explorer-item" ${_isMobile ? `onclick="openSourceFile('${f.path}')"` : ""} ondblclick="openSourceFile('${f.path}')" style="cursor:pointer;">
+        <span style="font-size:24px;">${SOURCE_ICON_MAP[f.type] || "📄"}</span>
+        <div class="explorer-item-name">${f.name}</div>
+      </div>`;
+    });
+    html += `</div>`;
+    main.innerHTML = html;
+
+    if (countEl)
+      countEl.textContent = `${files.length} file${files.length !== 1 ? "s" : ""}`;
+  }
+}
+
+async function openSourceFile(path) {
+  try {
+    const r = await fetch(path);
+    if (!r.ok) throw new Error(`HTTP ${r.status}`);
+    const text = await r.text();
+    const fname = path.split("/").pop();
+    document.getElementById("notepad-title").textContent = fname + " - Notepad";
+    document.getElementById("notepad-body").innerHTML =
+      `<pre>${esc(text)}</pre>`;
+    openWindow("win-notepad");
+  } catch (e) {
+    const fname = path.split("/").pop();
+    document.getElementById("notepad-title").textContent = fname + " - Notepad";
+    document.getElementById("notepad-body").innerHTML =
+      `<pre>Could not load file: ${esc(e.message)}</pre>`;
+    openWindow("win-notepad");
+  }
+}
+
+// Store images list globally for the viewer
+let _allImagesCache = [];
+
+function getAllImages() {
+  if (_allImagesCache.length > 0) return _allImagesCache;
+  const allImages = [];
+  IMAGE_FILES.forEach((img) =>
+    allImages.push({ name: img.name, path: img.path }),
+  );
+  ALL_POSTS.forEach((p) => {
+    if (p.image && !allImages.find((i) => i.path === p.image))
+      allImages.push({ name: p.image.split("/").pop(), path: p.image });
+  });
+  _allImagesCache = allImages;
+  return allImages;
+}
+
+async function renderThumbnail(img, idx) {
+  const container = document.getElementById(`thumb-${idx}`);
+  if (!container) return;
+
+  if (_thumbnailCache[img.path]) {
+    container.innerHTML = `<img src="${_thumbnailCache[img.path]}" alt="${img.name}">`;
+    return;
+  }
+
+  try {
+    const r = await fetch(img.path);
+    if (!r.ok) throw new Error(`${r.status}`);
+    const text = await r.text();
+
+    const canvas = document.createElement("canvas");
+    const lines = text.split("\n");
+    const maxCols = Math.max(...lines.map((l) => l.length));
+    const charW = 1.2,
+      charH = 2;
+    canvas.width = Math.min(maxCols * charW, 200);
+    canvas.height = Math.min(lines.length * charH, 150);
+    const ctx = canvas.getContext("2d");
+    ctx.fillStyle = "#fff";
+    ctx.fillRect(0, 0, canvas.width, canvas.height);
+    ctx.fillStyle = "#333";
+    ctx.font = `${charH}px monospace`;
+    lines.forEach((line, y) => {
+      ctx.fillText(line, 0, y * charH + charH);
+    });
+    const dataUrl = canvas.toDataURL("image/png");
+    _thumbnailCache[img.path] = dataUrl;
+    container.innerHTML = `<img src="${dataUrl}" alt="${img.name}">`;
+  } catch {
+    container.innerHTML = `<div style="width:80px;height:60px;background:#ddd;display:flex;align-items:center;justify-content:center;font-size:9px;color:#888;">No preview</div>`;
+  }
+}
+
+async function openExplorerImage(idx) {
+  const allImages = getAllImages();
+  const img = allImages[idx];
+  if (!img) return;
+  try {
+    const r = await fetch(img.path);
+    if (!r.ok) throw new Error(`${r.status}`);
+    const text = await r.text();
+    document.getElementById("reader-title").textContent = img.name;
+    const body = document.getElementById("reader-body");
+    body.className = "reader-body reader-picture";
+    body.innerHTML = `<pre style="font-family:monospace;font-size:4px;line-height:4px;overflow:hidden;white-space:pre;letter-spacing:0;margin:0;">${esc(text)}</pre>`;
+    openWindow("win-reader");
+  } catch (e) {
+    document.getElementById("reader-title").textContent = img.name;
+    const body = document.getElementById("reader-body");
+    body.className = "reader-body reader-picture";
+    body.innerHTML = `<p style="color:#800;">Failed to load: ${esc(e.message)}</p>`;
+    openWindow("win-reader");
+  }
+}
+
+function selectExplorerItem(el) {
+  el.closest(".explorer-file-grid, .explorer-pic-grid")
+    ?.querySelectorAll(".explorer-item, .explorer-pic-item")
+    .forEach((f) => f.classList.remove("selected"));
+  el.classList.add("selected");
+}
+function buildCategoryIcons(groups) {
+  document
+    .querySelectorAll(".dynamic-category-icon")
+    .forEach((el) => el.remove());
+
+  const aboutIcon = document.getElementById("about-icon");
+  const iconArea = document.getElementById("icon-area");
+  if (!iconArea || !aboutIcon) return;
+
+  Object.entries(CATEGORY_CONFIG).forEach(([cat, cfg]) => {
+    if (!groups[cat] || groups[cat].length === 0) return;
+
+    const div = document.createElement("div");
+    div.className = "desktop-icon dynamic-category-icon";
+    div.innerHTML = `<img src="${DESKTOP_FOLDER_SVG}" alt=""><span>${cfg.label}</span>`;
+
+    const handler = () => openWindow(cfg.winId);
+    if (_isMobile) {
+      div.addEventListener("click", handler);
+    } else {
+      div.addEventListener("dblclick", handler);
+    }
+
+    iconArea.insertBefore(div, aboutIcon);
+  });
+
+  // Update start menu category items
+  buildStartMenuCategories(groups);
+}
+
+function buildStartMenuCategories(groups) {
+  const container = document.getElementById("start-category-items");
+  if (!container) return;
+  container.innerHTML = "";
+
+  const CATEGORY_ICONS = { writing: "📄", journalism: "📰", project: "💾" };
+
+  Object.entries(CATEGORY_CONFIG).forEach(([cat, cfg]) => {
+    if (!groups[cat] || groups[cat].length === 0) return;
+    const div = document.createElement("div");
+    div.className = "start-item";
+    div.textContent = `${CATEGORY_ICONS[cat] || "📁"} ${cfg.label}`;
+    div.addEventListener("click", () => {
+      openWindow(cfg.winId);
+      toggleStart();
+    });
+    container.appendChild(div);
+  });
 }
 
 function renderFileList(listId, countId, items, icon, kind) {
@@ -132,8 +706,9 @@ function openReader(post) {
     : "";
 
   const bodyHtml = renderMarkdown(post._body || post.content);
-  document.getElementById("reader-body").innerHTML =
-    `<h1>${post.title}</h1>${metaHtml}${descHtml}${imgHtml}${bodyHtml}`;
+  const body = document.getElementById("reader-body");
+  body.className = "reader-body";
+  body.innerHTML = `<h1>${post.title}</h1>${metaHtml}${descHtml}${imgHtml}${bodyHtml}`;
 
   openWindow("win-reader");
 }
@@ -233,6 +808,8 @@ const WINDOW_LABELS = {
   "win-about": "👤 About",
   "win-github": "🐙 GitHub",
   "win-reader": "📖 Article",
+  "win-notepad": "📝 Notepad",
+  "win-mycomputer": "💻 My Computer",
 };
 
 // Track which windows are minimized (hidden but still in taskbar)

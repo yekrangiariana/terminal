@@ -547,6 +547,48 @@ html {
     height: calc(100vh - 40px - 36px);
   }
 
+  /* Notepad — fullscreen on mobile */
+  #win-notepad {
+    left: 0 !important;
+    top: 0 !important;
+    width: 100vw !important;
+    height: calc(100vh - 40px) !important;
+    max-height: calc(100vh - 40px) !important;
+    border-radius: 0;
+  }
+
+  /* Explorer — hide sidebar, stack toolbar on mobile */
+  .explorer-sidebar {
+    display: none;
+  }
+  .explorer-toolbar {
+    padding: 3px 6px;
+    overflow-x: auto;
+  }
+  .explorer-address-bar {
+    padding: 3px 8px;
+  }
+  .explorer-content {
+    flex-direction: column;
+  }
+  .explorer-main {
+    flex: 1;
+    overflow-y: auto;
+    -webkit-overflow-scrolling: touch;
+    max-height: 55vh;
+  }
+  .explorer-item {
+    min-width: 140px;
+    padding: 8px 10px;
+  }
+  .explorer-pic-item {
+    width: 100px;
+  }
+  .pic-thumbnail {
+    width: 80px;
+    height: 60px;
+  }
+
   /* About window */
   .about-body {
     flex-direction: column;

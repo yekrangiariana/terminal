@@ -48,28 +48,19 @@
     <div id="desktop" hidden>
       <!-- Desktop icons -->
       <div id="icon-area">
-        <div class="desktop-icon" ondblclick="openWindow('win-writing')">
+        <div class="desktop-icon" ondblclick="explorerNavigate('mycomputer')">
           <img
-            src="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 48 48'%3E%3Cg%3E%3Crect x='8' y='4' width='26' height='34' rx='2' fill='%23ffffff' stroke='%23cccccc' stroke-width='1'/%3E%3Crect x='8' y='4' width='26' height='34' rx='2' fill='url(%23p)'/%3E%3Cdefs%3E%3ClinearGradient id='p' x1='0' y1='0' x2='1' y2='1'%3E%3Cstop offset='0' stop-color='%23ffffff'/%3E%3Cstop offset='1' stop-color='%23e8e8e8'/%3E%3C/linearGradient%3E%3C/defs%3E%3Crect x='12' y='12' width='14' height='2' rx='1' fill='%23aac4e8'/%3E%3Crect x='12' y='17' width='18' height='2' rx='1' fill='%23aac4e8'/%3E%3Crect x='12' y='22' width='18' height='2' rx='1' fill='%23aac4e8'/%3E%3Crect x='12' y='27' width='12' height='2' rx='1' fill='%23aac4e8'/%3E%3Crect x='28' y='2' width='12' height='14' rx='1' fill='%234c9ce0' opacity='0.9'/%3E%3Cpath d='M28 2 l12 0 l0 14 l-12 0 z' fill='none' stroke='%232277bb' stroke-width='0.5'/%3E%3Ctext x='34' y='12' font-family='serif' font-size='9' fill='white' text-anchor='middle' font-weight='bold'%3EW%3C/text%3E%3C/g%3E%3C/svg%3E"
+            src="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 48 48'%3E%3Cdefs%3E%3ClinearGradient id='scr' x1='0' y1='0' x2='0' y2='1'%3E%3Cstop offset='0' stop-color='%231e78e0'/%3E%3Cstop offset='1' stop-color='%230d3fa8'/%3E%3C/linearGradient%3E%3C/defs%3E%3Crect x='8' y='4' width='32' height='24' rx='2' fill='%23d4d0c8' stroke='%23808080' stroke-width='1'/%3E%3Crect x='10' y='6' width='28' height='20' fill='url(%23scr)'/%3E%3Ctext x='24' y='19' font-family='Tahoma' font-size='9' fill='white' text-anchor='middle' font-weight='bold'%3EXP%3C/text%3E%3Crect x='18' y='28' width='12' height='4' fill='%23d4d0c8' stroke='%23808080' stroke-width='0.5'/%3E%3Crect x='10' y='32' width='28' height='3' rx='1' fill='%23c0bab0' stroke='%23808080' stroke-width='0.5'/%3E%3C/svg%3E"
             alt=""
           />
-          <span>Writing</span>
+          <span>My Computer</span>
         </div>
-        <div class="desktop-icon" ondblclick="openWindow('win-journalism')">
-          <img
-            src="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 48 48'%3E%3Cdefs%3E%3ClinearGradient id='fldr' x1='0' y1='0' x2='0' y2='1'%3E%3Cstop offset='0' stop-color='%23ffd966'/%3E%3Cstop offset='1' stop-color='%23e6a817'/%3E%3C/linearGradient%3E%3ClinearGradient id='fldrf' x1='0' y1='0' x2='0' y2='1'%3E%3Cstop offset='0' stop-color='%23ffe680'/%3E%3Cstop offset='1' stop-color='%23f5c518'/%3E%3C/linearGradient%3E%3C/defs%3E%3Crect x='4' y='16' width='40' height='28' rx='2' fill='url(%23fldr)' stroke='%23c48a00' stroke-width='1'/%3E%3Crect x='4' y='12' width='18' height='6' rx='2' fill='url(%23fldrf)' stroke='%23c48a00' stroke-width='1'/%3E%3Crect x='4' y='16' width='40' height='28' rx='2' fill='url(%23fldrf)'/%3E%3Cpath d='M4 20 Q24 16 44 20' stroke='%23c48a00' stroke-width='0.5' fill='none' opacity='0.5'/%3E%3C/svg%3E"
-            alt=""
-          />
-          <span>Journalism</span>
-        </div>
-        <div class="desktop-icon" ondblclick="openWindow('win-projects')">
-          <img
-            src="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 48 48'%3E%3Cdefs%3E%3ClinearGradient id='fldrb' x1='0' y1='0' x2='0' y2='1'%3E%3Cstop offset='0' stop-color='%236ab0e8'/%3E%3Cstop offset='1' stop-color='%232a7fcb'/%3E%3C/linearGradient%3E%3ClinearGradient id='fldrbf' x1='0' y1='0' x2='0' y2='1'%3E%3Cstop offset='0' stop-color='%2390c8f8'/%3E%3Cstop offset='1' stop-color='%234a9fe0'/%3E%3C/linearGradient%3E%3C/defs%3E%3Crect x='4' y='16' width='40' height='28' rx='2' fill='url(%23fldrb)' stroke='%23156ab5' stroke-width='1'/%3E%3Crect x='4' y='12' width='18' height='6' rx='2' fill='url(%23fldrbf)' stroke='%23156ab5' stroke-width='1'/%3E%3Crect x='4' y='16' width='40' height='28' rx='2' fill='url(%23fldrbf)'/%3E%3C/svg%3E"
-            alt=""
-          />
-          <span>Projects</span>
-        </div>
-        <div class="desktop-icon" ondblclick="openWindow('win-about')">
+        <!-- Category folder icons are generated dynamically by desktop.js -->
+        <div
+          class="desktop-icon"
+          id="about-icon"
+          ondblclick="openWindow('win-about')"
+        >
           <img
             src="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 48 48'%3E%3Cdefs%3E%3CradialGradient id='face' cx='50%25' cy='40%25' r='55%25'%3E%3Cstop offset='0' stop-color='%23fce8b2'/%3E%3Cstop offset='1' stop-color='%23f0b96b'/%3E%3C/radialGradient%3E%3ClinearGradient id='body' x1='0' y1='0' x2='0' y2='1'%3E%3Cstop offset='0' stop-color='%234a9ee0'/%3E%3Cstop offset='1' stop-color='%232266bb'/%3E%3C/linearGradient%3E%3C/defs%3E%3Ccircle cx='24' cy='16' r='10' fill='url(%23face)' stroke='%23d4994a' stroke-width='0.8'/%3E%3Cellipse cx='24' cy='40' rx='16' ry='10' fill='url(%23body)'/%3E%3C/svg%3E"
             alt=""
@@ -240,6 +231,67 @@
         </div>
       </div>
 
+      <!-- ── NOTEPAD WINDOW ── -->
+      <div class="xp-window notepad-window" id="win-notepad" hidden>
+        <div class="win-titlebar" onmousedown="dragStart(event, 'win-notepad')">
+          <span class="win-icon">📝</span>
+          <span class="win-title" id="notepad-title">Untitled - Notepad</span>
+          <div class="win-controls">
+            <button onclick="closeWindow('win-notepad')">✕</button>
+          </div>
+        </div>
+        <div class="win-menu">
+          <span>File</span><span>Edit</span><span>Format</span><span>View</span
+          ><span>Help</span>
+        </div>
+        <div class="win-body notepad-body" id="notepad-body"></div>
+      </div>
+
+      <!-- ── MY COMPUTER WINDOW (Explorer) ── -->
+      <div class="xp-window" id="win-mycomputer" hidden>
+        <div
+          class="win-titlebar"
+          onmousedown="dragStart(event, 'win-mycomputer')"
+        >
+          <span class="win-icon" id="explorer-icon">💻</span>
+          <span class="win-title" id="explorer-title">My Computer</span>
+          <div class="win-controls">
+            <button onclick="minimizeWindow('win-mycomputer')">_</button>
+            <button onclick="closeWindow('win-mycomputer')">✕</button>
+          </div>
+        </div>
+        <div class="win-menu">
+          <span>File</span><span>Edit</span><span>View</span
+          ><span>Favorites</span><span>Tools</span><span>Help</span>
+        </div>
+        <div class="explorer-toolbar">
+          <button
+            class="explorer-tb-btn"
+            id="explorer-back-btn"
+            onclick="explorerBack()"
+            disabled
+          >
+            <span class="tb-arrow">◀</span> Back
+          </button>
+          <button class="explorer-tb-btn" id="explorer-fwd-btn" disabled>
+            <span class="tb-arrow">▶</span>
+          </button>
+          <span class="tb-sep"></span>
+          <button class="explorer-tb-btn">🔍 Search</button>
+          <button class="explorer-tb-btn">📁 Folders</button>
+        </div>
+        <div class="explorer-address-bar">
+          <span class="address-label">Address</span>
+          <div class="address-field" id="explorer-address">My Computer</div>
+          <span class="address-go">▶</span>
+        </div>
+        <div class="explorer-content">
+          <div class="explorer-sidebar" id="explorer-sidebar"></div>
+          <div class="explorer-main" id="explorer-main"></div>
+        </div>
+        <div class="win-status-bar"><span id="explorer-count"></span></div>
+      </div>
+
       <!-- Taskbar -->
       <div id="taskbar">
         <button class="start-btn" onclick="toggleStart()">
@@ -258,34 +310,10 @@
         </div>
         <div class="start-main">
           <div class="start-left">
+            <div class="start-items" id="start-category-items">
+              <!-- Category items populated dynamically by desktop.js -->
+            </div>
             <div class="start-items">
-              <div
-                class="start-item"
-                onclick="
-                  openWindow('win-writing');
-                  toggleStart();
-                "
-              >
-                📄 Writing
-              </div>
-              <div
-                class="start-item"
-                onclick="
-                  openWindow('win-journalism');
-                  toggleStart();
-                "
-              >
-                📰 Journalism
-              </div>
-              <div
-                class="start-item"
-                onclick="
-                  openWindow('win-projects');
-                  toggleStart();
-                "
-              >
-                💾 Projects
-              </div>
               <div
                 class="start-item"
                 onclick="
@@ -312,9 +340,33 @@
           </div>
           <div class="start-right">
             <div class="start-items">
-              <div class="start-item">My Documents</div>
-              <div class="start-item">My Pictures</div>
-              <div class="start-item">Help</div>
+              <div
+                class="start-item"
+                onclick="
+                  explorerNavigate('mydocs');
+                  toggleStart();
+                "
+              >
+                📁 My Documents
+              </div>
+              <div
+                class="start-item"
+                onclick="
+                  explorerNavigate('mypics');
+                  toggleStart();
+                "
+              >
+                🌄 My Pictures
+              </div>
+              <div
+                class="start-item"
+                onclick="
+                  explorerNavigate('mycomputer');
+                  toggleStart();
+                "
+              >
+                💻 My Computer
+              </div>
             </div>
           </div>
         </div>
@@ -333,29 +385,29 @@
         <div
           class="ctx-item"
           onclick="
-            openWindow('win-writing');
+            explorerNavigate('mycomputer');
             hideCtxMenu();
           "
         >
-          📄 Open Writing
+          💻 My Computer
         </div>
         <div
           class="ctx-item"
           onclick="
-            openWindow('win-journalism');
+            explorerNavigate('mydocs');
             hideCtxMenu();
           "
         >
-          📰 Open Journalism
+          📁 My Documents
         </div>
         <div
           class="ctx-item"
           onclick="
-            openWindow('win-projects');
+            explorerNavigate('mypics');
             hideCtxMenu();
           "
         >
-          💾 Open Projects
+          🌄 My Pictures
         </div>
         <hr class="ctx-sep" />
         <div
@@ -382,6 +434,7 @@
       style="display: none"
     ></audio>
 
+    <script src="js/manifest.js"></script>
     <script src="js/shared.js"></script>
     <script src="js/desktop.js"></script>
   </body>
