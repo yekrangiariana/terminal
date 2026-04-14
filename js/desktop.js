@@ -1021,7 +1021,7 @@ document.addEventListener("mousedown", (e) => {
 // ── Escape to terminal ────────────────────────────────────────────────────────
 function goTerminal() {
   sessionStorage.setItem("preferTerminal", "1");
-  window.location.href = "../";
+  window.location.href = "./";
 }
 
 // ── GitHub repos ─────────────────────────────────────────────────────────────
@@ -1179,7 +1179,7 @@ function captchaSubmit() {
 }
 
 function captchaFail() {
-  window.location.href = "../";
+  window.location.href = "./";
 }
 
 function enterDesktop() {
