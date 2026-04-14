@@ -3209,7 +3209,7 @@ if (clockEl) clockEl.textContent = new Date().toLocaleTimeString("en-GB");
 let _termMaximised = false;
 
 function minimizeWindow() {
-  window.location.href = "desktop.html";
+  window.location.href = "desktop/";
 }
 
 function maximizeWindow() {
@@ -3225,7 +3225,7 @@ function maximizeWindow() {
 }
 
 function closeWindow() {
-  window.location.href = "desktop.html";
+  window.location.href = "desktop/";
 }
 
 // ─────────────────────────────────────────────
@@ -3243,7 +3243,7 @@ function closeWindow() {
     !sessionStorage.getItem("preferTerminal") &&
     !location.hash
   ) {
-    window.location.href = "desktop.html";
+    window.location.href = "desktop/";
     return;
   }
 

@@ -55,7 +55,7 @@ done
 printf '\n  ],\n'
 
 # Sub-directories
-for dir in js css blog images assets; do
+for dir in js css blog images assets desktop; do
   [ -d "$dir" ] || continue
   printf '  %s: [\n' "$dir"
   first=true

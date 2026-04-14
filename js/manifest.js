@@ -15,7 +15,6 @@ const IMAGE_FILES = [
 
 const SOURCE_TREE = {
   root: [
-    { name: "desktop.html", path: "desktop.html", type: "html" },
     { name: "index.html", path: "index.html", type: "html" },
     { name: ".nojekyll", path: ".nojekyll", type: "nojekyll" }
   ],
@@ -45,5 +44,8 @@ const SOURCE_TREE = {
     { name: "RasterForgeRegular-JpBgm.ttf", path: "assets/RasterForgeRegular-JpBgm.ttf", type: "ttf" },
     { name: "windows-xp-logo.svg", path: "assets/windows-xp-logo.svg", type: "svg" },
     { name: "xp-sound.mp3", path: "assets/xp-sound.mp3", type: "mp3" }
+  ],
+  desktop: [
+    { name: "index.html", path: "desktop/index.html", type: "html" }
   ],
 };
