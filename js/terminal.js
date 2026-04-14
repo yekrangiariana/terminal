@@ -1916,10 +1916,23 @@ function _fitAsciiArt(el, txt) {
   document.body.appendChild(probe);
   const charW = probe.getBoundingClientRect().width;
   document.body.removeChild(probe);
-  // Container width
-  const containerW = el.parentElement
+  // Measure 72ch in the parent's font (same width as .post-para)
+  const parentStyle = getComputedStyle(el.parentElement || el);
+  const probe72 = document.createElement("span");
+  probe72.style.cssText =
+    "position:absolute;visibility:hidden;white-space:pre;font-family:" +
+    parentStyle.fontFamily +
+    ";font-size:" +
+    parentStyle.fontSize;
+  probe72.textContent = "0".repeat(72);
+  document.body.appendChild(probe72);
+  const max72 = probe72.getBoundingClientRect().width;
+  document.body.removeChild(probe72);
+  // Use the smaller of parent width and 72ch in parent font
+  const parentW = el.parentElement
     ? el.parentElement.getBoundingClientRect().width
     : el.getBoundingClientRect().width;
+  const containerW = max72 && max72 < parentW ? max72 : parentW;
   if (!containerW || !charW) return;
   // fontSize = containerW / (maxCols * charWidthPerPx)
   const fontSize = containerW / (maxCols * (charW / 10));
@@ -2749,7 +2762,7 @@ const commands = {
     execute() {
       printLine("  launching desktop mode…", "c-info");
       setTimeout(() => {
-        window.location.href = "desktop.html";
+        window.location.href = "desktop/";
       }, 600);
     },
   },

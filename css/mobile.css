@@ -138,10 +138,10 @@ html {
   .post-header-title {
     font-size: 3.5em;
     line-height: 32px;
-    text-align: left;
+    text-align: center;
   }
   .post-header-desc {
-    text-align: left;
+    text-align: center;
   }
   .post-header-ascii {
     order: -1;
@@ -164,7 +164,7 @@ html {
   /* Post content — flush left */
   .post-para {
     max-width: 100%;
-    font-size: 12px;
+    font-size: 15px;
     line-height: 1.75;
     margin-bottom: 14px;
     padding-left: 0;
