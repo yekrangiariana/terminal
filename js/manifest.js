@@ -4,6 +4,7 @@
    ══════════════════════════════════════════════════════════════ */
 
 const SLUGS = [
+  "building-this-terminal copy",
   "building-this-terminal"
 ];
 
@@ -34,6 +35,7 @@ const SOURCE_TREE = {
     { name: "terminal.css", path: "css/terminal.css", type: "css" }
   ],
   blog: [
+    { name: "building-this-terminal copy.md", path: "blog/building-this-terminal copy.md", type: "md" },
     { name: "building-this-terminal.md", path: "blog/building-this-terminal.md", type: "md" }
   ],
   images: [
