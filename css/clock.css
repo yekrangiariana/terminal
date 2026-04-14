@@ -1,0 +1,32 @@
+/* ─────────────────────────────────────────────
+   Clock Widget Styles — Analog Clock + World Clock
+───────────────────────────────────────────── */
+
+/* Clock face elements */
+.clk-ring {
+  color: var(--grey);
+}
+.clk-mark {
+  color: var(--cyan-dim);
+  font-weight: 600;
+}
+.clk-hour {
+  color: var(--cyan);
+  text-shadow: 0 0 6px var(--cyan-glow);
+}
+.clk-min {
+  color: var(--blue);
+  text-shadow: 0 0 4px rgba(110, 180, 255, 0.3);
+}
+.clk-sec {
+  color: var(--amber);
+}
+.clk-center {
+  color: var(--yellow);
+  font-weight: 700;
+  text-shadow: 0 0 8px var(--yellow);
+}
+.clk-time {
+  color: var(--cyan);
+  font-weight: 600;
+}

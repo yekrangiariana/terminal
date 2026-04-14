@@ -37,3 +37,150 @@ function byDate(arr) {
     b.date > a.date ? 1 : b.date < a.date ? -1 : 0,
   );
 }
+
+// ── Space facts — computed client-side, shared by widget page + sidebar ──────
+function _spaceData() {
+  const now = new Date();
+  const startOfYear = new Date(now.getFullYear(), 0, 1);
+  const dayOfYear = Math.floor((now - startOfYear) / 864e5) + 1;
+  const totalDays = now.getFullYear() % 4 === 0 ? 366 : 365;
+
+  // Mars sol date (days on Mars since start of count)
+  // Simplified: sols since Unix epoch / 1.02749
+  const jd = 2440587.5 + Date.now() / 86400000;
+  const marsSol = Math.floor((jd - 2405522.0) / 1.02749125);
+
+  // Mars season (year ≈ 669 sols)
+  const marsYearDay = marsSol % 669;
+  const marsSeasons = [
+    [0, "spring"],
+    [167, "summer"],
+    [334, "autumn"],
+    [501, "winter"],
+  ];
+  let marsSeason = "winter";
+  for (const [s, n] of marsSeasons) {
+    if (marsYearDay >= s) marsSeason = n;
+  }
+
+  // Mars surface temperature estimate (varies -80 to -20°C by season)
+  const marsTemp = Math.round(
+    -50 + 30 * Math.sin((marsYearDay / 669) * 2 * Math.PI),
+  );
+
+  // Moon phase
+  const knownNewMoon = Date.UTC(2000, 0, 6, 18, 14);
+  const moonAge = ((Date.now() - knownNewMoon) / 86400000) % 29.53059;
+  const moonPct = moonAge / 29.53059;
+  let moonName, moonIcon;
+  if (moonPct < 0.0375) {
+    moonName = "new moon";
+    moonIcon = "NM";
+  } else if (moonPct < 0.2125) {
+    moonName = "wax cresc";
+    moonIcon = "WC";
+  } else if (moonPct < 0.2875) {
+    moonName = "first qtr";
+    moonIcon = "Q1";
+  } else if (moonPct < 0.4625) {
+    moonName = "wax gibb";
+    moonIcon = "WG";
+  } else if (moonPct < 0.5375) {
+    moonName = "full moon";
+    moonIcon = "FM";
+  } else if (moonPct < 0.7125) {
+    moonName = "wan gibb";
+    moonIcon = "WG";
+  } else if (moonPct < 0.7875) {
+    moonName = "last qtr";
+    moonIcon = "Q3";
+  } else if (moonPct < 0.9625) {
+    moonName = "wan cresc";
+    moonIcon = "WC";
+  } else {
+    moonName = "new moon";
+    moonIcon = "NM";
+  }
+
+  // Zodiac sign (tropical, based on day of year)
+  const zodiac = [
+    [20, "aquarius"],
+    [50, "pisces"],
+    [80, "aries"],
+    [111, "taurus"],
+    [141, "gemini"],
+    [172, "cancer"],
+    [204, "leo"],
+    [235, "virgo"],
+    [266, "libra"],
+    [296, "scorpio"],
+    [326, "sagitt"],
+    [356, "capric"],
+  ];
+  let zodiacName = "capric";
+  for (const [d, n] of zodiac) {
+    if (dayOfYear >= d) {
+      zodiacName = n;
+    }
+  }
+
+  // Next solstice/equinox
+  const events = [
+    { day: 80, label: "equinox" },
+    { day: 172, label: "solstice" },
+    { day: 266, label: "equinox" },
+    { day: 355, label: "solstice" },
+  ];
+  let nextEvent = events[0].label,
+    nextDays = events[0].day + totalDays - dayOfYear;
+  for (const e of events) {
+    if (e.day > dayOfYear) {
+      nextEvent = e.label;
+      nextDays = e.day - dayOfYear;
+      break;
+    }
+  }
+
+  return {
+    marsSol,
+    marsSeason,
+    marsTemp,
+    moonName,
+    moonIcon,
+    moonPct,
+    zodiacName,
+    nextEvent,
+    nextDays,
+  };
+}
+
+// ── Fetch real Mars weather from NASA Curiosity (MSL) API ────────────────────
+// Caches result in window._marsWeather; refreshes every 30 min.
+function fetchMarsWeather() {
+  if (window._marsWeather && Date.now() - window._marsWeather._ts < 1800000)
+    return;
+  const url =
+    "https://mars.nasa.gov/rss/api/?feed=weather&category=msl&feedtype=json";
+  fetch(url)
+    .then((r) => (r.ok ? r.json() : Promise.reject(r.status)))
+    .then((data) => {
+      const soles = data?.soles;
+      if (!Array.isArray(soles) || !soles.length) return;
+      const latest = soles[0]; // most recent sol
+      window._marsWeather = {
+        sol: parseInt(latest.sol, 10),
+        minTemp: parseInt(latest.min_temp, 10),
+        maxTemp: parseInt(latest.max_temp, 10),
+        pressure: parseInt(latest.pressure, 10),
+        season: latest.season || "",
+        opacity: latest.atmo_opacity || "",
+        date: latest.terrestrial_date || "",
+        sunrise: latest.sunrise || "",
+        sunset: latest.sunset || "",
+        _ts: Date.now(),
+      };
+    })
+    .catch(() => {
+      /* silently fall back to computed estimates */
+    });
+}

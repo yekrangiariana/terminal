@@ -1640,3 +1640,191 @@ body::after {
   vertical-align: middle;
   margin-right: 2px;
 }
+
+/* ─────────────────────────────────────────────
+   Widgets / System Monitor Dashboard
+───────────────────────────────────────────── */
+.widgets-page {
+  padding: 0;
+  min-height: 100%;
+  display: flex;
+  flex-direction: column;
+}
+.widgets-boot {
+  font-family: var(--font-mono);
+  font-size: 11px;
+  line-height: 1.7;
+  color: var(--grey);
+  white-space: pre;
+  padding: 8px 0;
+}
+.w-boot-title {
+  color: var(--cyan);
+  font-weight: 600;
+  letter-spacing: 0.06em;
+}
+.w-boot-rule {
+  color: var(--grey-dim);
+}
+.w-boot-dim {
+  color: var(--grey);
+}
+.w-boot-ok {
+  color: var(--cyan);
+  font-weight: 600;
+}
+.w-boot-skip {
+  color: var(--grey);
+}
+
+.widgets-dash {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+}
+.widgets-header {
+  font-family: var(--font-mono);
+  font-size: 11px;
+  line-height: 1.6;
+  white-space: pre;
+  padding: 4px 0 6px;
+  user-select: none;
+}
+.widgets-grid {
+  display: grid;
+  grid-template-columns: repeat(3, max-content);
+  gap: 2px 0px;
+  font-family: var(--font-mono);
+  font-size: 11px;
+  line-height: 1.15;
+  color: var(--grey);
+  white-space: pre;
+  user-select: none;
+  padding: 0;
+  justify-content: start;
+  flex: 1;
+}
+.widget-cell {
+  white-space: pre;
+}
+/* Span 2 columns for double-width widgets */
+.widget-cell.w-double {
+  grid-column: span 2;
+}
+/* Span 3 columns for full-width widgets */
+.widget-cell.w-full {
+  grid-column: span 3;
+}
+.widgets-hint {
+  font-family: var(--font-mono);
+  font-size: 11px;
+  line-height: 1.6;
+  color: var(--grey);
+  padding: 8px 0;
+  user-select: none;
+}
+
+/* Widget sb-* styles (mirror sidebar) */
+.widgets-grid .sb-frame,
+.widgets-header .sb-frame {
+  color: var(--grey-dim);
+}
+.widgets-grid .sb-label,
+.widgets-header .sb-label,
+.widgets-boot .sb-label {
+  color: var(--cyan-dim);
+}
+.widgets-grid .sb-val,
+.widgets-boot .sb-val {
+  color: var(--cyan);
+  font-weight: 500;
+}
+.widgets-grid .sb-bar {
+  color: var(--cyan);
+  text-shadow: 0 0 8px rgba(0, 255, 213, 0.4);
+}
+.widgets-grid .sb-dim {
+  color: var(--grey);
+}
+.widgets-grid .sb-sun {
+  color: var(--yellow);
+  font-size: 2.5em;
+  line-height: 0;
+  display: inline-block;
+  width: 0;
+  overflow: visible;
+  vertical-align: middle;
+  margin-right: 6px;
+  text-shadow: 0 0 12px rgba(255, 216, 102, 0.7);
+}
+.widgets-grid .sb-earth {
+  color: var(--cyan);
+  font-size: 2em;
+  line-height: 0;
+  display: inline-block;
+  width: 0;
+  overflow: visible;
+  vertical-align: middle;
+  margin-right: 6px;
+  font-weight: bold;
+  text-shadow: 0 0 14px rgba(0, 255, 213, 0.7);
+}
+.widgets-grid .sb-moon {
+  color: #ccc;
+  text-shadow: 0 0 5px rgba(200, 200, 220, 0.5);
+}
+.w-nf-user {
+  color: var(--cyan);
+  font-weight: 600;
+}
+.w-nf-host {
+  color: var(--purple);
+  font-weight: 600;
+}
+.w-nf-key {
+  color: var(--cyan-dim);
+}
+
+/* Blinking cursor */
+.w-cursor {
+  color: var(--cyan);
+  animation: w-blink 1s step-start infinite;
+}
+@keyframes w-blink {
+  50% {
+    opacity: 0;
+  }
+}
+
+/* Flicker effect */
+.w-flicker {
+  animation: w-flick 0.08s;
+}
+@keyframes w-flick {
+  0% {
+    opacity: 1;
+  }
+  50% {
+    opacity: 0.7;
+  }
+  100% {
+    opacity: 1;
+  }
+}
+
+/* Responsive: stack on smaller screens */
+@media (max-width: 720px) {
+  .widgets-grid {
+    grid-template-columns: 1fr;
+    overflow-x: auto;
+    -webkit-overflow-scrolling: touch;
+  }
+  .widget-cell.w-full,
+  .widget-cell.w-double {
+    grid-column: span 1;
+  }
+  .widget-cell {
+    max-width: 100%;
+    overflow-x: auto;
+  }
+}

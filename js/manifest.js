@@ -19,13 +19,16 @@ const SOURCE_TREE = {
     { name: ".nojekyll", path: ".nojekyll", type: "nojekyll" }
   ],
   js: [
+    { name: "clock.js", path: "js/clock.js", type: "js" },
     { name: "cmatrix.js", path: "js/cmatrix.js", type: "js" },
     { name: "desktop.js", path: "js/desktop.js", type: "js" },
     { name: "earth.js", path: "js/earth.js", type: "js" },
     { name: "shared.js", path: "js/shared.js", type: "js" },
-    { name: "terminal.js", path: "js/terminal.js", type: "js" }
+    { name: "terminal.js", path: "js/terminal.js", type: "js" },
+    { name: "widgets.js", path: "js/widgets.js", type: "js" }
   ],
   css: [
+    { name: "clock.css", path: "css/clock.css", type: "css" },
     { name: "cmatrix.css", path: "css/cmatrix.css", type: "css" },
     { name: "desktop.css", path: "css/desktop.css", type: "css" },
     { name: "mobile.css", path: "css/mobile.css", type: "css" },

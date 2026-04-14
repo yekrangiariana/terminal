@@ -75,6 +75,11 @@ function handleRoute(path) {
       commands.about.execute();
       return true;
     }
+    if (path === "/widgets") {
+      if (typeof renderWidgetsDashboard === "function")
+        renderWidgetsDashboard();
+      return true;
+    }
 
     // /blog or /blog/[category]
     if (path === "/blog") {
@@ -323,6 +328,7 @@ function clearOutput() {
     clearInterval(window._sidebarInterval);
     window._sidebarInterval = null;
   }
+  if (typeof _widgetsCleanup === "function") _widgetsCleanup();
   if (window._postScrollHandler) {
     terminal.removeEventListener("scroll", window._postScrollHandler);
     window._postScrollHandler = null;
@@ -455,32 +461,6 @@ async function fetchRealWeather() {
       const tmEl = document.getElementById("sb-temp-widget");
       if (tmEl) tmEl.dataset.ready = "1";
     }
-
-    // Update sidebar lines if already rendered
-    const tEl = document.getElementById("sb-temp-line");
-    if (tEl) {
-      const H = 24;
-      const fr = (s) => `<span class="sb-frame">${s}</span>`;
-      const strip = (s) => s.replace(/<[^>]*>/g, "");
-      const hpad = (inner) => {
-        const vis = strip(inner).length;
-        const gap = Math.max(0, H - 4 - vis);
-        return fr("│") + " " + inner + " ".repeat(gap) + " " + fr("│");
-      };
-      const tz = Intl.DateTimeFormat().resolvedOptions().timeZone || "unknown";
-      const tzShort = tz.split("/").pop() || tz;
-      const col =
-        temp > 15
-          ? "var(--amber)"
-          : temp > 5
-            ? "var(--yellow)"
-            : temp > -5
-              ? "var(--blue)"
-              : "var(--purple)";
-      tEl.innerHTML = hpad(
-        `<span style="color:${col}">${temp}°C</span> <span class="sb-dim">${tzShort}</span>`,
-      );
-    }
   } catch (_) {
     // silently fall back to seasonal estimate
   }
@@ -498,30 +478,15 @@ function buildSidebar(items) {
   const totalDays = now.getFullYear() % 4 === 0 ? 366 : 365;
   const yearPct = Math.round((dayOfYear / totalDays) * 100);
 
-  // Helsinki time
-  const timeStr = now.toLocaleTimeString("en-GB", {
-    hour: "2-digit",
-    minute: "2-digit",
-    second: "2-digit",
-    timeZone: "Europe/Helsinki",
-  });
-  const dateStr = now.toLocaleDateString("en-GB", {
-    day: "2-digit",
-    month: "short",
-    year: "numeric",
-    timeZone: "Europe/Helsinki",
-  });
   const hHour = parseInt(
     now.toLocaleTimeString("en-GB", {
       hour: "2-digit",
       hour12: false,
-      timeZone: "Europe/Helsinki",
     }),
   );
   const hMin = parseInt(
     now.toLocaleTimeString("en-GB", {
       minute: "2-digit",
-      timeZone: "Europe/Helsinki",
     }),
   );
   const dayPct = Math.round((hHour * 60 + hMin) / 14.4);
@@ -626,8 +591,6 @@ function buildSidebar(items) {
   const viewportRes = `${window.innerWidth}×${window.innerHeight}`;
   const colorDepth = screen.colorDepth + "bit";
   const lang = navigator.language || "en";
-  const tz = Intl.DateTimeFormat().resolvedOptions().timeZone || "unknown";
-  const tzShort = tz.split("/").pop() || tz;
   const proto = location.protocol === "https:" ? "HTTPS" : "HTTP";
   const ua = navigator.userAgent;
   let browser = "unknown";
@@ -850,82 +813,145 @@ function buildSidebar(items) {
   sb.appendChild(nfEl);
 
   // ═══════════════════════════════════════
-  // ROW 1: CLOCK + ORBIT
+  // ANALOG CLOCK (full-width)
   // ═══════════════════════════════════════
-  let CL = [];
-  CL.push(fr("┌" + "─".repeat(H - 2) + "┐"));
-  CL.push(hsep());
-  CL.push(hpad(`<span class="sb-label">CLOCK</span>`));
-  CL.push(hsep());
-  CL.push(
-    `<span id="sb-clock-line">${hpad(`<span class="sb-val">${timeStr}</span>`)}</span>`,
-  );
-  CL.push(hpad(`<span class="sb-dim">${dateStr}</span>`));
-  const tempColor =
-    temp > 15
-      ? "var(--amber)"
-      : temp > 5
-        ? "var(--yellow)"
-        : temp > -5
-          ? "var(--blue)"
-          : "var(--purple)";
-  CL.push(
-    `<span id="sb-temp-line">${hpad(`<span style="color:${tempColor}">${tempPrefix}${temp}°C</span> <span class="sb-dim">${esc(tzShort)}</span>`)}</span>`,
-  );
-  CL.push(hsep());
-  CL.push(
-    hpad(
-      `<span class="sb-dim">day</span> <span class="sb-bar">${dayBar}</span> <span class="sb-val">${dayPct}%</span>`,
-    ),
-  );
-  CL.push(
-    hpad(
-      `<span class="sb-dim">yr</span>  <span class="sb-val">${dayOfYear}</span><span class="sb-dim">/${totalDays}</span> <span class="sb-val">${yearPct}%</span>`,
-    ),
-  );
-  CL.push(hsep());
-  CL.push(fr("└" + "─".repeat(H - 2) + "┘"));
+  {
+    const lH = now.getHours();
+    const lM = now.getMinutes();
+    const lS = now.getSeconds();
+    const face = _clockRenderCompact(lH, lM, lS);
+
+    const clkTimeStr = now.toLocaleTimeString("en-GB", {
+      hour: "2-digit",
+      minute: "2-digit",
+      second: "2-digit",
+    });
+    const clkDateStr = now.toLocaleDateString("en-GB", {
+      day: "2-digit",
+      month: "short",
+      year: "numeric",
+    });
+    const clkTz = Intl.DateTimeFormat().resolvedOptions().timeZone || "unknown";
+    const clkTzShort = clkTz.split("/").pop() || clkTz;
+
+    const CK = 22; // left column: centered in W=48 (inner 44)
+    const tempColor =
+      temp > 15
+        ? "var(--amber)"
+        : temp > 5
+          ? "var(--yellow)"
+          : temp > -5
+            ? "var(--blue)"
+            : "var(--purple)";
+    const clkInfoLines = [
+      ``,
+      ` <span class="sb-label">LOCAL</span>`,
+      ` <span class="clk-time">${clkTimeStr}</span>`,
+      ` <span class="sb-dim">${clkDateStr}</span>`,
+      ``,
+      ` <span class="sb-dim">zone</span>  <span class="sb-val">${esc(clkTzShort)}</span>`,
+      ` <span class="sb-dim">day</span> <span class="sb-bar">${dayBar}</span> <span class="sb-val">${dayPct}%</span>`,
+      ` <span class="sb-dim">yr</span>  <span class="sb-val">${dayOfYear}</span><span class="sb-dim">/${totalDays}</span> <span class="sb-val">${yearPct}%</span>`,
+      ` <span style="color:${tempColor}">${tempPrefix}${temp}°C</span> <span class="clk-sec">${lS % 2 === 0 ? "●" : "○"}</span>`,
+    ];
+
+    function _sbClkRow(left, right) {
+      const lVis = strip(left).length;
+      const lPad = Math.max(0, CK - lVis);
+      const combined =
+        left +
+        " ".repeat(lPad) +
+        `<span style="color:var(--grey)">│</span>` +
+        right;
+      return mkPad(W, combined);
+    }
+
+    let AC = [];
+    AC.push(fr("┌" + "─".repeat(W - 2) + "┐"));
+    AC.push(_sbClkRow("", ""));
+
+    for (let i = 0; i < 9; i++) {
+      const left = " " + (face[i] || "");
+      const right = clkInfoLines[i] || "";
+      AC.push(_sbClkRow(left, right));
+    }
+
+    AC.push(fr("└" + "─".repeat(W - 2) + "┘"));
+
+    const acEl = document.createElement("div");
+    acEl.className = "sb-full";
+    acEl.id = "sb-analog-clock";
+    acEl.innerHTML = AC.join("\n");
+    sb.appendChild(acEl);
+  }
+
+  // ═══════════════════════════════════════
+  // ORBIT (full-width) — two-column: orbit left, info right
+  // ═══════════════════════════════════════
+  const sp = _spaceData();
+  const mw = window._marsWeather;
+  const marsLabel = mw ? `sol ${mw.sol}` : `sol ${sp.marsSol}`;
+  const marsLine2 = mw
+    ? `${mw.minTemp}/${mw.maxTemp}°C ${mw.opacity.toLowerCase()}`
+    : `${sp.marsTemp}°C ${sp.marsSeason}`;
+
+  const CL = 22; // left column width: centered in W=48 (inner 44)
+  const _sbOrbRow = (left, right) => {
+    const lVis = strip(left).length;
+    const lPad = Math.max(0, CL - lVis);
+    const combined =
+      left +
+      " ".repeat(lPad) +
+      `<span style="color:var(--grey)">│</span>` +
+      right;
+    return wPadOrbit(combined);
+  };
+  // wPadOrbit: full-width pad using W
+  function wPadOrbit(inner) {
+    const vis = strip(inner).length;
+    const gap = Math.max(0, W - 4 - vis);
+    return fr("│") + " " + inner + " ".repeat(gap) + " " + fr("│");
+  }
+
+  const orbitInfoLines = [
+    ``,
+    ` <span class="sb-label">MARS</span> <span class="sb-dim">${esc(marsLabel)}</span>`,
+    ` <span style="color:var(--blue)">${esc(marsLine2)}</span>`,
+    ``,
+    ` <span class="sb-label">MOON</span> <span class="sb-dim">${sp.moonIcon} ${sp.moonName}</span>`,
+    ` <span class="sb-label">SUN</span>  <span class="sb-dim">${sp.zodiacName}</span>`,
+    ` <span class="sb-dim">${sp.nextEvent}</span> <span class="sb-val">${sp.nextDays}d</span>`,
+  ];
 
   let OR = [];
-  OR.push(fr("┌" + "─".repeat(H - 2) + "┐"));
-  OR.push(hsep());
-  OR.push(
-    hpad(
-      `<span class="sb-label">ORBIT</span> <span class="sb-val">${orbitDeg}°</span> <span class="sb-dim">${season}</span>`,
+  OR.push(fr("┌" + "─".repeat(W - 2) + "┐"));
+
+  // Build the dynamic orbit content (header + 7 orbit rows + bottom)
+  let orbitContent = [];
+  orbitContent.push(
+    _sbOrbRow(
+      "",
+      ` <span class="sb-label">ORBIT</span> <span class="sb-val">${orbitDeg}°</span> <span class="sb-dim">${season}</span>`,
     ),
   );
-  OR.push(hsep());
-  const orbitLinesHTML = [];
-  for (const ol of orbitLines) {
-    const colored = ol
+  for (let i = 0; i < orbitLines.length; i++) {
+    const colored = orbitLines[i]
       .replace("S", `<span class="sb-sun">*</span>`)
       .replace("E", `<span class="sb-earth">⊕</span>`)
       .replace("o", `<span class="sb-moon">o</span>`);
-    orbitLinesHTML.push(hpad(colored));
+    const left = "  " + colored;
+    const right = orbitInfoLines[i] || "";
+    orbitContent.push(_sbOrbRow(left, right));
   }
-  // Push each orbit line individually so array length = visual line count
-  OR.push(`<span id="sb-orbit-lines">${orbitLinesHTML[0]}`);
-  for (let i = 1; i < orbitLinesHTML.length - 1; i++)
-    OR.push(orbitLinesHTML[i]);
-  OR.push(`${orbitLinesHTML[orbitLinesHTML.length - 1]}</span>`);
-  OR.push(hsep());
-  OR.push(fr("└" + "─".repeat(H - 2) + "┘"));
+  orbitContent.push(_sbOrbRow("", ""));
+  OR.push(`<span id="sb-orbit-lines">${orbitContent.join("\n")}</span>`);
+  OR.push(_sbOrbRow("", ""));
+  OR.push(fr("└" + "─".repeat(W - 2) + "┘"));
 
-  // Equalize heights
-  while (CL.length < OR.length) CL.splice(CL.length - 1, 0, hsep());
-  while (OR.length < CL.length) OR.splice(OR.length - 1, 0, hsep());
-
-  const row1 = document.createElement("div");
-  row1.className = "sb-row";
-  const clDiv = document.createElement("div");
-  clDiv.className = "sb-half";
-  clDiv.innerHTML = CL.join("\n");
-  const orDiv = document.createElement("div");
-  orDiv.className = "sb-half";
-  orDiv.innerHTML = OR.join("\n");
-  row1.appendChild(clDiv);
-  row1.appendChild(orDiv);
-  sb.appendChild(row1);
+  const orEl = document.createElement("div");
+  orEl.className = "sb-full";
+  orEl.innerHTML = OR.join("\n");
+  sb.appendChild(orEl);
 
   // ═══════════════════════════════════════
   // ROW 2: ARCHIVE + TEMP
@@ -1057,8 +1083,12 @@ function startSidebarUpdates(sb) {
   // Cache DOM lookups
   const _uptimeEl = sb.querySelector("#sb-uptime-val");
   const _ipEl = sb.querySelector("#sb-ip-val");
-  const _clockEl = sb.querySelector("#sb-clock-line");
   const _orbitEl = sb.querySelector("#sb-orbit-lines");
+  const _analogEl = sb.querySelector("#sb-analog-clock");
+
+  const W = 48;
+  const esc = (s) => s.replace(/&/g, "&amp;").replace(/</g, "&lt;");
+  const wPad = (inner) => mkPad(W, inner);
 
   window._sidebarInterval = setInterval(() => {
     // Skip all work when tab is hidden
@@ -1086,16 +1116,84 @@ function startSidebarUpdates(sb) {
       _ipEl._done = true;
     }
 
-    // Update clock
-    if (_clockEl) {
+    // Update analog clock face
+    if (_analogEl) {
       const now = new Date();
-      const timeStr = now.toLocaleTimeString("en-GB", {
+      const lH = now.getHours();
+      const lM = now.getMinutes();
+      const lS = now.getSeconds();
+      const face = _clockRenderCompact(lH, lM, lS);
+
+      const clkTimeStr = now.toLocaleTimeString("en-GB", {
         hour: "2-digit",
         minute: "2-digit",
         second: "2-digit",
-        timeZone: "Europe/Helsinki",
       });
-      _clockEl.innerHTML = hpad(`<span class="sb-val">${timeStr}</span>`);
+      const clkDateStr = now.toLocaleDateString("en-GB", {
+        day: "2-digit",
+        month: "short",
+        year: "numeric",
+      });
+      const clkTz =
+        Intl.DateTimeFormat().resolvedOptions().timeZone || "unknown";
+      const clkTzShort = clkTz.split("/").pop() || clkTz;
+
+      const startOfYear = new Date(now.getFullYear(), 0, 1);
+      const dayOfYear = Math.floor((now - startOfYear) / 864e5) + 1;
+      const totalDays = now.getFullYear() % 4 === 0 ? 366 : 365;
+      const yearPct = Math.round((dayOfYear / totalDays) * 100);
+      const hHour = now.getHours();
+      const hMin = now.getMinutes();
+      const dayPct = Math.round((hHour * 60 + hMin) / 14.4);
+      const dayFill = Math.round(dayPct / 10);
+      const dayBar = "█".repeat(dayFill) + "░".repeat(10 - dayFill);
+      const temp =
+        window._weatherData?.temp ??
+        Math.round(
+          5.5 + 12 * Math.sin(((dayOfYear - 105) / totalDays) * 2 * Math.PI),
+        );
+      const tempPrefix = window._weatherData ? "" : "~";
+      const tempColor =
+        temp > 15
+          ? "var(--amber)"
+          : temp > 5
+            ? "var(--yellow)"
+            : temp > -5
+              ? "var(--blue)"
+              : "var(--purple)";
+
+      const CK = 22;
+      const clkInfoLines = [
+        ``,
+        ` <span class="sb-label">LOCAL</span>`,
+        ` <span class="clk-time">${clkTimeStr}</span>`,
+        ` <span class="sb-dim">${clkDateStr}</span>`,
+        ``,
+        ` <span class="sb-dim">zone</span>  <span class="sb-val">${esc(clkTzShort)}</span>`,
+        ` <span class="sb-dim">day</span> <span class="sb-bar">${dayBar}</span> <span class="sb-val">${dayPct}%</span>`,
+        ` <span class="sb-dim">yr</span>  <span class="sb-val">${dayOfYear}</span><span class="sb-dim">/${totalDays}</span> <span class="sb-val">${yearPct}%</span>`,
+        ` <span style="color:${tempColor}">${tempPrefix}${temp}°C</span> <span class="clk-sec">${lS % 2 === 0 ? "●" : "○"}</span>`,
+      ];
+
+      const _sbClkRow = (left, right) => {
+        const lVis = strip(left).length;
+        const lPad = Math.max(0, CK - lVis);
+        const combined =
+          left +
+          " ".repeat(lPad) +
+          `<span style="color:var(--grey)">│</span>` +
+          right;
+        return wPad(combined);
+      };
+
+      let AC = [];
+      AC.push(fr("┌" + "─".repeat(W - 2) + "┐"));
+      AC.push(_sbClkRow("", ""));
+      for (let i = 0; i < 9; i++) {
+        AC.push(_sbClkRow(" " + (face[i] || ""), clkInfoLines[i] || ""));
+      }
+      AC.push(fr("└" + "─".repeat(W - 2) + "┘"));
+      _analogEl.innerHTML = AC.join("\n");
     }
 
     // Animate orbit — advance earth position using pre-computed ellipse
@@ -1107,6 +1205,17 @@ function startSidebarUpdates(sb) {
       const totalDays = now.getFullYear() % 4 === 0 ? 366 : 365;
       const baseAngle = (dayOfYear / totalDays) * 2 * Math.PI - Math.PI / 2;
       const animAngle = baseAngle + orbitStep * 0.05;
+      const orbitDeg = Math.round((dayOfYear / totalDays) * 360);
+      const seasons = [
+        [80, "spring"],
+        [172, "summer"],
+        [266, "autumn"],
+        [355, "winter"],
+      ];
+      let season = "winter";
+      for (const [s, n] of seasons) {
+        if (dayOfYear >= s) season = n;
+      }
 
       // Build grid from pre-computed dots
       let grid = [];
@@ -1135,15 +1244,48 @@ function startSidebarUpdates(sb) {
         grid[myPos][mxPos] = "o";
       }
       const lines = grid.map((r) => r.join(""));
-      const html = lines
-        .map((ol) => {
-          const colored = ol
-            .replace("S", `<span class="sb-sun">*</span>`)
-            .replace("E", `<span class="sb-earth">⊕</span>`)
-            .replace("o", `<span class="sb-moon">o</span>`);
-          return hpad(colored);
-        })
-        .join("\n");
+
+      // Space facts for info column
+      const sp = _spaceData();
+      const mw = window._marsWeather;
+      const marsLabel = mw ? `sol ${mw.sol}` : `sol ${sp.marsSol}`;
+      const marsLine2 = mw
+        ? `${mw.minTemp}/${mw.maxTemp}°C ${mw.opacity.toLowerCase()}`
+        : `${sp.marsTemp}°C ${sp.marsSeason}`;
+      const orbInfoLines = [
+        ``,
+        ` <span class="sb-label">MARS</span> <span class="sb-dim">${esc(marsLabel)}</span>`,
+        ` <span style="color:var(--blue)">${esc(marsLine2)}</span>`,
+        ``,
+        ` <span class="sb-label">MOON</span> <span class="sb-dim">${sp.moonIcon} ${sp.moonName}</span>`,
+        ` <span class="sb-label">SUN</span>  <span class="sb-dim">${sp.zodiacName}</span>`,
+        ` <span class="sb-dim">${sp.nextEvent}</span> <span class="sb-val">${sp.nextDays}d</span>`,
+      ];
+
+      const CL = 22;
+      const _orbAnimRow = (left, right) => {
+        const lVis = strip(left).length;
+        const lpad = Math.max(0, CL - lVis);
+        const combined =
+          left +
+          " ".repeat(lpad) +
+          `<span style="color:var(--grey)">│</span>` +
+          right;
+        return wPad(combined);
+      };
+
+      let html = _orbAnimRow(
+        "",
+        ` <span class="sb-label">ORBIT</span> <span class="sb-val">${orbitDeg}°</span> <span class="sb-dim">${season}</span>`,
+      );
+      for (let i = 0; i < lines.length; i++) {
+        const colored = lines[i]
+          .replace("S", `<span class="sb-sun">*</span>`)
+          .replace("E", `<span class="sb-earth">⊕</span>`)
+          .replace("o", `<span class="sb-moon">o</span>`);
+        html += "\n" + _orbAnimRow("  " + colored, orbInfoLines[i] || "");
+      }
+      html += "\n" + _orbAnimRow("", "");
       _orbitEl.innerHTML = html;
     }
   }, 1000);
@@ -2233,6 +2375,7 @@ function printHome() {
     ["projects", "projects & repos"],
     ["whoami", "a bit more about me"],
     ["fortune", "wisdom from the machine"],
+    ["htop", "system monitor dashboard"],
     ["config", "theme & font settings"],
     ["gui", "switch to desktop mode"],
     ["help", "all commands"],
@@ -2349,6 +2492,7 @@ const commands = {
       const termCmds = [
         ["home / exit", "return home"],
         ["gui", "switch to desktop (XP) mode"],
+        ["htop", "system monitor dashboard"],
         ["config", "terminal settings — theme & font"],
         ["clear", "clear screen"],
         ["cmatrix", "digital rain screensaver"],
@@ -2766,6 +2910,31 @@ const commands = {
       }, 600);
     },
   },
+
+  htop: {
+    description: "System monitor dashboard",
+    execute() {
+      if (typeof renderWidgetsDashboard === "function") {
+        renderWidgetsDashboard();
+      } else {
+        printLine("  sysmon module not loaded", "c-error");
+      }
+    },
+  },
+
+  widgets: {
+    description: "System monitor dashboard",
+    execute() {
+      commands.htop.execute();
+    },
+  },
+
+  sysmon: {
+    description: "System monitor dashboard",
+    execute() {
+      commands.htop.execute();
+    },
+  },
 };
 
 // ─────────────────────────────────────────────
@@ -3132,6 +3301,17 @@ input.addEventListener("keydown", (e) => {
     }
   }
 
+  // Widgets mode: ESC exits
+  if (window._widgetsInterval) {
+    if (e.key === "Escape") {
+      e.preventDefault();
+      clearOutput();
+      pushRoute("/");
+      printHome();
+      return;
+    }
+  }
+
   // Reader mode: arrow keys scroll, left/right navigate prev/next post
   if (readerMode) {
     if (e.key === "ArrowUp") {
@@ -3278,6 +3458,7 @@ function closeWindow() {
     fetchVisitorIP();
     fetchAndInjectRepos();
     fetchRealWeather();
+    if (typeof fetchMarsWeather === "function") fetchMarsWeather();
   };
   if (typeof requestIdleCallback === "function") {
     requestIdleCallback(_deferNetworkCalls);
