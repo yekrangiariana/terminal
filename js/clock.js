@@ -92,6 +92,9 @@ function _wAnalogClock() {
 }
 
 // Compact clock face: 21 wide × 9 tall
+// Monospace chars are ~2× taller than wide, so we use an ellipse (rx≫ry)
+// to make the face appear circular. Hands use sub-cell interpolation for
+// straighter lines and distinct characters per hand type.
 function _clockRenderCompact(hours, minutes, seconds) {
   const W = 21,
     H = 9;
@@ -99,6 +102,8 @@ function _clockRenderCompact(hours, minutes, seconds) {
     cy = 4;
   const rx = 9.5,
     ry = 3.8;
+  // Aspect ratio: how many x-cells per y-cell to look square
+  const aspect = rx / ry; // ≈ 2.5
 
   const grid = [];
   for (let y = 0; y < H; y++) {
@@ -106,7 +111,7 @@ function _clockRenderCompact(hours, minutes, seconds) {
     for (let x = 0; x < W; x++) grid[y][x] = " ";
   }
 
-  // Circle outline
+  // ── Circle outline ──
   for (let a = 0; a < 360; a += 2) {
     const rad = (a * Math.PI) / 180;
     const px = Math.round(cx + rx * Math.cos(rad));
@@ -116,65 +121,110 @@ function _clockRenderCompact(hours, minutes, seconds) {
     }
   }
 
-  // Hour markers — place at inner radius
-  for (let i = 0; i < 12; i++) {
-    const angle = ((i * 30 - 90) * Math.PI) / 180;
-    const mx = Math.round(cx + (rx - 0.5) * Math.cos(angle));
-    const my = Math.round(cy + (ry - 0.3) * Math.sin(angle));
-    if (mx >= 0 && mx < W && my >= 0 && my < H) {
-      // Use simple tick marks for compactness
-      const num = i === 0 ? "12" : String(i);
-      if (num.length === 2 && mx > 0) {
-        grid[my][mx - 1] = num[0];
-        grid[my][mx] = num[1];
-      } else {
-        grid[my][mx] = num;
-      }
+  // ── Hour markers at cardinal + ordinal positions ──
+  // Use tick marks: ○ at 12/3/6/9, • at others
+  const markers = [
+    { h: 12, x: 10, y: 0 },
+    { h: 1, x: 14, y: 0 },
+    { h: 2, x: 17, y: 1 },
+    { h: 3, x: 19, y: 4 },
+    { h: 4, x: 17, y: 7 },
+    { h: 5, x: 14, y: 8 },
+    { h: 6, x: 10, y: 8 },
+    { h: 7, x: 6, y: 8 },
+    { h: 8, x: 3, y: 7 },
+    { h: 9, x: 1, y: 4 },
+    { h: 10, x: 3, y: 1 },
+    { h: 11, x: 6, y: 0 },
+  ];
+  for (const m of markers) {
+    if (m.x >= 0 && m.x < W && m.y >= 0 && m.y < H) {
+      grid[m.y][m.x] = m.h % 3 === 0 ? "Q" : "T"; // Q=quarter, T=tick
     }
   }
 
-  // Draw hand via Bresenham-like stepping
-  function drawHand(angleDeg, lengthRatio, ch) {
+  // ── Draw hand with sub-pixel interpolation ──
+  // Uses floating-point line walking in "display space" where x is already
+  // aspect-corrected, so the angle you see matches the real clock angle.
+  function drawHand(angleDeg, lengthX, ch, priority) {
     const rad = ((angleDeg - 90) * Math.PI) / 180;
-    const len = lengthRatio;
-    const steps = Math.ceil(len * 10);
-    for (let s = 1; s <= steps; s++) {
-      const t = s / steps;
-      const ex = Math.round(cx + len * Math.cos(rad) * t);
-      const ey = Math.round(cy + len * (ry / rx) * Math.sin(rad) * t);
-      if (ex >= 0 && ex < W && ey >= 0 && ey < H) {
-        grid[ey][ex] = ch;
+    // End point in grid coords
+    const endX = cx + lengthX * Math.cos(rad);
+    const endY = cy + (lengthX / aspect) * Math.sin(rad);
+    // Walk from center to tip, plotting one cell per step
+    const dx = endX - cx;
+    const dy = endY - cy;
+    const steps = Math.max(Math.abs(dx), Math.abs(dy) * aspect, 1);
+    const n = Math.ceil(steps);
+    for (let i = 1; i <= n; i++) {
+      const t = i / n;
+      const px = Math.round(cx + dx * t);
+      const py = Math.round(cy + dy * t);
+      if (px >= 0 && px < W && py >= 0 && py < H) {
+        const cur = grid[py][px];
+        // Only overwrite if this hand has higher priority (or cell is empty/ring)
+        if (
+          cur === " " ||
+          cur === "·" ||
+          cur === "T" ||
+          cur === "Q" ||
+          priority > 0
+        ) {
+          // Don't overwrite a higher-priority hand
+          if (cur !== "H" || priority >= 3) {
+            if (cur !== "M" || priority >= 2) {
+              grid[py][px] = ch;
+            }
+          }
+        }
       }
     }
   }
 
-  // Hour hand
-  const hourAngle = ((hours % 12) + minutes / 60) * 30;
-  drawHand(hourAngle, 4, "H");
+  // Second hand (lowest priority — drawn first so others overwrite)
+  const secondAngle = seconds * 6;
+  drawHand(secondAngle, 8, "s", 1);
 
   // Minute hand
   const minuteAngle = (minutes + seconds / 60) * 6;
-  drawHand(minuteAngle, 6.5, "M");
+  drawHand(minuteAngle, 6.5, "M", 2);
 
-  // Second hand
-  const secondAngle = seconds * 6;
-  drawHand(secondAngle, 8, "s");
+  // Hour hand (highest priority, shortest)
+  const hourAngle = ((hours % 12) + minutes / 60) * 30;
+  drawHand(hourAngle, 4.5, "H", 3);
 
-  // Center
+  // Center dot (always on top)
   grid[cy][cx] = "+";
 
-  // Render with color spans
+  // ── Render with color + character mapping ──
   return grid.map((row) => {
     let line = "";
     for (const ch of row) {
-      if (ch === "H") line += `<span class="clk-hour">█</span>`;
-      else if (ch === "M") line += `<span class="clk-min">▓</span>`;
-      else if (ch === "s") line += `<span class="clk-sec">·</span>`;
-      else if (ch === "+") line += `<span class="clk-center">◉</span>`;
-      else if (ch === "·") line += `<span class="clk-ring">·</span>`;
-      else if (ch >= "0" && ch <= "9")
-        line += `<span class="clk-mark">${ch}</span>`;
-      else line += ch;
+      switch (ch) {
+        case "H":
+          line += `<span class="clk-hour">█</span>`;
+          break;
+        case "M":
+          line += `<span class="clk-min">░</span>`;
+          break;
+        case "s":
+          line += `<span class="clk-sec">∙</span>`;
+          break;
+        case "+":
+          line += `<span class="clk-center">◉</span>`;
+          break;
+        case "·":
+          line += `<span class="clk-ring">·</span>`;
+          break;
+        case "Q":
+          line += `<span class="clk-mark">◆</span>`;
+          break;
+        case "T":
+          line += `<span class="clk-mark">•</span>`;
+          break;
+        default:
+          line += ch;
+      }
     }
     return line;
   });

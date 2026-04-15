@@ -249,3 +249,84 @@
   object-fit: contain;
   margin: 8px 0;
 }
+
+/* ── Fenced code blocks — raw terminal output ── */
+.post-codeblock {
+  max-width: 72ch;
+  margin: 8px 0;
+}
+.post-codeblock-header {
+  display: none;
+}
+.post-codeblock-body {
+  margin: 0;
+  padding: 0;
+  font-family: "Fira Code", var(--font-mono);
+  font-size: 12.5px;
+  line-height: 1.7;
+  color: var(--cyan);
+  overflow-x: hidden;
+  white-space: pre-wrap;
+  word-break: break-all;
+  tab-size: 2;
+  background: transparent;
+}
+.post-codeblock-ln {
+  color: var(--grey-dim);
+  user-select: none;
+  opacity: 0.6;
+}
+
+/* ── Block math formulas (KaTeX) ── */
+.post-math-block {
+  max-width: 72ch;
+  margin: 12px 0;
+  padding: 0;
+  background: transparent;
+  overflow: visible;
+  text-align: left;
+}
+.post-math-block .katex-display {
+  text-align: left !important;
+  margin: 0 !important;
+  padding: 0 !important;
+  overflow: visible;
+}
+.post-math-block .katex-display > .katex {
+  text-align: left !important;
+}
+.post-math-block .katex {
+  color: var(--cyan);
+  font-size: 1.1em;
+  text-align: left;
+}
+.post-math-block .katex .mord,
+.post-math-block .katex .mbin,
+.post-math-block .katex .mrel,
+.post-math-block .katex .mopen,
+.post-math-block .katex .mclose,
+.post-math-block .katex .mpunct,
+.post-math-block .katex .mop {
+  color: var(--cyan);
+}
+.post-math-block .katex .mord.text {
+  color: var(--white);
+}
+
+/* ── Inline math (KaTeX) ── */
+.post-math-inline {
+  color: var(--cyan);
+  font-family: "Fira Code", var(--font-mono);
+  font-size: 0.9em;
+  padding: 1px 4px;
+  background: rgba(0, 255, 213, 0.06);
+  border-radius: 2px;
+}
+.katex {
+  font-size: 1em;
+}
+.post-para .katex,
+.post-blockquote .katex {
+  color: var(--cyan);
+  font-size: 0.95em;
+}

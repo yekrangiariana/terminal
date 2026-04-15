@@ -1809,6 +1809,17 @@ function inlineMarkdown(text) {
     /\[([^\]]+)\]\(([^)]*(?:\([^)]*\)[^)]*)*)\)/g,
     '<a class="post-link" href="$2" target="_blank" rel="noopener">$1</a>',
   );
+  // inline math: $expr$ (not preceded/followed by $)
+  text = text.replace(
+    /(?<!\$)\$(?!\$)([^$]+?)\$(?!\$)/g,
+    function(_, expr) {
+      try {
+        return katex.renderToString(expr, { throwOnError: false });
+      } catch (_e) {
+        return '<span class="post-math-inline">' + expr + '</span>';
+      }
+    },
+  );
   return text;
 }
 
@@ -2191,9 +2202,110 @@ function renderMarkdown(md, post) {
 
   const lines = md.split("\n");
   let paraBuf = [];
+  let inFence = false;
+  let fenceLang = "";
+  let fenceBuf = [];
+  let inMathBlock = false;
+  let mathBuf = [];
 
   for (let i = 0; i < lines.length; i++) {
     const raw = lines[i];
+
+    // ── Fenced code blocks: ```lang ... ``` ──
+    if (raw.trimStart().startsWith("```")) {
+      if (!inFence) {
+        flushPara(paraBuf);
+        paraBuf = [];
+        inFence = true;
+        fenceLang = raw.trimStart().slice(3).trim();
+        fenceBuf = [];
+      } else {
+        // closing fence — render the block
+        const esc = (s) =>
+          s.replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;");
+        const langLabel = fenceLang || "code";
+        const header =
+          '<div class="post-codeblock-header">' +
+          '<span class="post-codeblock-prompt">$</span>' +
+          '<span class="post-codeblock-lang">' + esc(langLabel) + '</span>' +
+          '</div>';
+        const codeLines = fenceBuf.map((l) => esc(l));
+        const numbered = codeLines
+          .map((l, idx) => {
+            const num = String(idx + 1).padStart(3, " ");
+            return '<span class="post-codeblock-ln">' + num + '</span>  ' + l;
+          })
+          .join("\n");
+        const block = document.createElement("div");
+        block.className =
+          "post-codeblock" + (_revealIdx < _REVEAL_CAP ? " term-reveal" : "");
+        if (_revealIdx < _REVEAL_CAP)
+          block.style.animationDelay = _revealDelay();
+        else _revealIdx++;
+        block.innerHTML =
+          header + '<pre class="post-codeblock-body">' + numbered + '</pre>';
+        output.appendChild(block);
+        inFence = false;
+        fenceLang = "";
+        fenceBuf = [];
+      }
+      continue;
+    }
+    if (inFence) {
+      fenceBuf.push(raw);
+      continue;
+    }
+
+    // ── Block math: $$ ... $$ ──
+    if (raw.trim().startsWith("$$")) {
+      if (!inMathBlock) {
+        flushPara(paraBuf);
+        paraBuf = [];
+        // Check if it's a single-line block: $$ content $$
+        const rest = raw.trim().slice(2);
+        if (rest.endsWith("$$") && rest.length > 2) {
+          const expr = rest.slice(0, -2).trim();
+          const mathDiv = document.createElement("div");
+          mathDiv.className =
+            "post-math-block" + (_revealIdx < _REVEAL_CAP ? " term-reveal" : "");
+          if (_revealIdx < _REVEAL_CAP)
+            mathDiv.style.animationDelay = _revealDelay();
+          else _revealIdx++;
+          try {
+            katex.render(expr, mathDiv, { displayMode: true, throwOnError: false });
+          } catch (_) {
+            mathDiv.textContent = expr;
+          }
+          output.appendChild(mathDiv);
+        } else {
+          inMathBlock = true;
+          mathBuf = [];
+          if (rest) mathBuf.push(rest);
+        }
+      } else {
+        // closing $$
+        const expr = mathBuf.join("\n").trim();
+        const mathDiv = document.createElement("div");
+        mathDiv.className =
+          "post-math-block" + (_revealIdx < _REVEAL_CAP ? " term-reveal" : "");
+        if (_revealIdx < _REVEAL_CAP)
+          mathDiv.style.animationDelay = _revealDelay();
+        else _revealIdx++;
+        try {
+          katex.render(expr, mathDiv, { displayMode: true, throwOnError: false });
+        } catch (_) {
+          mathDiv.textContent = expr;
+        }
+        output.appendChild(mathDiv);
+        inMathBlock = false;
+        mathBuf = [];
+      }
+      continue;
+    }
+    if (inMathBlock) {
+      mathBuf.push(raw);
+      continue;
+    }
 
     if (raw.startsWith("# ")) {
       flushPara(paraBuf);
