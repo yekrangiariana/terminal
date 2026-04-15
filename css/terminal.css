@@ -275,7 +275,14 @@
   border-top-color: rgba(26, 107, 74, 0.25);
 }
 [data-theme="paper"] body::after {
-  background: none;
+  background:
+    repeating-linear-gradient(
+      0deg,
+      transparent,
+      transparent 2px,
+      rgba(0, 0, 0, 0.03) 2px,
+      rgba(0, 0, 0, 0.03) 4px
+    );
 }
 [data-theme="paper"] #terminal-wrapper {
   box-shadow:
@@ -305,6 +312,10 @@
   border-left-color: rgba(0, 0, 0, 0.3);
   border-top-color: rgba(0, 0, 0, 0.3);
   background: rgba(255, 140, 66, 0.06);
+  color: #cc8855;
+}
+[data-theme="cinnamon"] #status-bar .sb-item#sb-mode {
+  color: #ff8c42;
 }
 [data-theme="cinnamon"] #terminal::-webkit-scrollbar-thumb {
   background: #6a3820;
@@ -320,11 +331,19 @@
   border-top-color: rgba(255, 140, 66, 0.3);
 }
 [data-theme="cinnamon"] body::after {
-  background: radial-gradient(
-    ellipse at center,
-    rgba(255, 100, 20, 0.04) 0%,
-    transparent 70%
-  );
+  background:
+    repeating-linear-gradient(
+      0deg,
+      transparent,
+      transparent 2px,
+      rgba(0, 0, 0, 0.03) 2px,
+      rgba(0, 0, 0, 0.03) 4px
+    ),
+    radial-gradient(
+      ellipse at center,
+      rgba(255, 100, 20, 0.04) 0%,
+      transparent 70%
+    );
 }
 [data-theme="cinnamon"] #terminal-wrapper {
   box-shadow:
@@ -354,6 +373,10 @@
   border-left-color: rgba(0, 0, 0, 0.3);
   border-top-color: rgba(0, 0, 0, 0.3);
   background: rgba(255, 92, 184, 0.06);
+  color: #dd66aa;
+}
+[data-theme="barbie"] #status-bar .sb-item#sb-mode {
+  color: #ff5cb8;
 }
 [data-theme="barbie"] #terminal::-webkit-scrollbar-thumb {
   background: #6a2048;
@@ -369,11 +392,19 @@
   border-top-color: rgba(255, 92, 184, 0.35);
 }
 [data-theme="barbie"] body::after {
-  background: radial-gradient(
-    ellipse at center,
-    rgba(255, 50, 150, 0.04) 0%,
-    transparent 70%
-  );
+  background:
+    repeating-linear-gradient(
+      0deg,
+      transparent,
+      transparent 2px,
+      rgba(0, 0, 0, 0.03) 2px,
+      rgba(0, 0, 0, 0.03) 4px
+    ),
+    radial-gradient(
+      ellipse at center,
+      rgba(255, 50, 150, 0.04) 0%,
+      transparent 70%
+    );
 }
 [data-theme="barbie"] #terminal-wrapper {
   box-shadow:

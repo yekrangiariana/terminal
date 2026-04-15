@@ -23,6 +23,7 @@ const SOURCE_TREE = {
     { name: "cmatrix.js", path: "js/cmatrix.js", type: "js" },
     { name: "desktop.js", path: "js/desktop.js", type: "js" },
     { name: "earth.js", path: "js/earth.js", type: "js" },
+    { name: "furrow.js", path: "js/furrow.js", type: "js" },
     { name: "shared.js", path: "js/shared.js", type: "js" },
     { name: "terminal.js", path: "js/terminal.js", type: "js" },
     { name: "widgets.js", path: "js/widgets.js", type: "js" }
@@ -31,6 +32,7 @@ const SOURCE_TREE = {
     { name: "clock.css", path: "css/clock.css", type: "css" },
     { name: "cmatrix.css", path: "css/cmatrix.css", type: "css" },
     { name: "desktop.css", path: "css/desktop.css", type: "css" },
+    { name: "furrow.css", path: "css/furrow.css", type: "css" },
     { name: "mobile.css", path: "css/mobile.css", type: "css" },
     { name: "post.css", path: "css/post.css", type: "css" },
     { name: "terminal.css", path: "css/terminal.css", type: "css" }

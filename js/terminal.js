@@ -71,6 +71,10 @@ function handleRoute(path) {
   path = (path || getRoutePath()).replace(/\/+$/, "") || "/";
   _suppressPush = true;
   try {
+    if (path === "/furrow") {
+      commands.furrow.execute();
+      return true;
+    }
     if (path === "/about") {
       commands.about.execute();
       return true;
@@ -513,9 +517,8 @@ function buildSidebar(items) {
   const currentMonth = now.getMonth();
   const monthLabels = "JFMAMJJASOND";
 
-  // Earth orbit — real calculation based on day of year
+  // Earth orbit — degree and season for initial label (animation takes over in 1s)
   const orbitDeg = Math.round((dayOfYear / totalDays) * 360);
-  const orbitAngle = (dayOfYear / totalDays) * 2 * Math.PI - Math.PI / 2;
   // Season (Northern Hemisphere)
   const seasons = [
     [80, "spring"],
@@ -528,51 +531,8 @@ function buildSidebar(items) {
     if (dayOfYear >= start) season = name;
   }
 
-  // Build ASCII orbit with sun and earth glyphs
-  // Ellipse: 19 wide, 7 tall
-  const OW = 19,
-    OH = 7;
-  let orbitGrid = [];
-  for (let y = 0; y < OH; y++) {
-    let row = [];
-    for (let x = 0; x < OW; x++) row.push(" ");
-    orbitGrid.push(row);
-  }
-  // Draw orbit ellipse
-  const cx = 9,
-    cy = 3,
-    rx = 8,
-    ry = 3;
-  for (let a = 0; a < 360; a += 4) {
-    const rad = (a * Math.PI) / 180;
-    const px = Math.round(cx + rx * Math.cos(rad));
-    const py = Math.round(cy + ry * Math.sin(rad));
-    if (px >= 0 && px < OW && py >= 0 && py < OH && orbitGrid[py][px] === " ") {
-      orbitGrid[py][px] = "·";
-    }
-  }
-  // Place sun at center
-  orbitGrid[cy][cx] = "S";
-  // Place earth on orbit
-  const ex = Math.round(cx + rx * Math.cos(orbitAngle));
-  const ey = Math.round(cy + ry * Math.sin(orbitAngle));
-  if (ex >= 0 && ex < OW && ey >= 0 && ey < OH) {
-    orbitGrid[ey][ex] = "E";
-  }
-  // Place moon orbiting earth
-  const moonAngle = (dayOfYear / 29.53) * 2 * Math.PI;
-  const mx = Math.max(
-    0,
-    Math.min(OW - 1, Math.round(ex + 2 * Math.cos(moonAngle))),
-  );
-  const my = Math.max(
-    0,
-    Math.min(OH - 1, Math.round(ey + 1 * Math.sin(moonAngle))),
-  );
-  if (orbitGrid[my][mx] === "·" || orbitGrid[my][mx] === " ") {
-    orbitGrid[my][mx] = "o";
-  }
-  const orbitLines = orbitGrid.map((r) => r.join(""));
+  // Placeholder lines — the live animation in startSidebarUpdates() fills these in
+  const orbitLines = Array(7).fill(" ".repeat(19));
 
   // Session uptime — real
   const uptimeSec = Math.floor((Date.now() - startTime) / 1000);
@@ -1090,7 +1050,7 @@ function startSidebarUpdates(sb) {
   const esc = (s) => s.replace(/&/g, "&amp;").replace(/</g, "&lt;");
   const wPad = (inner) => mkPad(W, inner);
 
-  window._sidebarInterval = setInterval(() => {
+  function _sidebarTick() {
     // Skip all work when tab is hidden
     if (document.hidden) return;
 
@@ -1288,7 +1248,10 @@ function startSidebarUpdates(sb) {
       html += "\n" + _orbAnimRow("", "");
       _orbitEl.innerHTML = html;
     }
-  }, 1000);
+  }
+
+  _sidebarTick();
+  window._sidebarInterval = setInterval(_sidebarTick, 1000);
 }
 
 // ── Render the full blog page ──────────────────
@@ -2475,6 +2438,7 @@ function printHome() {
   homeWrap.appendChild(homeMain);
   homeWrap.appendChild(sb);
   output.appendChild(homeWrap);
+  requestAnimationFrame(() => { terminal.scrollTop = 0; });
 
   // Start sidebar live updates (clock tick + orbit animation)
   startSidebarUpdates(sb);
@@ -2494,7 +2458,8 @@ function printHome() {
     ["whoami", "a bit more about me"],
     ["fortune", "wisdom from the machine"],
     ["htop", "system monitor dashboard"],
-    ["config", "theme & font settings"],
+    ["config", "theme & screensaver"],
+    ["furrow", "ASCII art gallery"],
     ["gui", "switch to desktop mode"],
     ["help", "all commands"],
   ];
@@ -2595,6 +2560,7 @@ const commands = {
         ["blog category", "filter by category"],
         ["projects", "projects & repos"],
         ["cmatrix", "digital rain screensaver"],
+        ["furrow", "ASCII art animation gallery"],
         ["ls", "quick text listing by category"],
         ["about / whoami", "about me"],
       ];
@@ -2611,9 +2577,10 @@ const commands = {
         ["home / exit", "return home"],
         ["gui", "switch to desktop (XP) mode"],
         ["htop", "system monitor dashboard"],
-        ["config", "terminal settings — theme & font"],
+        ["config", "theme & screensaver settings"],
         ["clear", "clear screen"],
         ["cmatrix", "digital rain screensaver"],
+        ["furrow", "ASCII art animation gallery"],
         ["fortune", "wisdom from the machine"],
       ];
       printLine("   │  Terminal", "c-dim");
@@ -2811,6 +2778,7 @@ const commands = {
       const sb = buildSidebar(ALL);
       aboutWrap.appendChild(sb);
       output.appendChild(aboutWrap);
+      requestAnimationFrame(() => { terminal.scrollTop = 0; });
       startSidebarUpdates(sb);
 
       fetch("assets/ariana-ascii.txt")
@@ -2855,6 +2823,50 @@ const commands = {
     description: "Digital rain screensaver",
     execute() {
       if (window.cmatrix) window.cmatrix.start();
+    },
+  },
+
+  furrow: {
+    description: "ASCII art animation gallery",
+    execute() {
+      clearOutput();
+      pushRoute("/furrow");
+      const lines = [
+        ["", ""],
+        ["  ░▒▓ ASCIIxGPT by The Furrow ▓▒░", "c-cyan"],
+        ["", ""],
+        ["  Licensed under CC BY-NC-SA 4.0", "c-dim"],
+        ["  thefurrow.tv/project/asciixgpt", "c-dim"],
+        ["", ""],
+      ];
+      let i = 0;
+      function next() {
+        if (i >= lines.length) {
+          setTimeout(() => {
+            if (window.furrow) {
+              window.furrow.onStop(() => {
+                clearOutput();
+                printHome();
+                pushRoute("/");
+              });
+              window.furrow.start();
+            }
+          }, 600);
+          return;
+        }
+        const [text, cls] = lines[i];
+        const div = document.createElement("div");
+        if (cls) div.className = cls;
+        if (text) {
+          div.textContent = text;
+        } else {
+          div.className = "spacer";
+        }
+        output.appendChild(div);
+        i++;
+        setTimeout(next, 35);
+      }
+      next();
     },
   },
 
@@ -2968,9 +2980,9 @@ const commands = {
   },
 
   config: {
-    description: "Terminal settings — theme & font",
+    description: "Terminal settings — theme & screensaver",
     execute(args) {
-      // Direct shortcut: config theme <name> / config font <name>
+      // Direct shortcut: config theme <name>
       if (args) {
         const parts = args.trim().split(/\s+/);
         if (parts[0] === "theme" && parts[1]) {
@@ -2989,20 +3001,6 @@ const commands = {
             `  available: ${THEMES.map((t) => t.id).join(", ")}`,
             "c-dim",
           );
-          return;
-        }
-        if (parts[0] === "font" && parts[1]) {
-          const match = FONTS.find(
-            (f) =>
-              f.id === parts[1] ||
-              f.name.toLowerCase() === parts.slice(1).join(" ").toLowerCase(),
-          );
-          if (match) {
-            applyFont(match.id);
-            printLine(`  font → ${match.name}`, "c-info");
-            return;
-          }
-          printLine(`  unknown font: ${parts[1]}`, "c-error");
           return;
         }
       }
@@ -3059,9 +3057,30 @@ const commands = {
 // Interactive Config Menu
 // ─────────────────────────────────────────────
 let _configMode = false;
-let _configSection = 0; // 0 = theme, 1 = font
+let _configSection = 0; // 0 = theme, 1 = screensaver
 let _configIdx = 0;
 let _configEl = null;
+
+// ── Screensaver setting ──
+// stored value: "cmatrix" (default) or a furrow concept index (0–8)
+function getActiveScreensaver() {
+  try {
+    return localStorage.getItem("term-screensaver") || "cmatrix";
+  } catch { return "cmatrix"; }
+}
+function setActiveScreensaver(val) {
+  try { localStorage.setItem("term-screensaver", val); } catch {}
+}
+
+function _getScreensaverList() {
+  const list = [{ id: "cmatrix", name: "CMatrix — Digital Rain", desc: "" }];
+  if (window.furrow && window.furrow.getNames) {
+    window.furrow.getNames().forEach((n, i) => {
+      list.push({ id: String(i), name: n, desc: "" });
+    });
+  }
+  return list;
+}
 
 function _openConfigMenu() {
   _configMode = true;
@@ -3089,7 +3108,8 @@ function _closeConfigMenu() {
 function _renderConfig() {
   if (!_configEl) return;
   const activeTheme = getActiveTheme();
-  const activeFont = getActiveFont();
+  const activeSS = getActiveScreensaver();
+  const ssList = _getScreensaverList();
 
   let html = "";
   html += "\n";
@@ -3116,21 +3136,22 @@ function _renderConfig() {
 
   html += '  <span class="c-cyan">│</span>\n';
 
-  // ── FONT section ──
-  const fontActive = _configSection === 1;
+  // ── SCREENSAVER section ──
+  const ssActive = _configSection === 1;
   html +=
     '  <span class="c-cyan">│</span>  <span class="cfg-section">' +
-    (fontActive ? "▸ " : "  ") +
-    "FONT</span>\n";
+    (ssActive ? "▸ " : "  ") +
+    "SCREENSAVER</span>\n";
   html += '  <span class="c-cyan">│</span>\n';
-  FONTS.forEach((f, i) => {
-    const isCurrent = f.id === activeFont;
-    const isSelected = fontActive && i === _configIdx;
+  ssList.forEach((s, i) => {
+    const isCurrent = s.id === activeSS;
+    const isSelected = ssActive && i === _configIdx;
     const cls = isSelected ? "cfg-option active" : "cfg-option";
     const cursor = isSelected ? "▸" : " ";
     const check = isCurrent ? "●" : "○";
     const checkCls = isCurrent ? "cfg-check checked" : "cfg-check";
-    html += `  <span class="c-cyan">│</span>  <span class="${cls}"><span class="cfg-cursor">${cursor}</span><span class="${checkCls}">${check}</span> <span class="cfg-label">${f.name.padEnd(16)}</span><span class="c-dim">${f.desc}</span></span>\n`;
+    const desc = s.desc ? '<span class="c-dim">' + s.desc + "</span>" : "";
+    html += `  <span class="c-cyan">│</span>  <span class="${cls}"><span class="cfg-cursor">${cursor}</span><span class="${checkCls}">${check}</span> <span class="cfg-label">${s.name.padEnd(28)}</span>${desc}</span>\n`;
   });
 
   html += '  <span class="c-cyan">│</span>\n';
@@ -3154,8 +3175,9 @@ function _renderConfig() {
       } else {
         _configSection = 1;
         _configIdx = i - THEMES.length;
-        applyFont(FONTS[_configIdx].id);
-        printLine(`  font → ${FONTS[_configIdx].name}`, "c-info");
+        const picked = ssList[_configIdx];
+        setActiveScreensaver(picked.id);
+        printLine(`  screensaver → ${picked.name}`, "c-info");
       }
       _renderConfig();
     });
@@ -3165,14 +3187,14 @@ function _renderConfig() {
 function _configKeyHandler(e) {
   if (!_configMode) return false;
 
-  const items = _configSection === 0 ? THEMES : FONTS;
+  const ssList = _getScreensaverList();
+  const items = _configSection === 0 ? THEMES : ssList;
 
   if (e.key === "ArrowUp") {
     e.preventDefault();
     if (_configIdx > 0) {
       _configIdx--;
     } else if (_configSection === 1) {
-      // Jump up from first font → last theme
       _configSection = 0;
       _configIdx = THEMES.length - 1;
     }
@@ -3184,7 +3206,6 @@ function _configKeyHandler(e) {
     if (_configIdx < items.length - 1) {
       _configIdx++;
     } else if (_configSection === 0) {
-      // Jump down from last theme → first font
       _configSection = 1;
       _configIdx = 0;
     }
@@ -3195,7 +3216,8 @@ function _configKeyHandler(e) {
     e.preventDefault();
     if (_configSection === 0) {
       _configSection = 1;
-      _configIdx = FONTS.findIndex((f) => f.id === getActiveFont());
+      const activeSS = getActiveScreensaver();
+      _configIdx = ssList.findIndex((s) => s.id === activeSS);
       if (_configIdx < 0) _configIdx = 0;
     } else {
       _configSection = 0;
@@ -3207,13 +3229,14 @@ function _configKeyHandler(e) {
   }
   if (e.key === "Enter") {
     e.preventDefault();
-    const selected = items[_configIdx];
     if (_configSection === 0) {
+      const selected = THEMES[_configIdx];
       applyTheme(selected.id);
       printLine(`  theme → ${selected.name}`, "c-info");
     } else {
-      applyFont(selected.id);
-      printLine(`  font → ${selected.name}`, "c-info");
+      const selected = ssList[_configIdx];
+      setActiveScreensaver(selected.id);
+      printLine(`  screensaver → ${selected.name}`, "c-info");
     }
     _renderConfig();
     return true;

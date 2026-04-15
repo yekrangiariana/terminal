@@ -703,6 +703,57 @@ function _wDomStats() {
   };
 }
 
+// Storage / cache stats widget (12 lines)
+function _wStorage() {
+  let lsUsed = "—",
+    ssUsed = "—",
+    lsCount = 0,
+    ssCount = 0;
+  try {
+    lsCount = localStorage.length;
+    let lsBytes = 0;
+    for (let i = 0; i < lsCount; i++) {
+      const k = localStorage.key(i);
+      lsBytes += (k.length + (localStorage.getItem(k) || "").length) * 2;
+    }
+    lsUsed =
+      lsBytes < 1024 ? lsBytes + " B" : (lsBytes / 1024).toFixed(1) + " KB";
+  } catch (_) {}
+  try {
+    ssCount = sessionStorage.length;
+    let ssBytes = 0;
+    for (let i = 0; i < ssCount; i++) {
+      const k = sessionStorage.key(i);
+      ssBytes += (k.length + (sessionStorage.getItem(k) || "").length) * 2;
+    }
+    ssUsed =
+      ssBytes < 1024 ? ssBytes + " B" : (ssBytes / 1024).toFixed(1) + " KB";
+  } catch (_) {}
+
+  const cacheApi = "caches" in window ? "YES" : "NO";
+  const sw = navigator.serviceWorker ? "REG" : "NONE";
+  const cookies = navigator.cookieEnabled ? "ON" : "OFF";
+  const pct = Math.min(100, Math.round((lsCount / 50) * 100));
+
+  return {
+    html: [
+      _wtop(), // 1
+      _wsep(), // 2
+      _wpad(`<span class="sb-label">STORAGE I/O</span>`), // 3
+      _wsep(), // 4
+      _wrow("LOCAL", _wcol("var(--amber)", _wesc(lsUsed))), // 5
+      _wrow("KEYS", _wval(lsCount)), // 6
+      _wrow("SESSION", _wcol("var(--blue)", _wesc(ssUsed))), // 7
+      _wrow("S-KEYS", _wval(ssCount)), // 8
+      _wrow("CACHE", _wval(cacheApi)), // 9
+      _wrow("QUOTA", _wbar(pct)), // 10
+      _wsep(), // 11
+      _wbot(), // 12
+    ].join("\n"),
+    size: "single",
+  };
+}
+
 // ══════════════════════════════════════════════════════════════
 // SINGLE-WIDTH: CLOCK ORBIT  (12 lines)
 // Animated earth/sun/moon orbit
@@ -1013,6 +1064,8 @@ function _wBootSequence(container, callback) {
     "TEMP / ARCHIVE",
     "NEOFETCH",
     "INPUT DEVICES",
+    "DOM INSPECTOR",
+    "STORAGE I/O",
   ];
 
   const lines = [
@@ -1089,7 +1142,7 @@ function _wBootSequence(container, callback) {
 //   Row 3: [Memory]  [Network]  [Display]        — hardware
 //   Row 4: [TempArchive (double)]  [Presence]    — environment
 //   Row 5: [Orbit (double)]  [RenderEngine]      — space + perf
-//   Row 6: [Input]                               — devices
+//   Row 6: [Input]  [DomStats]  [Storage]        — devices / io
 //   Row 7: ─── Footer (full) ──────────────────
 //
 function _wRebuildGrid() {
@@ -1108,7 +1161,9 @@ function _wRebuildGrid() {
     _wPresence(), // d + s (row 4)
     _wClockOrbit(),
     _wRenderEngine(), // d + s (row 5)
-    _wInput(), // s     (row 6)
+    _wInput(),
+    _wDomStats(),
+    _wStorage(), // s+s+s (row 6)
     _wFooter(), // full  (row 7)
   ];
 

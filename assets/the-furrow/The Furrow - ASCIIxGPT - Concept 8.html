@@ -1,0 +1,164 @@
+
+            <!DOCTYPE html>
+            <html lang="en">
+            <head>
+                <meta charset="UTF-8">
+                <meta name="viewport" content="width=device-width, initial-scale=1.0">
+                <title>Exported Animation</title>
+                <style>
+                    body {
+                        font-family: 'Courier New', monospace;
+                        background-color: black;
+                        color: white;
+                        margin: 0;
+                        padding: 0;
+                    }
+
+                    body::-webkit-scrollbar {
+                        display: none;
+                    }
+                    
+                    .center-container {
+                        display: flex;
+                        flex-direction: column;
+                        align-items: center;
+                        justify-content: center;
+                        min-height: 100vh;
+                    }
+
+                    #animation {
+                        background: black;
+                        color: white;
+                        padding: 20px;
+                        font-size: 18px;
+                        line-height: 1;
+                        white-space: pre;
+                        margin-bottom: 20px; 
+                    }
+                </style>           
+            </head>
+            <body>
+                <div class="center-container">
+                    <pre id="animation" style="font-family: monospace;"></pre>
+                </div>
+                <script>
+                    let time = 0;
+
+                    // Hardcoded values
+                    const charset = decodeURIComponent(escape(atob("ImAtLl8sLSciYC0uXywtJyJgLS5fLC0nImAtLl8sLSc=")));
+                    const frameWidth = 180;
+                    const frameHeight = 56;
+                    const xConstant = 0.0002;
+                    const yConstant = 0.1;
+                    const frameMultiplier = 0.1;
+                    const animationSpeed = 50;
+                    const pattern = "cross";
+                    const chaos = 0.001;
+
+                    function animate() {
+                        let output = "";
+
+                        for (let y = 0; y < frameHeight; y++) {
+                            for (let x = 0; x < frameWidth; x++) {
+                                let value;
+
+                        switch (pattern) {
+                            case 'spirals':
+                                value = Math.sin(x * xConstant + time * frameMultiplier) + Math.cos(y * yConstant + time * frameMultiplier);
+                                break;
+                            case 'wavefronts':
+                                value = Math.sin(x * xConstant + y * yConstant + time * frameMultiplier);
+                                break;
+                            case 'circular':
+                                value = Math.sin((x - frameWidth / 2) * (x - frameWidth / 2) * xConstant + (y - frameHeight / 2) * (y - frameHeight / 2) * yConstant + time * frameMultiplier);
+                                break;
+                            case 'expanding':
+                                value = Math.sin(Math.sqrt((x - frameWidth / 2) * (x - frameWidth / 2) + (y - frameHeight / 2) * (y - frameHeight / 2)) * frameMultiplier + time * frameMultiplier);
+                                break;
+                            case 'swirling':
+                                value = Math.sin(x * xConstant + time) + Math.cos(y * yConstant + time);
+                                break;
+                            case 'grid':
+                                value = Math.sin(x * xConstant + y + time * frameMultiplier);
+                                break;
+                            case 'ziplines':
+                                value = Math.sin(x * xConstant + y * yConstant + time);
+                                break;
+                            case 'cross':
+                                value = Math.sin((x - frameWidth / 2) * (x - frameWidth / 2) * xConstant + time * frameMultiplier) + Math.cos((y - frameHeight / 2) * (y - frameHeight / 2) * yConstant + time * frameMultiplier);
+                                break;
+                            case 'rise':
+                                value = Math.sin(x * xConstant + y + time) + Math.cos(y * yConstant + x + time);
+                                break;
+                            case 'rippling':
+                                value = Math.sin(x * xConstant + Math.sin(y + time) + time);
+                                break;
+                            case 'pulsating':
+                                value = Math.sin((x * xConstant + y * yConstant) * frameMultiplier + time);
+                                break;
+                            case 'spiralWave':
+                                value = Math.sin(x * xConstant + time) + Math.cos(Math.sqrt(y * y + x * x) + time);
+                                break;
+                            case 'twirling':
+                                value = Math.sin((x - frameWidth / 2) * xConstant + Math.cos((y - frameHeight / 2) * yConstant + time));
+                                break;
+                            case 'checkerboard':
+                                value = Math.sin(x * xConstant) * Math.sin(y * yConstant + time);
+                                break;
+                            case 'tornado':
+                                value = Math.sin(x * xConstant + y * yConstant + time) * Math.cos(y * yConstant + time);
+                                break;
+                            case 'diagonalWaves':
+                                value = Math.sin(x * xConstant + y * yConstant + time);
+                                break;
+                            case 'nestedCircles':
+                                value = Math.sin((x * xConstant + y * yConstant) * Math.sin(time) + time);
+                                break;
+                            case 'radialRays':
+                                value = Math.sin(x * xConstant + y * yConstant) * Math.cos(time);
+                                break;
+                            case 'diamonds':
+                                value = Math.sin(x * xConstant + y + time) + Math.cos(y * yConstant + x + time);
+                                break;
+                            case 'burst':
+                                value = Math.sin((x - frameWidth / 2) * (x - frameWidth / 2) + (y - frameHeight / 2) * (y - frameHeight / 2) + time) * (yConstant/xConstant);
+                                break;
+                            case 'squareWave':
+                                value = Math.sin(x * xConstant) * Math.cos(y * yConstant + time);
+                                break;
+                            case 'flower':
+                                value = Math.sin((x - frameWidth / 2) * xConstant) * Math.cos((y - frameHeight / 2) * yConstant + time);
+                                break;
+                            case 'mosaic':
+                                value = Math.sin(x * xConstant + time) * Math.sin(y * yConstant + time);
+                                break;
+                            case 'helix':
+                                value = Math.sin(x * xConstant + y * yConstant + time) * Math.cos(y * yConstant + time * 2);
+                                break;
+                            default:
+                                value = 0;
+                                break;
+                        }
+
+                        const index = Math.floor((value + 2) / 4 * charset.length);
+                        output += charset[index] || charset.charAt(charset.length - 1);
+
+                        if (Math.random() < chaos) {
+                            const direction = Math.random() < 0.5 ? -1 : 1;  // Determine whether to pick the previous or next char.
+                            const newIndex = index + direction;
+                            output = output.slice(0, -1) + (charset[newIndex] || (direction === -1 ? charset[0] : charset.charAt(charset.length - 1)));
+                        }                }
+                            output += "\n";
+                        }
+
+                        document.getElementById('animation').textContent = output;
+
+                        setTimeout(animate, animationSpeed);
+                        time += frameMultiplier;
+                    }
+
+                    animate();
+                 </script>
+            </body>
+            </html>
+            

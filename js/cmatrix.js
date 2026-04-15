@@ -272,11 +272,26 @@
   });
 
   // ── Idle screensaver timer ──
+  function _getScreensaverChoice() {
+    try {
+      return localStorage.getItem("term-screensaver") || "cmatrix";
+    } catch { return "cmatrix"; }
+  }
+
+  function _launchScreensaver() {
+    const choice = _getScreensaverChoice();
+    if (choice === "cmatrix") {
+      if (!active) start();
+    } else if (window.furrow && !window.furrow.isActive()) {
+      window.furrow.start(parseInt(choice, 10));
+    }
+  }
+
   function resetIdleTimer() {
     if (idleTimer) clearTimeout(idleTimer);
     idleTimer = setTimeout(() => {
       if (!active && document.getElementById("terminal-wrapper")) {
-        start();
+        _launchScreensaver();
       }
     }, IDLE_TIMEOUT);
   }

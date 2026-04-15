@@ -1,0 +1,35 @@
+/* ─────────────────────────────────────────────
+   furrow — ASCII animation gallery overlay
+───────────────────────────────────────────── */
+#terminal.furrow-active {
+  position: relative;
+  padding: 0;
+  overflow: hidden;
+}
+#terminal.furrow-active::-webkit-scrollbar {
+  display: none;
+}
+
+#furrow-canvas {
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  margin: 0;
+  padding: 0;
+  user-select: none;
+  cursor: none;
+  display: block;
+}
+
+/* Input line overlaid on the animation while typing */
+#terminal.furrow-active #input-line.furrow-typing {
+  display: flex;
+  position: absolute;
+  bottom: 16px;
+  left: 28px;
+  right: 28px;
+  z-index: 20;
+  margin-top: 0;
+}

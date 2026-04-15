@@ -1,0 +1,221 @@
+<!DOCTYPE html>
+            <html lang="en">
+            <head>
+                <meta charset="UTF-8">
+                <meta name="viewport" content="width=device-width, initial-scale=1.0">
+                <link rel="stylesheet" href="https://fonts.googleapis.com/css?family=Roboto+Mono|Source+Code+Pro|Ubuntu+Mono|Space+Mono|Inconsolata|VT323|Fira+Mono&display=swap">
+                <link rel="shortcut icon" href="https://img.icons8.com/?size=2x&id=53372&format=png" type="image/x-icon">
+                <link rel="icon" href="https://img.icons8.com/?size=2x&id=53372&format=png" type="image/x-icon">
+                <title>Exported Animation</title>
+                <style>
+                    body {
+                        font-family: 'Courier New', monospace;
+                        background-color: #7C7C7C;
+                        color: white;
+                        margin: 0;
+                        padding: 0;
+                    }
+
+                    body::-webkit-scrollbar {
+                        display: none;
+                    }
+                    
+                    .center-container {
+                        padding: 10px;
+                        display: flex;
+                        flex-direction: column;
+                        align-items: center;
+                        justify-content: center;
+                        min-height: 100vh;
+                    }
+
+                    #animation {
+                        background: #7C7C7C;
+                        /* color: white; */
+                        padding: 20px;
+                        font-size: 18px;
+                        line-height: 1;
+                        white-space: pre;
+                        margin-bottom: 20px;
+                        overflow: hidden;
+                        width: calc(1ch * 120);
+                        height: calc(1em * 30);
+                    }
+                </style>           
+            </head>
+            <body>
+                <div class="center-container">
+                    <pre id="animation"></pre>
+                </div>
+                <script>
+                    let time = 0;
+
+                    // Hardcoded values
+                    const selectedFontValue = "monospace";
+                    const mirrorAxis = "x";
+                    const charset = decodeURIComponent(escape(atob("X198fHx84paR4paR4paS4paS4paT4paT4paT4paT4paS4paS4paR4paRfHx8fF9ffF9fX3x8fHzilpHilpHilpLilpLilpPilpPilpPilpLilpHilpF8fHx8Xw==")));
+                    const frameWidth = 120;
+                    const frameHeight = 30;
+                    const xConstant = 0.05;
+                    const yConstant = 19.1;
+                    const frameMultiplier = 0.019;
+                    const animationSpeed = 1;
+                    const pattern = "centerSpiral";
+                    const chaos = 0;
+                    const globalVal = 3.8;
+
+                    const color1 = "#FF7700";
+                    const color2 = "#F88826";
+                    const color3 = "#FF6900";
+                    const color4 = "#9800FF";
+                    const color5 = "#7600FF";
+                    const colors = [color1, color2, color3, color4, color5];
+
+
+                    function animate() {
+                        let output = "";
+
+                        for (let y = 0; y < frameHeight; y++) {
+                for (let x = 0; x < frameWidth; x++) {
+                    let value;
+                    let mirrorX = x;
+                    let mirrorY = y;
+
+                    if (mirrorAxis === "x" && x > frameWidth / 2) {
+                        mirrorX = frameWidth - x;
+                    }
+
+                    if (mirrorAxis === "y" && y > frameHeight / 2) {
+                        mirrorY = frameHeight - y;
+                    }
+
+                    switch (pattern) {
+                                    case 'spirals':
+                                    value = Math.sin(mirrorX * xConstant + time * frameMultiplier) + Math.cos(mirrorY * yConstant + time * frameMultiplier);
+                                    break;
+                                case 'wavefronts':
+                                    value = Math.sin(mirrorX * xConstant + mirrorY * yConstant + time * frameMultiplier);
+                                    break;
+                                case 'circular':
+                                    value = Math.sin((mirrorX - frameWidth / 2) * (mirrorX - frameWidth / 2) * xConstant + (mirrorY - frameHeight / 2) * (mirrorY - frameHeight / 2) * yConstant + time * frameMultiplier);
+                                    break;
+                                case 'expanding':
+                                    value = Math.sin(Math.sqrt((mirrorX - frameWidth / 2) * (mirrorX - frameWidth / 2) + (mirrorY - frameHeight / 2) * (mirrorY - frameHeight / 2)) * frameMultiplier + time * frameMultiplier);
+                                    break;
+                                case 'swirling':
+                                    value = Math.sin(mirrorX * xConstant + time) + Math.cos(mirrorY * yConstant + time);
+                                    break;
+                                case 'grid':
+                                    value = Math.sin(mirrorX * xConstant + mirrorY + time * frameMultiplier);
+                                    break;
+                                case 'cross':
+                                    value = Math.sin((mirrorX - frameWidth / 2) * (mirrorX - frameWidth / 2) * xConstant + time * frameMultiplier) + Math.cos((mirrorY - frameHeight / 2) * (mirrorY - frameHeight / 2) * yConstant + time * frameMultiplier);
+                                    break;
+                                case 'rise':
+                                    value = Math.sin(mirrorX * xConstant + mirrorY + time) + Math.cos(mirrorY * yConstant + mirrorX + time);
+                                    break;
+                                case 'rippling':
+                                    value = Math.sin(mirrorX * xConstant + Math.sin(mirrorY + time) + time);
+                                    break;
+                                case 'pulsating':
+                                    value = Math.sin((mirrorX * xConstant + mirrorY * yConstant) * frameMultiplier + time);
+                                    break;
+                                case 'spiralWave':
+                                    value = Math.sin(mirrorX * xConstant + time) + Math.cos(Math.sqrt(mirrorY * mirrorY + mirrorX * mirrorX) + time);
+                                    break;
+                                case 'twirling':
+                                    value = Math.sin((mirrorX - frameWidth / 2) * xConstant + Math.cos((mirrorY - frameHeight / 2) * yConstant + time));
+                                    break;
+                                case 'diagonalWaves':
+                                    value = Math.sin(mirrorX * xConstant + mirrorY * yConstant + time);
+                                    break;
+                                case 'bounceDiagonals':
+                                    value = Math.sin((mirrorX * xConstant + mirrorY * yConstant) * Math.sin(time) + time);
+                                    break;
+                                case 'radialRays':
+                                    value = Math.sin(mirrorX * xConstant + mirrorY * yConstant) * Math.cos(time);
+                                    break;
+                                case 'burst':
+                                    value = Math.sin((mirrorX - frameWidth / 2) * (mirrorX - frameWidth / 2) + (mirrorY - frameHeight / 2) * (mirrorY - frameHeight / 2) + time) * (yConstant/xConstant);
+                                    break;
+                                case 'squareWave':
+                                    value = Math.sin(mirrorX * xConstant) * Math.cos(mirrorY * yConstant + time);
+                                    break;
+                                case 'mosaic':
+                                    value = Math.sin(mirrorX * xConstant + time) * Math.sin(mirrorY * yConstant + time);
+                                    break;
+                                case 'helix':
+                                    value = Math.sin(mirrorX * xConstant + mirrorY * yConstant + time) * Math.cos(mirrorY * yConstant + time * 2);
+                                    break;
+                                case 'parabolic':
+                                    value = Math.sin(mirrorX * mirrorX * xConstant + time);
+                                    break;
+                                
+                                case 'verticalWave':
+                                    value = Math.sin(mirrorY * yConstant + time);
+                                    break;
+                                case 'horizontalWave':
+                                    value = Math.sin(mirrorX * xConstant + time);
+                                    break;
+                                case 'concentricCircles':
+                                    value = Math.sin(Math.sqrt((mirrorX - frameWidth / 2) * (mirrorX - frameWidth / 2) + (mirrorY - frameHeight / 2) * (mirrorY - frameHeight / 2)) + time);
+                                    break;
+                                case 'randomBurst':
+                                    value = Math.sin((mirrorX - frameWidth / 2) * (mirrorX - frameWidth / 2) + (mirrorY - frameHeight / 2) * (mirrorY - frameHeight / 2) + time) * Math.random();
+                                    break;
+
+                                case 'centerSpiral': {
+                                    let dx = mirrorX - frameWidth / 2;
+                                    let dy = mirrorY - frameHeight / 2;
+                                    let theta = Math.atan2(dy, dx) + xConstant;
+                                    let curvature = Math.sin(theta * yConstant);
+                                    let wave = globalVal * Math.sin(mirrorX * xConstant + time);
+                                    let density = Math.sin(theta * frameMultiplier);
+                                    let localSpeed = Math.sin(mirrorX * xConstant + mirrorY * yConstant);
+                                    let r = (theta + (time + localSpeed) * frameMultiplier + curvature + wave) * (1 + density);
+                                    value = Math.sin(r);
+                                    break;
+                                }
+                                case 'raySpiral': {
+                                    let ex = mirrorX - frameWidth / 2;
+                                    let ey = mirrorY - frameHeight / 2;
+                                    let theta = Math.atan2(ey, ex) + xConstant;
+                                    let curvature = Math.sin(theta * yConstant);
+                                    let r = theta + time * frameMultiplier + curvature;
+                                    value = Math.sin(r);
+                                    break;
+                                }
+
+                                default:
+                                    value = 0;
+                                    break;
+                        }
+
+                        const index = Math.floor((value + 2) / 4 * charset.length);
+                        const color = colors[index % colors.length];
+                        const char = charset[index] || charset.charAt(charset.length - 1);
+                        output += '<span style="color:' + color + '">' + char + '</span>';
+
+                        if (Math.random() < chaos) {
+                            const direction = Math.random() < 0.5 ? -1 : 1;  // Determine whether to pick the previous or next char.
+                            const newIndex = index + direction;
+                            const newChar = charset[newIndex] || (direction === -1 ? charset[0] : charset.charAt(charset.length - 1));
+                            const newColor = colors[newIndex % colors.length];
+                            output = output.slice(0, -1) + '<span style="color:' + newColor + '}">' + newChar + '</span>';
+                        }
+               
+                        }
+                            output += "\n";
+                        }
+
+                        document.getElementById('animation').innerHTML = output;
+                        document.getElementById('animation').style.fontFamily = selectedFontValue;
+
+                        setTimeout(animate, animationSpeed);
+                        time += frameMultiplier;
+                    }
+
+                    animate();
+                    </script>
+                </body>
+            </html>
