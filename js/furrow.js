@@ -166,9 +166,18 @@
       pattern: "pollock",
       charset: ".,;:!|/\\~=#%@&*",
       colors: [
-        "#FF2020", "#FF6600", "#FFCC00", "#FFFFFF",
-        "#2288FF", "#00BBFF", "#22FF66", "#FF44AA",
-        "#CC44FF", "#FF8800", "#44DDDD", "#FFEE55",
+        "#FF2020",
+        "#FF6600",
+        "#FFCC00",
+        "#FFFFFF",
+        "#2288FF",
+        "#00BBFF",
+        "#22FF66",
+        "#FF44AA",
+        "#CC44FF",
+        "#FF8800",
+        "#44DDDD",
+        "#FFEE55",
       ],
       xConstant: 7,
       yConstant: 5,
@@ -226,7 +235,8 @@
 
     // Compute final position for cell index at a given generation
     function pos(idx, g) {
-      var x = cx, y = cy;
+      var x = cx,
+        y = cy;
       for (var lvl = 0; lvl < g; lvl++) {
         var bit = (idx >> (g - 1 - lvl)) & 1;
         var dir = bit * 2 - 1;
@@ -245,7 +255,7 @@
     var count = 1 << gen;
 
     // Easing for split interpolation
-    var ease = t < 0.5 ? 2 * t * t : 1 - (-2 * t + 2) * (-2 * t + 2) / 2;
+    var ease = t < 0.5 ? 2 * t * t : 1 - ((-2 * t + 2) * (-2 * t + 2)) / 2;
 
     for (var i = 0; i < count; i++) {
       var final = pos(i, gen);
@@ -314,22 +324,36 @@
         // Nucleus glow — dense at center
         const nucleus = Math.exp(-dist * dist * 0.02) * 2;
         // Electron shells — concentric rings that pulse
-        const shell1 = Math.sin(dist * 0.5 - time * c.frameMultiplier * 3) *
-                        Math.exp(-Math.abs(dist - 8) * 0.15);
-        const shell2 = Math.sin(dist * 0.5 - time * c.frameMultiplier * 2 + 2) *
-                        Math.exp(-Math.abs(dist - 16) * 0.12);
-        const shell3 = Math.sin(dist * 0.5 - time * c.frameMultiplier * 1.5 + 4) *
-                        Math.exp(-Math.abs(dist - 26) * 0.1);
+        const shell1 =
+          Math.sin(dist * 0.5 - time * c.frameMultiplier * 3) *
+          Math.exp(-Math.abs(dist - 8) * 0.15);
+        const shell2 =
+          Math.sin(dist * 0.5 - time * c.frameMultiplier * 2 + 2) *
+          Math.exp(-Math.abs(dist - 16) * 0.12);
+        const shell3 =
+          Math.sin(dist * 0.5 - time * c.frameMultiplier * 1.5 + 4) *
+          Math.exp(-Math.abs(dist - 26) * 0.1);
         // Orbiting electrons — bright dots on each shell
-        const e1 = Math.exp(-Math.pow(dist - 8, 2) * 0.3) *
-                   Math.exp(-Math.pow(angle - time * c.frameMultiplier * 5, 2) * 2);
-        const e2 = Math.exp(-Math.pow(dist - 16, 2) * 0.2) *
-                   Math.exp(-Math.pow(angle + time * c.frameMultiplier * 3 + 1, 2) * 1.5);
-        const e3 = Math.exp(-Math.pow(dist - 26, 2) * 0.15) *
-                   Math.exp(-Math.pow(angle - time * c.frameMultiplier * 2 + 3, 2) * 1.2);
+        const e1 =
+          Math.exp(-Math.pow(dist - 8, 2) * 0.3) *
+          Math.exp(-Math.pow(angle - time * c.frameMultiplier * 5, 2) * 2);
+        const e2 =
+          Math.exp(-Math.pow(dist - 16, 2) * 0.2) *
+          Math.exp(
+            -Math.pow(angle + time * c.frameMultiplier * 3 + 1, 2) * 1.5,
+          );
+        const e3 =
+          Math.exp(-Math.pow(dist - 26, 2) * 0.15) *
+          Math.exp(
+            -Math.pow(angle - time * c.frameMultiplier * 2 + 3, 2) * 1.2,
+          );
         // Cloud probability field
-        const cloud = Math.sin(angle * c.xConstant + dist * 0.3 + time * c.frameMultiplier) *
-                      c.globalVal * Math.exp(-dist * 0.03);
+        const cloud =
+          Math.sin(
+            angle * c.xConstant + dist * 0.3 + time * c.frameMultiplier,
+          ) *
+          c.globalVal *
+          Math.exp(-dist * 0.03);
         return nucleus + shell1 + shell2 + shell3 + (e1 + e2 + e3) * 3 + cloud;
       }
       case "mitosis": {
@@ -348,7 +372,7 @@
           var ddx = mx - cX;
           var ddy = (my - cY) * 1.8; // aspect ratio
           var d2 = ddx * ddx + ddy * ddy;
-          field += cO * 18 / (1 + d2 * 0.12);
+          field += (cO * 18) / (1 + d2 * 0.12);
         }
 
         // Map to -2..+2 range for charset
@@ -364,25 +388,35 @@
         var h = _frand(mx * 13.71 + my * 7.93 + Math.floor(t1 * 0.3) * 99.1);
 
         // Drip strands — vertical-ish chaotic curves
-        var drip1 = Math.sin(mx * 0.4 + Math.sin(my * 0.15 + t1) * c.xConstant + t1) *
-                    Math.cos(my * 0.08 + t2 * 0.5);
-        var drip2 = Math.sin(mx * 0.25 - t2 + Math.sin(my * 0.3 + t1 * 1.3) * 3) *
-                    Math.cos(my * 0.12 - mx * 0.06 + t1);
-        var drip3 = Math.cos(mx * 0.6 + my * 0.1 + t3) *
-                    Math.sin(my * 0.2 + Math.cos(mx * 0.08 + t2) * c.yConstant);
+        var drip1 =
+          Math.sin(mx * 0.4 + Math.sin(my * 0.15 + t1) * c.xConstant + t1) *
+          Math.cos(my * 0.08 + t2 * 0.5);
+        var drip2 =
+          Math.sin(mx * 0.25 - t2 + Math.sin(my * 0.3 + t1 * 1.3) * 3) *
+          Math.cos(my * 0.12 - mx * 0.06 + t1);
+        var drip3 =
+          Math.cos(mx * 0.6 + my * 0.1 + t3) *
+          Math.sin(my * 0.2 + Math.cos(mx * 0.08 + t2) * c.yConstant);
 
         // Splatter blobs — sudden bursts
         var blob1 = Math.sin(mx * 0.9 + t1 * 3) * Math.sin(my * 0.7 - t2 * 2);
-        var blob2 = Math.cos(mx * 0.5 - my * 0.8 + t3 * 4) *
-                    Math.sin(mx * 0.3 + my * 0.4 + t1 * 2);
+        var blob2 =
+          Math.cos(mx * 0.5 - my * 0.8 + t3 * 4) *
+          Math.sin(mx * 0.3 + my * 0.4 + t1 * 2);
 
         // Sweeping arcs — broad gestural strokes
-        var arc = Math.sin((mx + my) * 0.12 + t1 * 0.7) *
-                  Math.cos((mx - my * 1.5) * 0.08 + t2 * 0.4);
+        var arc =
+          Math.sin((mx + my) * 0.12 + t1 * 0.7) *
+          Math.cos((mx - my * 1.5) * 0.08 + t2 * 0.4);
 
         // Combine layers — the chaos
-        var val = drip1 * 0.8 + drip2 * 0.7 + drip3 * 0.6 +
-                  blob1 * 0.5 + blob2 * 0.4 + arc * 0.6;
+        var val =
+          drip1 * 0.8 +
+          drip2 * 0.7 +
+          drip3 * 0.6 +
+          blob1 * 0.5 +
+          blob2 * 0.4 +
+          arc * 0.6;
 
         // Threshold splatter — sharp paint-or-no-paint edges
         var splat = h > 0.6 ? (h - 0.6) * 2.5 : 0;
