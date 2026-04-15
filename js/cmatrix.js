@@ -275,7 +275,9 @@
   function _getScreensaverChoice() {
     try {
       return localStorage.getItem("term-screensaver") || "cmatrix";
-    } catch { return "cmatrix"; }
+    } catch {
+      return "cmatrix";
+    }
   }
 
   function _launchScreensaver() {

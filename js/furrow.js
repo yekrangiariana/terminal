@@ -7,8 +7,8 @@
 
   // ── Concept presets ──────────────────────────
   const CONCEPTS = [
-
-    {      name: "Center Spiral",
+    {
+      name: "Center Spiral",
       pattern: "centerSpiral",
       charset: "░▒▓░▒▓░░▒▓░▒▓░░▒▓░▒▓░░▒▓░▒▓░░▒▓░▒▓░░▒▓░▒▓░░▒▓░▒▓░",
       colors: ["#43BFD4", "#BC7ED2", "#9EE1EF", "#C3ECF0", "#B9AAF3"],
@@ -165,10 +165,7 @@
         const density = Math.sin(theta * c.frameMultiplier);
         const localSpeed = Math.sin(mx * c.xConstant + my * c.yConstant);
         const r =
-          (theta +
-            (time + localSpeed) * c.frameMultiplier +
-            curvature +
-            wave) *
+          (theta + (time + localSpeed) * c.frameMultiplier + curvature + wave) *
           (1 + density);
         return Math.sin(r);
       }
@@ -176,22 +173,21 @@
         return Math.sin(
           (mx - fw / 2) * (mx - fw / 2) * c.xConstant +
             (my - fh / 2) * (my - fh / 2) * c.yConstant +
-            time * c.frameMultiplier
+            time * c.frameMultiplier,
         );
       case "mosaic":
         return (
-          Math.sin(mx * c.xConstant + time) *
-          Math.sin(my * c.yConstant + time)
+          Math.sin(mx * c.xConstant + time) * Math.sin(my * c.yConstant + time)
         );
       case "cross":
         return (
           Math.sin(
             (mx - fw / 2) * (mx - fw / 2) * c.xConstant +
-              time * c.frameMultiplier
+              time * c.frameMultiplier,
           ) +
           Math.cos(
             (my - fh / 2) * (my - fh / 2) * c.yConstant +
-              time * c.frameMultiplier
+              time * c.frameMultiplier,
           )
         );
       case "checkerboard":
@@ -280,9 +276,12 @@
           fill = colors[((idx % colLen) + colLen) % colLen];
         } else {
           const brightness = (value + 2) * 0.25;
-          fill = brightness > 0.65 ? theme.cyan
-               : brightness > 0.4  ? theme.dim
-               :                      theme.grey;
+          fill =
+            brightness > 0.65
+              ? theme.cyan
+              : brightness > 0.4
+                ? theme.dim
+                : theme.grey;
         }
 
         if (fill !== prevFill) {
@@ -302,7 +301,9 @@
     const c = CONCEPTS[currentIdx];
     if (!_sbMode) _sbMode = document.getElementById("sb-mode");
     if (!_sbStatus) _sbStatus = document.getElementById("sb-status");
-    if (_sbMode) _sbMode.textContent = c.name + " [" + (currentIdx + 1) + "/" + CONCEPTS.length + "]";
+    if (_sbMode)
+      _sbMode.textContent =
+        c.name + " [" + (currentIdx + 1) + "/" + CONCEPTS.length + "]";
     if (_sbStatus) _sbStatus.textContent = "← → browse · ESC exit";
   }
 
@@ -402,7 +403,10 @@
     const inp = document.getElementById("command-input");
     if (inp) inp.focus();
 
-    if (_onStop) { _onStop(); _onStop = null; }
+    if (_onStop) {
+      _onStop();
+      _onStop = null;
+    }
   }
 
   let _typing = false; // true when input line is overlaid on the animation
@@ -505,7 +509,7 @@
         return;
       }
     },
-    true
+    true,
   );
 
   document.addEventListener("click", () => {
@@ -516,8 +520,14 @@
   window.furrow = {
     start,
     stop,
-    onStop(fn) { _onStop = fn; },
-    getNames() { return CONCEPTS.map((c) => c.name); },
-    isActive() { return active; },
+    onStop(fn) {
+      _onStop = fn;
+    },
+    getNames() {
+      return CONCEPTS.map((c) => c.name);
+    },
+    isActive() {
+      return active;
+    },
   };
 })();

@@ -2438,7 +2438,9 @@ function printHome() {
   homeWrap.appendChild(homeMain);
   homeWrap.appendChild(sb);
   output.appendChild(homeWrap);
-  requestAnimationFrame(() => { terminal.scrollTop = 0; });
+  requestAnimationFrame(() => {
+    terminal.scrollTop = 0;
+  });
 
   // Start sidebar live updates (clock tick + orbit animation)
   startSidebarUpdates(sb);
@@ -2778,7 +2780,9 @@ const commands = {
       const sb = buildSidebar(ALL);
       aboutWrap.appendChild(sb);
       output.appendChild(aboutWrap);
-      requestAnimationFrame(() => { terminal.scrollTop = 0; });
+      requestAnimationFrame(() => {
+        terminal.scrollTop = 0;
+      });
       startSidebarUpdates(sb);
 
       fetch("assets/ariana-ascii.txt")
@@ -3066,10 +3070,14 @@ let _configEl = null;
 function getActiveScreensaver() {
   try {
     return localStorage.getItem("term-screensaver") || "cmatrix";
-  } catch { return "cmatrix"; }
+  } catch {
+    return "cmatrix";
+  }
 }
 function setActiveScreensaver(val) {
-  try { localStorage.setItem("term-screensaver", val); } catch {}
+  try {
+    localStorage.setItem("term-screensaver", val);
+  } catch {}
 }
 
 function _getScreensaverList() {
