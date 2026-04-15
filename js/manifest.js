@@ -10,7 +10,8 @@ const SLUGS = [
 const IMAGE_FILES = [
   { name: "terminal.txt", path: "images/terminal.txt" },
   { name: "xp-logo.txt", path: "images/xp-logo.txt" },
-  { name: "ariana-ascii.txt", path: "assets/ariana-ascii.txt" }
+  { name: "ariana-ascii.txt", path: "assets/ariana-ascii.txt" },
+  { name: "FURROW-CREDITS.txt", path: "assets/FURROW-CREDITS.txt" }
 ];
 
 const SOURCE_TREE = {
@@ -46,6 +47,7 @@ const SOURCE_TREE = {
   ],
   assets: [
     { name: "ariana-ascii.txt", path: "assets/ariana-ascii.txt", type: "txt" },
+    { name: "FURROW-CREDITS.txt", path: "assets/FURROW-CREDITS.txt", type: "txt" },
     { name: "RasterForgeRegular-JpBgm.ttf", path: "assets/RasterForgeRegular-JpBgm.ttf", type: "ttf" },
     { name: "windows-xp-logo.svg", path: "assets/windows-xp-logo.svg", type: "svg" },
     { name: "xp-sound.mp3", path: "assets/xp-sound.mp3", type: "mp3" }

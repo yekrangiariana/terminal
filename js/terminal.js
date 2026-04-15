@@ -2838,6 +2838,7 @@ const commands = {
       const lines = [
         ["", ""],
         ["  ░▒▓ ASCIIxGPT by The Furrow ▓▒░", "c-cyan"],
+        ["  Atomic, Mitosis & Pollock by Ariana Yekrangi", "c-cyan"],
         ["", ""],
         ["  Licensed under CC BY-NC-SA 4.0", "c-dim"],
         ["  thefurrow.tv/project/asciixgpt", "c-dim"],

@@ -133,6 +133,52 @@
       globalVal: 0,
       colored: false,
     },
+    {
+      name: "Atomic",
+      pattern: "atomic",
+      charset: "·∙○◎●◉○∙·  ",
+      colors: ["#00CFFF", "#0088DD", "#44EEFF", "#AAEEFF", "#006699"],
+      xConstant: 3,
+      yConstant: 2,
+      frameMultiplier: 0.07,
+      animationSpeed: 0.5,
+      mirrorAxis: "none",
+      chaos: 0,
+      globalVal: 0.4,
+      colored: true,
+    },
+    {
+      name: "Mitosis",
+      pattern: "mitosis",
+      charset: "  ..··:∙∘○◎●",
+      colors: ["#00FF88", "#22DDAA", "#44FFBB", "#88FFCC", "#00CC66"],
+      xConstant: 0,
+      yConstant: 0,
+      frameMultiplier: 0.05,
+      animationSpeed: 0.8,
+      mirrorAxis: "none",
+      chaos: 0,
+      globalVal: 0,
+      colored: true,
+    },
+    {
+      name: "Pollock",
+      pattern: "pollock",
+      charset: ".,;:!|/\\~=#%@&*",
+      colors: [
+        "#FF2020", "#FF6600", "#FFCC00", "#FFFFFF",
+        "#2288FF", "#00BBFF", "#22FF66", "#FF44AA",
+        "#CC44FF", "#FF8800", "#44DDDD", "#FFEE55",
+      ],
+      xConstant: 7,
+      yConstant: 5,
+      frameMultiplier: 0.08,
+      animationSpeed: 0.6,
+      mirrorAxis: "none",
+      chaos: 0,
+      globalVal: 0,
+      colored: true,
+    },
   ];
 
   let active = false;
@@ -152,6 +198,72 @@
   let lastTick = 0;
   let cachedTheme = null;
   let _onStop = null;
+
+  // ── Mitosis cell state (precomputed per frame) ──
+  let _mitCells = []; // [[x, y, opacity], ...]
+
+  function _frand(n) {
+    const s = Math.sin(n * 127.1 + 311.7) * 43758.5453;
+    return s - Math.floor(s);
+  }
+
+  function _updateMitCells(fw, fh) {
+    var phase = time * 0.05;
+    var maxGen = 5; // up to 32 cells
+    var cycleLen = maxGen + 2; // pause at max before restart
+    var cp = phase % cycleLen;
+    var gen = Math.min(Math.floor(cp), maxGen);
+    var t = cp - gen; // 0..1 within this generation
+
+    // Fade-out at end of cycle
+    if (cp > maxGen + 1) {
+      _mitCells = [];
+      return;
+    }
+
+    var cx = fw / 2;
+    var cy = fh / 2;
+
+    // Compute final position for cell index at a given generation
+    function pos(idx, g) {
+      var x = cx, y = cy;
+      for (var lvl = 0; lvl < g; lvl++) {
+        var bit = (idx >> (g - 1 - lvl)) & 1;
+        var dir = bit * 2 - 1;
+        var a = _frand(lvl * 137.3 + 7.1) * 6.2832;
+        var r = 7 + lvl * 2.5 + _frand(lvl * 43.7 + 13.3) * 2;
+        x += dir * Math.cos(a) * r;
+        y += dir * Math.sin(a) * r * 0.55;
+      }
+      // Gentle drift
+      x += Math.sin(time * 0.008 + idx * 1.7) * 0.8;
+      y += Math.cos(time * 0.008 + idx * 2.3) * 0.4;
+      return [x, y];
+    }
+
+    _mitCells = [];
+    var count = 1 << gen;
+
+    // Easing for split interpolation
+    var ease = t < 0.5 ? 2 * t * t : 1 - (-2 * t + 2) * (-2 * t + 2) / 2;
+
+    for (var i = 0; i < count; i++) {
+      var final = pos(i, gen);
+      var opacity = 1;
+
+      if (gen === 0 && cp < 1) {
+        // First cell fading in
+        opacity = Math.min(cp * 1.5, 1);
+        _mitCells.push([cx, cy, opacity]);
+      } else {
+        // Interpolate from parent to final position
+        var parent = gen > 0 ? pos(i >> 1, gen - 1) : [cx, cy];
+        var x = parent[0] + (final[0] - parent[0]) * ease;
+        var y = parent[1] + (final[1] - parent[1]) * ease;
+        _mitCells.push([x, y, opacity]);
+      }
+    }
+  }
 
   // ── Pattern math ─────────────────────────────
   function computeValue(pattern, mx, my, fw, fh, c) {
@@ -192,6 +304,92 @@
         );
       case "checkerboard":
         return Math.sin(mx * c.xConstant) * Math.sin(my * c.yConstant + time);
+      case "atomic": {
+        const cx = fw / 2;
+        const cy = fh / 2;
+        const dx = mx - cx;
+        const dy = (my - cy) * 1.8; // stretch to compensate for char aspect ratio
+        const dist = Math.sqrt(dx * dx + dy * dy);
+        const angle = Math.atan2(dy, dx);
+        // Nucleus glow — dense at center
+        const nucleus = Math.exp(-dist * dist * 0.02) * 2;
+        // Electron shells — concentric rings that pulse
+        const shell1 = Math.sin(dist * 0.5 - time * c.frameMultiplier * 3) *
+                        Math.exp(-Math.abs(dist - 8) * 0.15);
+        const shell2 = Math.sin(dist * 0.5 - time * c.frameMultiplier * 2 + 2) *
+                        Math.exp(-Math.abs(dist - 16) * 0.12);
+        const shell3 = Math.sin(dist * 0.5 - time * c.frameMultiplier * 1.5 + 4) *
+                        Math.exp(-Math.abs(dist - 26) * 0.1);
+        // Orbiting electrons — bright dots on each shell
+        const e1 = Math.exp(-Math.pow(dist - 8, 2) * 0.3) *
+                   Math.exp(-Math.pow(angle - time * c.frameMultiplier * 5, 2) * 2);
+        const e2 = Math.exp(-Math.pow(dist - 16, 2) * 0.2) *
+                   Math.exp(-Math.pow(angle + time * c.frameMultiplier * 3 + 1, 2) * 1.5);
+        const e3 = Math.exp(-Math.pow(dist - 26, 2) * 0.15) *
+                   Math.exp(-Math.pow(angle - time * c.frameMultiplier * 2 + 3, 2) * 1.2);
+        // Cloud probability field
+        const cloud = Math.sin(angle * c.xConstant + dist * 0.3 + time * c.frameMultiplier) *
+                      c.globalVal * Math.exp(-dist * 0.03);
+        return nucleus + shell1 + shell2 + shell3 + (e1 + e2 + e3) * 3 + cloud;
+      }
+      case "mitosis": {
+        // Starfield background
+        var hash = _frand(mx * 0.731 + my * 3.117 + 0.5);
+        var star = hash > 0.992 ? 0.5 : 0;
+
+        if (_mitCells.length === 0) return star - 2;
+
+        // Metaball field — sum contributions from all cells
+        var field = 0;
+        for (var ci = 0; ci < _mitCells.length; ci++) {
+          var cX = _mitCells[ci][0];
+          var cY = _mitCells[ci][1];
+          var cO = _mitCells[ci][2];
+          var ddx = mx - cX;
+          var ddy = (my - cY) * 1.8; // aspect ratio
+          var d2 = ddx * ddx + ddy * ddy;
+          field += cO * 18 / (1 + d2 * 0.12);
+        }
+
+        // Map to -2..+2 range for charset
+        return Math.min(field, 4) - 2 + star;
+      }
+      case "pollock": {
+        // Multiple chaotic "drip" layers at different scales and speeds
+        var t1 = time * c.frameMultiplier;
+        var t2 = t1 * 1.7;
+        var t3 = t1 * 0.6;
+
+        // Hash for spatial noise — gives gritty splatter texture
+        var h = _frand(mx * 13.71 + my * 7.93 + Math.floor(t1 * 0.3) * 99.1);
+
+        // Drip strands — vertical-ish chaotic curves
+        var drip1 = Math.sin(mx * 0.4 + Math.sin(my * 0.15 + t1) * c.xConstant + t1) *
+                    Math.cos(my * 0.08 + t2 * 0.5);
+        var drip2 = Math.sin(mx * 0.25 - t2 + Math.sin(my * 0.3 + t1 * 1.3) * 3) *
+                    Math.cos(my * 0.12 - mx * 0.06 + t1);
+        var drip3 = Math.cos(mx * 0.6 + my * 0.1 + t3) *
+                    Math.sin(my * 0.2 + Math.cos(mx * 0.08 + t2) * c.yConstant);
+
+        // Splatter blobs — sudden bursts
+        var blob1 = Math.sin(mx * 0.9 + t1 * 3) * Math.sin(my * 0.7 - t2 * 2);
+        var blob2 = Math.cos(mx * 0.5 - my * 0.8 + t3 * 4) *
+                    Math.sin(mx * 0.3 + my * 0.4 + t1 * 2);
+
+        // Sweeping arcs — broad gestural strokes
+        var arc = Math.sin((mx + my) * 0.12 + t1 * 0.7) *
+                  Math.cos((mx - my * 1.5) * 0.08 + t2 * 0.4);
+
+        // Combine layers — the chaos
+        var val = drip1 * 0.8 + drip2 * 0.7 + drip3 * 0.6 +
+                  blob1 * 0.5 + blob2 * 0.4 + arc * 0.6;
+
+        // Threshold splatter — sharp paint-or-no-paint edges
+        var splat = h > 0.6 ? (h - 0.6) * 2.5 : 0;
+        val += splat * Math.sin(mx * 1.3 + my * 0.9 + t1 * 5) * 0.8;
+
+        return val;
+      }
       default:
         return 0;
     }
@@ -242,6 +440,10 @@
     const theme = cachedTheme;
     const fw = columns;
     const fh = rows;
+
+    // Precompute mitosis cell positions once per frame
+    if (c.pattern === "mitosis") _updateMitCells(fw, fh);
+
     const charset = c.charset;
     const csLen = charset.length;
     const colors = c.colors;
