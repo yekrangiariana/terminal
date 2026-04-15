@@ -1810,16 +1810,13 @@ function inlineMarkdown(text) {
     '<a class="post-link" href="$2" target="_blank" rel="noopener">$1</a>',
   );
   // inline math: $expr$ (not preceded/followed by $)
-  text = text.replace(
-    /(?<!\$)\$(?!\$)([^$]+?)\$(?!\$)/g,
-    function(_, expr) {
-      try {
-        return katex.renderToString(expr, { throwOnError: false });
-      } catch (_e) {
-        return '<span class="post-math-inline">' + expr + '</span>';
-      }
-    },
-  );
+  text = text.replace(/(?<!\$)\$(?!\$)([^$]+?)\$(?!\$)/g, function (_, expr) {
+    try {
+      return katex.renderToString(expr, { throwOnError: false });
+    } catch (_e) {
+      return '<span class="post-math-inline">' + expr + "</span>";
+    }
+  });
   return text;
 }
 
@@ -2227,13 +2224,15 @@ function renderMarkdown(md, post) {
         const header =
           '<div class="post-codeblock-header">' +
           '<span class="post-codeblock-prompt">$</span>' +
-          '<span class="post-codeblock-lang">' + esc(langLabel) + '</span>' +
-          '</div>';
+          '<span class="post-codeblock-lang">' +
+          esc(langLabel) +
+          "</span>" +
+          "</div>";
         const codeLines = fenceBuf.map((l) => esc(l));
         const numbered = codeLines
           .map((l, idx) => {
             const num = String(idx + 1).padStart(3, " ");
-            return '<span class="post-codeblock-ln">' + num + '</span>  ' + l;
+            return '<span class="post-codeblock-ln">' + num + "</span>  " + l;
           })
           .join("\n");
         const block = document.createElement("div");
@@ -2243,7 +2242,7 @@ function renderMarkdown(md, post) {
           block.style.animationDelay = _revealDelay();
         else _revealIdx++;
         block.innerHTML =
-          header + '<pre class="post-codeblock-body">' + numbered + '</pre>';
+          header + '<pre class="post-codeblock-body">' + numbered + "</pre>";
         output.appendChild(block);
         inFence = false;
         fenceLang = "";
@@ -2267,12 +2266,16 @@ function renderMarkdown(md, post) {
           const expr = rest.slice(0, -2).trim();
           const mathDiv = document.createElement("div");
           mathDiv.className =
-            "post-math-block" + (_revealIdx < _REVEAL_CAP ? " term-reveal" : "");
+            "post-math-block" +
+            (_revealIdx < _REVEAL_CAP ? " term-reveal" : "");
           if (_revealIdx < _REVEAL_CAP)
             mathDiv.style.animationDelay = _revealDelay();
           else _revealIdx++;
           try {
-            katex.render(expr, mathDiv, { displayMode: true, throwOnError: false });
+            katex.render(expr, mathDiv, {
+              displayMode: true,
+              throwOnError: false,
+            });
           } catch (_) {
             mathDiv.textContent = expr;
           }
@@ -2292,7 +2295,10 @@ function renderMarkdown(md, post) {
           mathDiv.style.animationDelay = _revealDelay();
         else _revealIdx++;
         try {
-          katex.render(expr, mathDiv, { displayMode: true, throwOnError: false });
+          katex.render(expr, mathDiv, {
+            displayMode: true,
+            throwOnError: false,
+          });
         } catch (_) {
           mathDiv.textContent = expr;
         }
