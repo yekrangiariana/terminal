@@ -710,6 +710,59 @@ body {
   margin-top: 2px;
 }
 
+/* ── ASCII Art Upload ── */
+.art-drop-zone {
+  border: 2px dashed #b0a890;
+  border-radius: 4px;
+  padding: 14px 10px;
+  text-align: center;
+  font-size: 11px;
+  color: #888;
+  cursor: pointer;
+  transition:
+    border-color 0.15s,
+    background 0.15s;
+}
+.art-drop-zone:hover,
+.art-drop-zone.dragover {
+  border-color: #0078d4;
+  background: rgba(0, 120, 212, 0.05);
+  color: #555;
+}
+.art-info {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-size: 11px;
+  padding: 4px 0;
+  color: #444;
+}
+.art-info span:first-child {
+  font-weight: 600;
+}
+.art-info span:nth-child(2) {
+  color: #888;
+}
+
+/* ── Art-override state for pattern section ── */
+.section.art-override .section-body {
+  opacity: 0.4;
+  pointer-events: none;
+}
+.section.art-override .section-head {
+  opacity: 0.6;
+}
+.section.art-override .section-dice {
+  opacity: 0.3;
+  pointer-events: none;
+}
+
+/* ── Field-level scene dimming ── */
+.field.scene-na {
+  opacity: 0.35;
+  pointer-events: none;
+}
+
 /* ══════════════════════════════════════
    PRESETS
    ══════════════════════════════════════ */

@@ -100,12 +100,33 @@
     <div class="xp-menu" id="menu-edit">
       <div
         class="xp-menu-item"
+        id="mi-undo"
+        onclick="
+          undo();
+          closeMenus();
+        "
+      >
+        Undo<span class="mi-accel">Ctrl+Z</span>
+      </div>
+      <div
+        class="xp-menu-item"
+        id="mi-redo"
+        onclick="
+          redo();
+          closeMenus();
+        "
+      >
+        Redo<span class="mi-accel">Ctrl+Shift+Z</span>
+      </div>
+      <div class="xp-menu-sep"></div>
+      <div
+        class="xp-menu-item"
         onclick="
           randomize();
           closeMenus();
         "
       >
-        Randomize<span class="mi-accel">Ctrl+R</span>
+        Randomise<span class="mi-accel">Ctrl+R</span>
       </div>
       <div class="xp-menu-sep"></div>
       <div
@@ -421,6 +442,9 @@
           <div class="xp-help-nav-item" onclick="showHelpTopic('custom', this)">
             Custom Equations
           </div>
+          <div class="xp-help-nav-item" onclick="showHelpTopic('scenes', this)">
+            Scenes
+          </div>
           <div
             class="xp-help-nav-item"
             onclick="showHelpTopic('characters', this)"
@@ -699,23 +723,117 @@
             <!-- Presets + Randomize -->
             <div class="section">
               <div class="section-head" onclick="toggleSection(this)">
-                <span class="arrow">▶</span> Presets &amp; Discover
+                <span class="arrow">▶</span> Presets
               </div>
               <div class="section-body">
                 <div class="field">
                   <div class="desc">
-                    Load a preset or hit Randomize to discover new patterns.
+                    Load a preset to start from a known look.
                   </div>
                 </div>
-                <button class="randomize-btn" onclick="randomize()">
-                  Randomize
-                </button>
                 <div class="presets" id="presets"></div>
               </div>
             </div>
 
+            <!-- Scenes (simulation-based) -->
+            <div class="section" id="scene-section">
+              <div class="section-head" onclick="toggleSection(this)">
+                <span class="arrow">▶</span> Scenes
+              </div>
+              <div class="section-body">
+                <div class="field">
+                  <div class="desc">
+                    Simulation-based animations — particles, life, growth. Pick
+                    one and tweak the sliders.
+                  </div>
+                </div>
+                <span
+                  id="scene-active-label"
+                  style="
+                    display: none;
+                    font-weight: bold;
+                    font-size: 11px;
+                    margin-bottom: 4px;
+                  "
+                ></span>
+                <div id="scene-list" class="presets"></div>
+                <div id="scene-params" style="display: none"></div>
+                <p
+                  id="scene-compat-hint"
+                  class="range-hint"
+                  style="display: none; margin-top: 6px"
+                >
+                  Scenes replace the pattern equation. Transforms, character
+                  set, colors, Layer B and animation speed still apply.
+                </p>
+                <button
+                  id="scene-exit-btn"
+                  class="xp-btn xp-btn-sm"
+                  style="display: none; margin-top: 6px"
+                  onclick="deactivateScene()"
+                >
+                  Back to Patterns
+                </button>
+              </div>
+            </div>
+
+            <!-- ASCII Art Upload -->
+            <div class="section" id="ascii-art-section">
+              <div class="section-head" onclick="toggleSection(this)">
+                <span class="arrow">▶</span> Your ASCII Art
+              </div>
+              <div class="section-body">
+                <div class="field">
+                  <div class="desc">
+                    Upload a <strong>.txt</strong> file to use as the base
+                    pattern. Your art drives the shapes — animation, palette,
+                    blending, and transforms all apply on top.
+                  </div>
+                </div>
+                <div
+                  id="art-drop-zone"
+                  class="art-drop-zone"
+                  ondragover="
+                    event.preventDefault();
+                    this.classList.add('dragover');
+                  "
+                  ondragleave="this.classList.remove('dragover')"
+                  ondrop="handleArtDrop(event)"
+                >
+                  <span id="art-drop-label"
+                    >Drop .txt here or click to browse</span
+                  >
+                  <input
+                    type="file"
+                    id="art-file-input"
+                    accept=".txt,text/plain"
+                    style="display: none"
+                    onchange="handleArtFile(this)"
+                  />
+                </div>
+                <div id="art-info" class="art-info" style="display: none">
+                  <span id="art-file-name"></span>
+                  <span id="art-dimensions"></span>
+                  <button
+                    class="xp-btn xp-btn-sm"
+                    onclick="resetArtStyles()"
+                    title="Reset all styles to clean defaults — keeps your art"
+                  >
+                    Reset Styles
+                  </button>
+                  <button
+                    class="xp-btn xp-btn-sm"
+                    onclick="clearArt()"
+                    title="Remove uploaded art and return to math pattern"
+                  >
+                    Remove
+                  </button>
+                </div>
+              </div>
+            </div>
+
             <!-- Pattern Function -->
-            <div class="section">
+            <div class="section" id="pattern-section">
               <div class="section-head" onclick="toggleSection(this)">
                 <span class="arrow">▶</span> Pattern Function
                 <button
@@ -804,9 +922,7 @@ sin(x * 0.1 + time) * cos(y * 0.05 + time * 1.5)</textarea
                 </div>
               </div>
             </div>
-
-            <!-- Spatial Constants -->
-            <div class="section">
+            <div class="section" id="spatial-section">
               <div class="section-head" onclick="toggleSection(this)">
                 <span class="arrow">▶</span> Spatial Constants
                 <button
@@ -942,7 +1058,7 @@ sin(x * 0.1 + time) * cos(y * 0.05 + time * 1.5)</textarea
             </div>
 
             <!-- Animation & Time -->
-            <div class="section">
+            <div class="section" id="animation-section">
               <div class="section-head" onclick="toggleSection(this)">
                 <span class="arrow">▶</span> Animation &amp; Time
                 <button
@@ -971,7 +1087,7 @@ sin(x * 0.1 + time) * cos(y * 0.05 + time * 1.5)</textarea
                 </button>
               </div>
               <div class="section-body">
-                <div class="field">
+                <div class="field" id="fm-field">
                   <label
                     >Frame Multiplier
                     <span
@@ -1969,6 +2085,7 @@ sin(r * 0.2 + time)</textarea
             <button class="xp-btn" id="btn-play" onclick="togglePlay()">
               Pause
             </button>
+            <button class="xp-btn" onclick="randomize()">Randomise</button>
             <button class="xp-btn" onclick="resetTime()">Reset</button>
             <div class="sep"></div>
             <span class="lbl">Font:</span>
