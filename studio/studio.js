@@ -40,6 +40,8 @@ function _snapshotState() {
     config: config,
     scene: _activeScene || null,
     sceneParams: sp,
+    artSceneBlend: _artSceneBlend,
+    artSceneAmount: _artSceneAmount,
   });
 }
 
@@ -77,6 +79,8 @@ function undo() {
     if (prev.sceneParams && _activeScene) {
       _restoreSceneParams(prev.sceneParams);
     }
+    if (prev.artSceneBlend !== undefined) _artSceneBlend = prev.artSceneBlend;
+    if (prev.artSceneAmount !== undefined) _artSceneAmount = prev.artSceneAmount;
   } else {
     config = prev;
     deactivateScene();
@@ -109,6 +113,8 @@ function redo() {
     if (next.sceneParams && _activeScene) {
       _restoreSceneParams(next.sceneParams);
     }
+    if (next.artSceneBlend !== undefined) _artSceneBlend = next.artSceneBlend;
+    if (next.artSceneAmount !== undefined) _artSceneAmount = next.artSceneAmount;
   } else {
     config = next;
     deactivateScene();
@@ -1099,6 +1105,8 @@ var _sceneH = 0;
 var _sceneState = {}; // per-scene persistent state
 var _sceneLastTs = 0; // last update timestamp (ms) for real dt
 var _sceneParamsCache = {}; // cached scene param values (updated on slider input)
+var _artSceneBlend = "mask"; // how art + scene combine: "mask", "add", "multiply", "screen"
+var _artSceneAmount = 1.0; // blend strength 0–1
 
 // Scene registry: each scene defines:
 //   label       — display name
@@ -2769,6 +2777,93 @@ function _buildSceneParamsUI(key) {
     // sync initial display
     syncSlider(slider);
   }
+
+  // ── Art + Scene blend controls ──
+  if (_artGrid) {
+    var sep = document.createElement("div");
+    sep.style.cssText = "border-top:1px solid #aaa; margin:8px 0 6px; padding-top:6px;";
+    var sepLabel = document.createElement("label");
+    sepLabel.style.cssText = "font-weight:bold; font-size:11px; margin-bottom:4px; display:block;";
+    sepLabel.textContent = "Art + Scene Blend";
+    sep.appendChild(sepLabel);
+    wrap.appendChild(sep);
+
+    // Blend mode dropdown
+    var modeField = document.createElement("div");
+    modeField.className = "field";
+    var modeLabel = document.createElement("label");
+    modeLabel.textContent = "Effect ";
+    var modeTip = document.createElement("span");
+    modeTip.className = "help-tip";
+    modeTip.title = "Mask = scene fills your shape. Add = scene layered on top. Multiply = scene modulates art. Screen = brightening blend.";
+    modeTip.textContent = "?";
+    modeLabel.appendChild(modeTip);
+    modeField.appendChild(modeLabel);
+    var modeSelect = document.createElement("select");
+    modeSelect.id = "art-scene-blend";
+    var modes = [
+      ["mask", "Mask (scene fills shape)"],
+      ["add", "Add (scene on top)"],
+      ["multiply", "Multiply"],
+      ["screen", "Screen (brighten)"]
+    ];
+    for (var m = 0; m < modes.length; m++) {
+      var opt = document.createElement("option");
+      opt.value = modes[m][0];
+      opt.textContent = modes[m][1];
+      if (modes[m][0] === _artSceneBlend) opt.selected = true;
+      modeSelect.appendChild(opt);
+    }
+    modeSelect.onchange = function () {
+      pushUndo();
+      _artSceneBlend = this.value;
+      if (!playing) render();
+    };
+    modeField.appendChild(modeSelect);
+    wrap.appendChild(modeField);
+
+    // Strength slider
+    var strField = document.createElement("div");
+    strField.className = "field";
+    var strLabel = document.createElement("label");
+    strLabel.textContent = "Strength ";
+    var strTip = document.createElement("span");
+    strTip.className = "help-tip";
+    strTip.title = "How much the scene affects your art. 0 = art only, 1 = full effect.";
+    strTip.textContent = "?";
+    strLabel.appendChild(strTip);
+    strField.appendChild(strLabel);
+    var strRow = document.createElement("div");
+    strRow.className = "slider-row";
+    var strSlider = document.createElement("input");
+    strSlider.type = "range";
+    strSlider.id = "art-scene-amount";
+    strSlider.min = "0";
+    strSlider.max = "1";
+    strSlider.step = "0.05";
+    strSlider.value = _artSceneAmount;
+    strSlider.oninput = function () {
+      syncSlider(this);
+      _artSceneAmount = parseFloat(this.value);
+    };
+    strSlider.onpointerdown = function () { pushUndo(); };
+    strRow.appendChild(strSlider);
+    var strVal = document.createElement("input");
+    strVal.type = "text";
+    strVal.className = "slider-val";
+    strVal.id = "art-scene-amount-val";
+    strVal.value = _artSceneAmount;
+    strVal.onchange = function () {
+      pushUndo();
+      syncVal(this, "art-scene-amount");
+      _artSceneAmount = parseFloat(document.getElementById("art-scene-amount").value);
+      if (!playing) render();
+    };
+    strRow.appendChild(strVal);
+    strField.appendChild(strRow);
+    wrap.appendChild(strField);
+    syncSlider(strSlider);
+  }
 }
 
 function _updateSceneUI() {
@@ -2781,23 +2876,32 @@ function _updateSceneUI() {
   var fmField = document.getElementById("fm-field");
   var compatHint = document.getElementById("scene-compat-hint");
   var sceneActive = document.getElementById("scene-active-label");
+  var hasArt = !!_artGrid;
 
   if (_activeScene) {
     // Show scene params, hide pattern section
     if (list) list.style.display = "none";
     if (paramsWrap) paramsWrap.style.display = "";
-    if (exitBtn) exitBtn.style.display = "";
-    if (compatHint) compatHint.style.display = "";
+    if (exitBtn) {
+      exitBtn.style.display = "";
+      exitBtn.textContent = hasArt ? "Remove Scene Effect" : "Back to Patterns";
+    }
+    if (compatHint) {
+      compatHint.style.display = "";
+      compatHint.textContent = hasArt
+        ? "Scene animates on your uploaded art. Use blend mode and strength below."
+        : "Scenes replace the pattern equation. Transforms, character set, colors, Layer B and animation speed still apply.";
+    }
     if (sceneActive) {
       sceneActive.style.display = "";
       sceneActive.textContent =
         "Active: " +
         (SCENES[_activeScene] ? SCENES[_activeScene].label : _activeScene);
     }
-    // Dim sections that scenes override
+    // Dim sections that scenes override (but NOT art section — art coexists)
     if (patSection) patSection.classList.add("art-override");
-    if (spatialSection) spatialSection.classList.add("art-override");
-    if (artSection) artSection.classList.add("art-override");
+    if (spatialSection && !hasArt) spatialSection.classList.add("art-override");
+    if (artSection) artSection.classList.remove("art-override");
     // Dim Frame Multiplier (only animationSpeed affects scenes)
     if (fmField) fmField.classList.add("scene-na");
     _buildSceneParamsUI(_activeScene);
@@ -3185,6 +3289,8 @@ function render() {
   var hasLayerB = c.layerB && c.layerB.enabled;
   var lb = hasLayerB ? c.layerB : null;
   var isScene = !!_activeScene;
+  var hasArt = !!_artGrid;
+  var artScene = isScene && hasArt; // both active — blend them
 
   // Update scene simulation before rendering
   if (isScene) _updateSceneGrid(_exportFrameDt);
@@ -3233,7 +3339,41 @@ function render() {
 
       // 7. Compute
       var value;
-      if (isScene) {
+      if (artScene) {
+        // Both art and scene active — blend them
+        var artVal = sampleArtGrid(mx, my, fw, fh);
+        var sceneVal = _sampleScene(mx, my, fw, fh);
+        if (sceneVal === -2) sceneVal = 0; // scene OOB — use neutral value
+        if (artVal <= -0.95) {
+          // Outside art bounds — show nothing
+          continue;
+        }
+        var amt = _artSceneAmount;
+        switch (_artSceneBlend) {
+          case "mask":
+            // Scene adds animated detail within art shape, preserving art brightness
+            var mask = (artVal + 1) * 0.5; // 0..1
+            if (mask < 0.05) { continue; } // outside shape
+            value = artVal + sceneVal * mask * amt * 0.5;
+            break;
+          case "add":
+            value = artVal + sceneVal * amt * 0.5;
+            break;
+          case "multiply":
+            // Scene oscillates around 1.0 so it can brighten and darken equally
+            var sceneFactor = 0.5 + (sceneVal + 2) * 0.25; // 0.5..1.5
+            value = artVal * (1 - amt + amt * sceneFactor);
+            break;
+          case "screen":
+            var a = (artVal + 2) * 0.25; // 0..1
+            var b = (sceneVal + 2) * 0.25;
+            var s = a + b - a * b;
+            value = artVal * (1 - amt) + (s * 4 - 2) * amt;
+            break;
+          default:
+            value = artVal;
+        }
+      } else if (isScene) {
         value = _sampleScene(mx, my, fw, fh);
         if (value === -2) continue; // OOB — leave background
       } else {
@@ -3501,6 +3641,7 @@ function _applyArtText(text, fileName) {
   applyPatternRanges("asciiArt");
   _updateArtInfo();
   _updateArtActiveUI();
+  if (_activeScene) _updateSceneUI(); // refresh blend controls
   liveUpdate();
 }
 function _updateArtInfo() {
@@ -3530,6 +3671,7 @@ function clearArt() {
   config.pattern = document.getElementById("p-pattern").value;
   _updateArtInfo();
   _updateArtActiveUI();
+  if (_activeScene) _updateSceneUI(); // refresh scene UI text
   var input = document.getElementById("art-file-input");
   if (input) input.value = "";
   liveUpdate();
@@ -4020,6 +4162,12 @@ function randomize() {
     if (!playing) togglePlay();
     // Also randomise the compatible visual settings
     _randomizeVisuals();
+    // Randomise art+scene blend if art is loaded
+    if (_artGrid) {
+      var blendModes = ["mask", "add", "multiply", "screen"];
+      _artSceneBlend = blendModes[Math.floor(Math.random() * blendModes.length)];
+      _artSceneAmount = 0.3 + Math.random() * 0.7;
+    }
     config.name = "Random — " + (SCENES[key] ? SCENES[key].label : key);
     _updateSceneUI();
     configToUI();
@@ -5393,6 +5541,27 @@ function newPreset() {
 document.addEventListener("keydown", function (e) {
   // Don't intercept when typing in inputs
   var tag = (e.target.tagName || "").toLowerCase();
+
+  // Arrow key increment/decrement on slider value inputs
+  if (tag === "input" && e.target.classList.contains("slider-val") &&
+      (e.key === "ArrowUp" || e.key === "ArrowDown")) {
+    e.preventDefault();
+    var sliderId = e.target.id.replace(/-val$/, "");
+    var slider = document.getElementById(sliderId);
+    if (!slider) return;
+    var step = parseFloat(slider.step) || 1;
+    if (e.shiftKey) step *= 10;
+    var cur = parseFloat(e.target.value) || 0;
+    var nv = e.key === "ArrowUp" ? cur + step : cur - step;
+    // round to avoid floating point noise
+    var decimals = (slider.step.split(".")[1] || "").length;
+    nv = parseFloat(nv.toFixed(decimals + 2));
+    e.target.value = nv;
+    // trigger existing onchange handler
+    if (e.target.onchange) e.target.onchange();
+    return;
+  }
+
   if (tag === "input" || tag === "textarea" || tag === "select") return;
 
   if (e.key === "F1") {
@@ -5543,6 +5712,13 @@ document.addEventListener(
 );
 
 window.addEventListener("load", function () {
+  // Mobile device detection — show XP error dialog
+  if (/Android|iPhone|iPad|iPod|webOS|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent) ||
+      (navigator.maxTouchPoints > 1 && window.innerWidth < 900)) {
+    var block = document.getElementById("mobile-block");
+    if (block) block.style.display = "block";
+  }
+
   initTooltips();
   buildPresets();
   buildSceneList();

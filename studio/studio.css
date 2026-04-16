@@ -529,10 +529,33 @@ body {
   padding: 2px 0;
 }
 .check-row input[type="checkbox"] {
+  appearance: none;
+  -webkit-appearance: none;
   width: 13px;
   height: 13px;
   margin: 0;
-  accent-color: var(--xp-select);
+  background: #fff;
+  border: 1px solid var(--xp-groove);
+  border-top-color: #696969;
+  border-left-color: #696969;
+  border-right-color: #e0ddd4;
+  border-bottom-color: #e0ddd4;
+  cursor: pointer;
+  position: relative;
+  flex-shrink: 0;
+}
+.check-row input[type="checkbox"]:checked::after {
+  content: "✓";
+  position: absolute;
+  top: -1px;
+  left: 1px;
+  font-size: 12px;
+  font-weight: bold;
+  color: #000;
+  line-height: 1;
+}
+.check-row input[type="checkbox"]:focus {
+  border-color: var(--xp-select);
 }
 
 /* ══════════════════════════════════════
@@ -927,6 +950,10 @@ body {
 .xp-btn:focus {
   outline: 1px dotted #000;
   outline-offset: -3px;
+}
+.xp-btn-sm {
+  font-size: 10px;
+  padding: 2px 6px;
 }
 
 /* ══════════════════════════════════════
@@ -1323,4 +1350,35 @@ body.embedded .titlebar {
 }
 body.embedded #taskbar {
   display: none;
+}
+
+/* ══════════════════════════════════════
+   MOBILE DEVICE ERROR DIALOG
+   ══════════════════════════════════════ */
+.mobile-overlay {
+  position: fixed;
+  inset: 0;
+  background: linear-gradient(
+    180deg,
+    #245edb 0%,
+    #3f8cf0 20%,
+    #72b0f4 40%,
+    #adcf8a 60%,
+    #8ab648 75%,
+    #4a8015 90%,
+    #3a6a10 100%
+  );
+  z-index: 99998;
+}
+.mobile-error-dialog {
+  position: fixed;
+  z-index: 99999;
+  left: 50%;
+  top: 50%;
+  transform: translate(-50%, -50%);
+  background: var(--xp-silver);
+  border: 2px solid #1460d2;
+  border-radius: 6px 6px 0 0;
+  box-shadow: 4px 4px 16px rgba(0, 0, 0, 0.5);
+  width: min(380px, 90vw);
 }

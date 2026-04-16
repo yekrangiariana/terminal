@@ -40,6 +40,36 @@
   </head>
   <body>
     <!-- ════════════════════════════════════
+     MOBILE DEVICE ERROR DIALOG
+     ════════════════════════════════════ -->
+    <div id="mobile-block" style="display:none">
+      <div class="mobile-overlay"></div>
+      <div class="mobile-error-dialog">
+        <div class="xp-dialog-titlebar">
+          <span>ASCII Studio</span>
+          <button onclick="document.getElementById('mobile-block').style.display='none'">✕</button>
+        </div>
+        <div class="xp-dialog-body" style="display:flex;gap:14px;align-items:flex-start">
+          <div style="flex-shrink:0;margin-top:2px">
+            <svg width="32" height="32" viewBox="0 0 32 32">
+              <circle cx="16" cy="16" r="14" fill="#d42020" stroke="#8b0000" stroke-width="1.5"/>
+              <line x1="10" y1="10" x2="22" y2="22" stroke="#fff" stroke-width="3" stroke-linecap="round"/>
+              <line x1="22" y1="10" x2="10" y2="22" stroke="#fff" stroke-width="3" stroke-linecap="round"/>
+            </svg>
+          </div>
+          <div style="font-size:11px;line-height:1.6;color:#222;font-family:Tahoma,sans-serif">
+            <p style="margin:0 0 8px"><strong>This program cannot run on this device.</strong></p>
+            <p style="margin:0 0 8px">ASCII Studio requires a desktop computer with a keyboard and mouse. Mobile devices are not supported.</p>
+            <p style="margin:0;color:#888;font-size:10px">The developer was too lazy to make a mobile version. Please visit on a desktop browser.</p>
+          </div>
+        </div>
+        <div class="xp-dialog-footer">
+          <button class="xp-btn" onclick="document.getElementById('mobile-block').style.display='none'" style="min-width:75px">OK</button>
+        </div>
+      </div>
+    </div>
+
+    <!-- ════════════════════════════════════
      XP DROPDOWN MENUS (absolutely positioned)
      ════════════════════════════════════ -->
     <div class="xp-menu" id="menu-file">
