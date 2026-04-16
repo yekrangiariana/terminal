@@ -11,9 +11,9 @@ image: images/ascii-studio-logo.svg
 
 After building the terminal site, I had a handful of ASCII animation patterns that I'd been tweaking by hand — editing constants in source code, refreshing the browser, squinting at the result, and repeating. It was slow and the feedback loop was miserable. I wanted a tool where I could drag a slider and see the animation change instantly, try layering two patterns together, type a custom equation and watch it render. So I built one.
 
-ASCII Studio is a browser-based animation pattern designer. You pick a mathematical function, adjust its constants with sliders, apply symmetry transforms, blend two layers, and the result is rendered in real time as animated monospace text on a canvas. The whole thing is wrapped in a pixel-accurate Windows XP interface because I thought it would be funny, and then I couldn't stop.
+ASCII Studio is a browser-based animation pattern designer. You pick a mathematical function, adjust its constants with sliders, apply symmetry transforms, blend two layers, and the result is rendered in real time as animated monospace text on a canvas. You can also load simulation-driven scenes — Game of Life, fire, flocking — or upload your own ASCII art as a source pattern. The whole thing is wrapped in a pixel-accurate Windows XP interface because I thought it would be funny, and then I couldn't stop.
 
-It's about 2,100 lines of vanilla JavaScript, a single HTML file, and a CSS stylesheet. No frameworks, no build step, no dependencies. The only external libraries — gif.js and mp4-muxer — are lazy-loaded at export time and never touch the main render path.
+It's about 5,500 lines of vanilla JavaScript, a single HTML file, and a CSS stylesheet. No frameworks, no build step, no dependencies. The only external libraries — gif.js and mp4-muxer — are lazy-loaded at export time and never touch the main render path.
 
 ## Turning math into characters
 
@@ -347,6 +347,111 @@ function _avcCodecForSize(w, h) {
 
 The dimensions are rounded up to multiples of 16 before computing the area, because H.264 encodes in 16×16 macroblocks and partial blocks count as full ones. Keyframes are emitted every two seconds, and the muxer writes an fMP4 stream that's finalized into a blob and offered as a download.
 
+## Scenes: simulation-driven animation
+
+Everything described so far — the pattern equations, the spatial constants, the expression parser — operates on a single principle: a pure mathematical function takes a coordinate and returns a value. There's no state between frames. Every cell computes its value independently, and the global `time` variable is the only thing that changes.
+
+Scenes throw that model out. A scene is a stateful grid simulation — Game of Life, flocking, fire propagation, wave physics. Instead of evaluating a function per pixel, the scene maintains a `Float32Array` buffer the size of the render grid and mutates it every frame according to simulation rules.
+
+The architecture is a registry of scene objects, each defining three things:
+
+```js
+var SCENES = {};
+SCENES.gameOfLife = {
+  label: "Game of Life",
+  params: [
+    { key: "density", label: "Initial Density", min: 0.1, max: 0.9,
+      step: 0.05, default: 0.4, tip: "How full the initial grid is" },
+    { key: "tickSpeed", label: "Tick Speed", min: 0.5, max: 20,
+      step: 0.5, default: 8 },
+    // ...
+  ],
+  init: function(w, h, p) { /* allocate buffers, seed cells */ },
+  update: function(dt, w, h, p, grid) { /* advance simulation, write grid */ }
+};
+```
+
+The `init` function sets up whatever state the simulation needs — cell buffers, particle arrays, tip lists. The `update` function advances the simulation by `dt` seconds and writes scalar values into the output grid. There are eleven scenes: Cell Division, Particle Rain, Crystal Growth, Game of Life, Ripples, Flocking, Wave Propagation, Langton's Ant, Fire, Maze Generator, and DLA Snowflake.
+
+The interesting design decision was how to integrate scenes into the existing render pipeline without duplicating it. The answer is that scenes are sampled exactly like patterns. In the render loop, where a pattern would call `computeValue()` to get a float from a math function, scenes call `_sampleScene()` to look up a float from the grid buffer:
+
+```js
+if (isScene) {
+  value = _sampleScene(mx, my, fw, fh);
+} else {
+  value = computeValue(c.pattern, mx, my, fw, fh, c);
+}
+```
+
+Both paths return a float. Everything downstream — character mapping, color cycling, Layer B blending — is identical regardless of whether the value came from a sine wave or a physics simulation. This means all the existing transforms work on scenes for free. You can rotate a Game of Life, apply 8-fold radial symmetry to a fire simulation, or add turbulence warp to crystal growth. The scene has no idea transforms are happening — it writes a flat grid, and the render pipeline samples that grid through warped coordinates.
+
+### Two timing models
+
+Scenes introduced a fundamental timing change. The math patterns use a global `time` counter incremented by a fixed step each frame — essentially a phase accumulator. The animation speed slider controls how big that step is, and the frame multiplier controls how much `time` feeds into the equation. This works because patterns are stateless: the output is a pure function of the current time value, so it doesn't matter how you got there.
+
+Simulations can't work that way. A Game of Life generation has to be computed sequentially — you can't skip to frame 1000 without computing frames 1 through 999. So scenes use real wall-clock time via `performance.now()`:
+
+```js
+var now = performance.now();
+dt = Math.min((now - _sceneLastTs) / 1000, 0.1);
+_sceneLastTs = now;
+dt *= (config.animationSpeed || 0.3) / 0.3;
+```
+
+The `dt` is capped at 100ms to prevent spiral-of-death when a tab regains focus after being backgrounded — without the cap, the simulation would try to advance by several seconds in a single frame, which either looks terrible or crashes.
+
+Discrete simulations like Game of Life and Langton's Ant use a dt-to-step accumulator pattern. They accumulate `dt` into a counter, and when it crosses a threshold, they execute one discrete generation:
+
+```js
+st.tickAccum += dt * p.tickSpeed;
+while (st.tickAccum >= 1) {
+  st.tickAccum -= 1;
+  // ... run one generation
+}
+```
+
+This decouples simulation speed from frame rate. Whether the browser delivers 30fps or 60fps, the simulation advances at the same real-time rate. Continuous simulations like Particle Rain and Flocking integrate `dt` directly into velocity calculations — standard physics timestep integration.
+
+### Optimizations worth the ugliness
+
+Several scenes needed specific optimizations to run smoothly at 30fps on a typical grid.
+
+Game of Life uses double-buffered `Uint8Array`s for the cell grid. After each generation, the current and next buffers swap references instead of allocating a new array. Zero allocations per tick. It also tracks population stability and reseeds automatically when the simulation goes stale — if the population changes by fewer than 3 cells for 30 consecutive generations, it scatters fresh random cells to restart the dynamics.
+
+Cell Division stores all cell positions in flat `Float64Array`s (`cellX`, `cellY`, `cellO`) instead of an array of objects. For a scene that computes the distance from every screen cell to every simulation cell, cache-coherent flat arrays make a measurable difference. The recursive position function reuses a module-level `_posOut = [0, 0]` array instead of allocating a return value on each call.
+
+Wave Propagation runs a discrete 2D wave equation with a Laplacian stencil, and needs three buffers (current, previous, next). Each frame, the buffers rotate: `prev←curr, curr←next, next←prev`. No allocation, just pointer reassignment.
+
+### Dynamic parameter UI
+
+Each scene declares its parameters as a structured array with min, max, step, default, and tooltip. When you activate a scene, `_buildSceneParamsUI()` reads this array and generates the slider UI dynamically — the same slider+number-box pattern used by the main controls. Moving a scene slider updates `_sceneParamsCache`, which the scene reads on the next frame. No DOM queries in the hot loop.
+
+## Uploading ASCII art
+
+The other addition that broke the pure-math model was letting people upload their own ASCII art as a source pattern. Instead of computing values from an equation, the system reads characters from a `.txt` file, maps each one to a density value, and renders through the existing pipeline.
+
+The density mapping uses a hand-ordered ramp of 42 characters:
+
+```
+ .`'"^,:;!i|/\~-_+<>?][}{)(#*0OQ%&@$█▓▒░
+```
+
+Each character's position in this string determines its visual weight — space is 0.0, the full block `█` is near 1.0. Characters not in the ramp get a fallback: printable characters default to 0.5, control characters and spaces to 0. The density is then mapped to the $[-1, +1]$ range to match what `computeValue()` returns for math patterns.
+
+The art grid is stored as an array of `Float32Array` rows. Sampling uses aspect-preserving contain — the art is scaled to fit inside the canvas without distortion, centered, with out-of-bounds regions returning $-1$ (dim). No interpolation; it's nearest-neighbor sampling with integer floor, which preserves the crisp character-cell look.
+
+What makes it interesting is that uploaded art becomes just another value source in the render pipeline. It gets the same transform chain — you can rotate your ASCII art 45 degrees, apply mirror symmetry, or warp it with turbulence. The `asciiArt` pattern case even mixes a subtle sine-wave overlay on top of the uploaded grid:
+
+```js
+case "asciiArt":
+  var artVal = sampleArtGrid(mx, my, fw, fh);
+  return artVal * (c.globalVal || 1)
+    + Math.sin(mx * c.xConstant + time * c.frameMultiplier)
+    * Math.sin(my * c.yConstant + time * c.frameMultiplier * 0.7) * 0.3;
+```
+
+The `globalVal` parameter controls contrast, and the spatial constants drive a gentle wave animation across the art. At low values it's barely perceptible — a shimmer. At higher values the uploaded art becomes a canvas for interference patterns, the original text visible but distorted by mathematical waves washing across it.
+
 ## Why Windows XP
 
 The interface is a pixel-accurate recreation of Windows XP's Luna theme. Blue title bar gradients, beveled input fields, the green-and-blue desktop background, a taskbar with a Start button and a clock.
@@ -381,5 +486,9 @@ The interesting constraint of ASCII art as a medium is that your resolution is g
 The per-pattern slider ranges were the single biggest improvement to usability. Before them, every pattern required the user to already know what values were interesting. After them, dragging any slider anywhere produces a result worth looking at. That's the difference between a tool and a puzzle.
 
 The expression parser was the most satisfying code to write. It's a complete mathematical programming language in about 120 lines — tokenizer, recursive descent parser, closure compiler, function library — and it runs in a hot loop tens of thousands of times per frame without any noticeable overhead. The memoization means the parse cost is paid once and the compiled closure is pure arithmetic from then on. Compiling to closures instead of an AST interpreter was the right call — there's no tree-walking overhead, just nested function calls that V8 can inline and optimize.
+
+Adding scenes taught me that a well-chosen abstraction boundary can absorb radical changes. The decision to have everything funnel through a single `value → character → color` pipeline meant that simulations — which are architecturally nothing like math patterns — slotted in by implementing one function. The render loop didn't need to know whether it was drawing a sine wave or a cellular automaton. The tricky part was timing: bolting real-clock physics onto a system designed around a monotonic phase counter required careful separation between what `time` means for patterns and what `dt` means for simulations.
+
+The ASCII art upload was a similar lesson in reuse. A `.txt` file is about as far from a trigonometric equation as you can get, but once you map characters to floats, it's just another value source. Rotation, symmetry, turbulence — all free. The sine-wave overlay was an accident that stuck: I added it to test whether the pattern constants still worked with uploaded art, and the shimmering effect on static text was compelling enough to keep.
 
 The XP interface started as a joke and became the thing people remember. Nobody expects a tool for generating mathematical ASCII art to look like a twenty-year-old operating system. The dissonance between the visual style and the technical capability is part of the appeal. It's a creative tool that doesn't take itself seriously, and that gives the user permission not to take their output seriously either — which makes them more likely to experiment.
