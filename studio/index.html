@@ -784,7 +784,7 @@
                     rows="3"
                     spellcheck="false"
                     oninput="onFormulaInput()"
-                    onfocus="_lastFormulaTarget='a'"
+                    onfocus="_lastFormulaTarget = 'a'"
                     placeholder="e.g.  sin(r * 0.2 + theta * 3 + time)"
                   >
 sin(x * 0.1 + time) * cos(y * 0.05 + time * 1.5)</textarea
@@ -935,7 +935,8 @@ sin(x * 0.1 + time) * cos(y * 0.05 + time * 1.5)</textarea
                   </div>
                 </div>
                 <p class="range-hint" id="spatial-range-hint">
-                  Slider covers the useful range. Type any value in the number box.
+                  Slider covers the useful range. Type any value in the number
+                  box.
                 </p>
               </div>
             </div>
@@ -1039,18 +1040,83 @@ sin(x * 0.1 + time) * cos(y * 0.05 + time * 1.5)</textarea
                 <div class="field">
                   <label>Quick Presets</label>
                   <div style="display: flex; gap: 3px; flex-wrap: wrap">
-                    <span class="preset-btn" onclick="setSlider('p-fm',0.005);setSlider('p-as',0.05);liveUpdate()">Glacial</span>
-                    <span class="preset-btn" onclick="setSlider('p-fm',0.02);setSlider('p-as',0.1);liveUpdate()">Slow Drift</span>
-                    <span class="preset-btn" onclick="setSlider('p-fm',0.04);setSlider('p-as',0.15);liveUpdate()">Gentle</span>
-                    <span class="preset-btn" onclick="setSlider('p-fm',0.08);setSlider('p-as',0.3);liveUpdate()">Medium</span>
-                    <span class="preset-btn" onclick="setSlider('p-fm',0.15);setSlider('p-as',0.6);liveUpdate()">Lively</span>
-                    <span class="preset-btn" onclick="setSlider('p-fm',0.3);setSlider('p-as',1.0);liveUpdate()">Fast</span>
-                    <span class="preset-btn" onclick="setSlider('p-fm',0.6);setSlider('p-as',1.5);liveUpdate()">Hyper</span>
-                    <span class="preset-btn" onclick="setSlider('p-fm',1.0);setSlider('p-as',2.0);liveUpdate()">Chaos</span>
+                    <span
+                      class="preset-btn"
+                      onclick="
+                        setSlider('p-fm', 0.005);
+                        setSlider('p-as', 0.05);
+                        liveUpdate();
+                      "
+                      >Glacial</span
+                    >
+                    <span
+                      class="preset-btn"
+                      onclick="
+                        setSlider('p-fm', 0.02);
+                        setSlider('p-as', 0.1);
+                        liveUpdate();
+                      "
+                      >Slow Drift</span
+                    >
+                    <span
+                      class="preset-btn"
+                      onclick="
+                        setSlider('p-fm', 0.04);
+                        setSlider('p-as', 0.15);
+                        liveUpdate();
+                      "
+                      >Gentle</span
+                    >
+                    <span
+                      class="preset-btn"
+                      onclick="
+                        setSlider('p-fm', 0.08);
+                        setSlider('p-as', 0.3);
+                        liveUpdate();
+                      "
+                      >Medium</span
+                    >
+                    <span
+                      class="preset-btn"
+                      onclick="
+                        setSlider('p-fm', 0.15);
+                        setSlider('p-as', 0.6);
+                        liveUpdate();
+                      "
+                      >Lively</span
+                    >
+                    <span
+                      class="preset-btn"
+                      onclick="
+                        setSlider('p-fm', 0.3);
+                        setSlider('p-as', 1.0);
+                        liveUpdate();
+                      "
+                      >Fast</span
+                    >
+                    <span
+                      class="preset-btn"
+                      onclick="
+                        setSlider('p-fm', 0.6);
+                        setSlider('p-as', 1.5);
+                        liveUpdate();
+                      "
+                      >Hyper</span
+                    >
+                    <span
+                      class="preset-btn"
+                      onclick="
+                        setSlider('p-fm', 1.0);
+                        setSlider('p-as', 2.0);
+                        liveUpdate();
+                      "
+                      >Chaos</span
+                    >
                   </div>
                 </div>
                 <p class="range-hint" id="anim-range-hint">
-                  Slider: fm −1 to 1, speed 0.01 to 2. Type any value in the number box — no limit.
+                  Slider: fm −1 to 1, speed 0.01 to 2. Type any value in the
+                  number box — no limit.
                 </p>
               </div>
             </div>
@@ -1341,7 +1407,7 @@ sin(x * 0.1 + time) * cos(y * 0.05 + time * 1.5)</textarea
                       rows="2"
                       spellcheck="false"
                       oninput="onFormulaInputB()"
-                      onfocus="_lastFormulaTarget='b'"
+                      onfocus="_lastFormulaTarget = 'b'"
                       placeholder="e.g.  sin(r * 0.3 + time)"
                     >
 sin(r * 0.2 + time)</textarea
@@ -1352,7 +1418,10 @@ sin(r * 0.2 + time)</textarea
                       >
                       <button
                         class="xp-btn formula-ref-btn"
-                        onclick="_lastFormulaTarget='b';showMathRef()"
+                        onclick="
+                          _lastFormulaTarget = 'b';
+                          showMathRef();
+                        "
                       >
                         Math Ref...
                       </button>
@@ -1624,10 +1693,14 @@ sin(r * 0.2 + time)</textarea
                     <span class="preset-btn" onclick="setCharset('▬▭▬▭▬▭▬▭')"
                       >Dashes</span
                     >
-                    <span class="preset-btn" onclick="setCharset('ס₪₪§|Ξ≥≤≥≤Ξ>')"
+                    <span
+                      class="preset-btn"
+                      onclick="setCharset('ס₪₪§|Ξ≥≤≥≤Ξ>')"
                       >Machine</span
                     >
-                    <span class="preset-btn" onclick="setCharset('\\:::/ \\:::/____')"
+                    <span
+                      class="preset-btn"
+                      onclick="setCharset('\\:::/ \\:::/____')"
                       >Slashes</span
                     >
                     <span class="preset-btn" onclick="setCharset('¯_(ツ)_/¯')"

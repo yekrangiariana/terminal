@@ -3037,15 +3037,12 @@ let _configMode = false;
 let _configIdx = 0;
 let _configEl = null;
 
-
-
 function _openConfigMenu() {
   _configMode = true;
   _configIdx = THEMES.findIndex((t) => t.id === getActiveTheme());
   if (_configIdx < 0) _configIdx = 0;
   if (sbMode) sbMode.textContent = "CONFIG";
-  if (sbStatus)
-    sbStatus.textContent = "↑↓ navigate  Enter=select  ESC=close";
+  if (sbStatus) sbStatus.textContent = "↑↓ navigate  Enter=select  ESC=close";
 
   _configEl = document.createElement("div");
   _configEl.id = "config-menu";

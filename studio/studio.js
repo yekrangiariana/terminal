@@ -906,9 +906,18 @@ function applyPatternRanges(pattern) {
   var hint = document.getElementById("spatial-range-hint");
   if (hint) {
     hint.textContent =
-      "Slider: xC " + r.xc[0] + " to " + r.xc[1] +
-      ", yC " + r.yc[0] + " to " + r.yc[1] +
-      ", gV " + r.gv[0] + " to " + r.gv[1] +
+      "Slider: xC " +
+      r.xc[0] +
+      " to " +
+      r.xc[1] +
+      ", yC " +
+      r.yc[0] +
+      " to " +
+      r.yc[1] +
+      ", gV " +
+      r.gv[0] +
+      " to " +
+      r.gv[1] +
       ". Type any value in the number box \u2014 no limit.";
   }
 }
@@ -1442,7 +1451,9 @@ var _lastFormulaTarget = "a";
 function useSnippet(codeEl) {
   var text = codeEl.textContent || codeEl.innerText;
   var isB = _lastFormulaTarget === "b";
-  var field = document.getElementById(isB ? "p-lb-custom-expr" : "p-custom-expr");
+  var field = document.getElementById(
+    isB ? "p-lb-custom-expr" : "p-custom-expr",
+  );
   // If field is empty or has placeholder, replace entirely; otherwise append
   var curExpr = isB ? config.layerB.customExpr : config.customExpr;
   if (!field.value.trim() || field.value === curExpr) {
@@ -1693,7 +1704,16 @@ function randomize() {
     ["#FFFFFF", "#BBBBBB", "#888888", "#444444", "#000000"],
     ["#FFFFFF", "#DDDDDD", "#AAAAAA", "#777777", "#333333", "#000000"],
     ["#000000", "#1A1A1A", "#333333", "#4D4D4D", "#666666"],
-    ["#FFFFFF", "#E0E0E0", "#C0C0C0", "#A0A0A0", "#808080", "#606060", "#404040", "#202020"],
+    [
+      "#FFFFFF",
+      "#E0E0E0",
+      "#C0C0C0",
+      "#A0A0A0",
+      "#808080",
+      "#606060",
+      "#404040",
+      "#202020",
+    ],
   ];
   var charsets = [
     "░▒▓█░▒▓█",
