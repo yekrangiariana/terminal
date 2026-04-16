@@ -71,8 +71,8 @@ function handleRoute(path) {
   path = (path || getRoutePath()).replace(/\/+$/, "") || "/";
   _suppressPush = true;
   try {
-    if (path === "/furrow") {
-      commands.furrow.execute();
+    if (path === "/furrow" || path === "/ascii-studio") {
+      window.location.href = "desktop/#ascii-studio";
       return true;
     }
     if (path === "/about") {
@@ -2460,8 +2460,8 @@ function printHome() {
     ["whoami", "a bit more about me"],
     ["fortune", "wisdom from the machine"],
     ["htop", "system monitor dashboard"],
-    ["config", "theme & screensaver"],
-    ["furrow", "ASCII art gallery"],
+    ["config", "theme settings"],
+    ["furrow", "ASCII studio (desktop)"],
     ["gui", "switch to desktop mode"],
     ["help", "all commands"],
   ];
@@ -2562,7 +2562,7 @@ const commands = {
         ["blog category", "filter by category"],
         ["projects", "projects & repos"],
         ["cmatrix", "digital rain screensaver"],
-        ["furrow", "ASCII art animation gallery"],
+        ["furrow", "ASCII studio (desktop)"],
         ["ls", "quick text listing by category"],
         ["about / whoami", "about me"],
       ];
@@ -2579,10 +2579,10 @@ const commands = {
         ["home / exit", "return home"],
         ["gui", "switch to desktop (XP) mode"],
         ["htop", "system monitor dashboard"],
-        ["config", "theme & screensaver settings"],
+        ["config", "theme settings"],
         ["clear", "clear screen"],
         ["cmatrix", "digital rain screensaver"],
-        ["furrow", "ASCII art animation gallery"],
+        ["furrow", "ASCII studio (desktop)"],
         ["fortune", "wisdom from the machine"],
       ];
       printLine("   │  Terminal", "c-dim");
@@ -2831,47 +2831,19 @@ const commands = {
   },
 
   furrow: {
-    description: "ASCII art animation gallery",
+    description: "Open ASCII Studio in desktop mode",
     execute() {
-      clearOutput();
-      pushRoute("/furrow");
-      const lines = [
-        ["", ""],
-        ["  ░▒▓ ASCIIxGPT by The Furrow ▓▒░", "c-cyan"],
-        ["  Atomic, Mitosis & Pollock by Ariana Yekrangi", "c-cyan"],
-        ["", ""],
-        ["  Licensed under CC BY-NC-SA 4.0", "c-dim"],
-        ["  thefurrow.tv/project/asciixgpt", "c-dim"],
-        ["", ""],
-      ];
-      let i = 0;
-      function next() {
-        if (i >= lines.length) {
-          setTimeout(() => {
-            if (window.furrow) {
-              window.furrow.onStop(() => {
-                clearOutput();
-                printHome();
-                pushRoute("/");
-              });
-              window.furrow.start();
-            }
-          }, 600);
-          return;
-        }
-        const [text, cls] = lines[i];
-        const div = document.createElement("div");
-        if (cls) div.className = cls;
-        if (text) {
-          div.textContent = text;
-        } else {
-          div.className = "spacer";
-        }
-        output.appendChild(div);
-        i++;
-        setTimeout(next, 35);
-      }
-      next();
+      printLine("  launching ASCII Studio…", "c-info");
+      setTimeout(() => {
+        window.location.href = "desktop/#ascii-studio";
+      }, 600);
+    },
+  },
+
+  "ascii-studio": {
+    description: "Open ASCII Studio in desktop mode",
+    execute() {
+      commands.furrow.execute();
     },
   },
 
@@ -2985,7 +2957,7 @@ const commands = {
   },
 
   config: {
-    description: "Terminal settings — theme & screensaver",
+    description: "Terminal settings — theme",
     execute(args) {
       // Direct shortcut: config theme <name>
       if (args) {
@@ -3062,43 +3034,18 @@ const commands = {
 // Interactive Config Menu
 // ─────────────────────────────────────────────
 let _configMode = false;
-let _configSection = 0; // 0 = theme, 1 = screensaver
 let _configIdx = 0;
 let _configEl = null;
 
-// ── Screensaver setting ──
-// stored value: "cmatrix" (default) or a furrow concept index (0–8)
-function getActiveScreensaver() {
-  try {
-    return localStorage.getItem("term-screensaver") || "cmatrix";
-  } catch {
-    return "cmatrix";
-  }
-}
-function setActiveScreensaver(val) {
-  try {
-    localStorage.setItem("term-screensaver", val);
-  } catch {}
-}
 
-function _getScreensaverList() {
-  const list = [{ id: "cmatrix", name: "CMatrix — Digital Rain", desc: "" }];
-  if (window.furrow && window.furrow.getNames) {
-    window.furrow.getNames().forEach((n, i) => {
-      list.push({ id: String(i), name: n, desc: "" });
-    });
-  }
-  return list;
-}
 
 function _openConfigMenu() {
   _configMode = true;
-  _configSection = 0;
   _configIdx = THEMES.findIndex((t) => t.id === getActiveTheme());
   if (_configIdx < 0) _configIdx = 0;
   if (sbMode) sbMode.textContent = "CONFIG";
   if (sbStatus)
-    sbStatus.textContent = "↑↓ navigate  Enter=select  Tab=section  ESC=close";
+    sbStatus.textContent = "↑↓ navigate  Enter=select  ESC=close";
 
   _configEl = document.createElement("div");
   _configEl.id = "config-menu";
@@ -3117,8 +3064,6 @@ function _closeConfigMenu() {
 function _renderConfig() {
   if (!_configEl) return;
   const activeTheme = getActiveTheme();
-  const activeSS = getActiveScreensaver();
-  const ssList = _getScreensaverList();
 
   let html = "";
   html += "\n";
@@ -3127,15 +3072,12 @@ function _renderConfig() {
   html += '  <span class="c-cyan">│</span>\n';
 
   // ── THEME section ──
-  const themeActive = _configSection === 0;
   html +=
-    '  <span class="c-cyan">│</span>  <span class="cfg-section">' +
-    (themeActive ? "▸ " : "  ") +
-    "THEME</span>\n";
+    '  <span class="c-cyan">│</span>  <span class="cfg-section">  THEME</span>\n';
   html += '  <span class="c-cyan">│</span>\n';
   THEMES.forEach((t, i) => {
     const isCurrent = t.id === activeTheme;
-    const isSelected = themeActive && i === _configIdx;
+    const isSelected = i === _configIdx;
     const cls = isSelected ? "cfg-option active" : "cfg-option";
     const cursor = isSelected ? "▸" : " ";
     const check = isCurrent ? "●" : "○";
@@ -3144,30 +3086,10 @@ function _renderConfig() {
   });
 
   html += '  <span class="c-cyan">│</span>\n';
-
-  // ── SCREENSAVER section ──
-  const ssActive = _configSection === 1;
-  html +=
-    '  <span class="c-cyan">│</span>  <span class="cfg-section">' +
-    (ssActive ? "▸ " : "  ") +
-    "SCREENSAVER</span>\n";
-  html += '  <span class="c-cyan">│</span>\n';
-  ssList.forEach((s, i) => {
-    const isCurrent = s.id === activeSS;
-    const isSelected = ssActive && i === _configIdx;
-    const cls = isSelected ? "cfg-option active" : "cfg-option";
-    const cursor = isSelected ? "▸" : " ";
-    const check = isCurrent ? "●" : "○";
-    const checkCls = isCurrent ? "cfg-check checked" : "cfg-check";
-    const desc = s.desc ? '<span class="c-dim">' + s.desc + "</span>" : "";
-    html += `  <span class="c-cyan">│</span>  <span class="${cls}"><span class="cfg-cursor">${cursor}</span><span class="${checkCls}">${check}</span> <span class="cfg-label">${s.name.padEnd(28)}</span>${desc}</span>\n`;
-  });
-
-  html += '  <span class="c-cyan">│</span>\n';
   html +=
     '  <span class="c-cyan">└──────────────────────────────────────────────────┘</span>\n';
   html +=
-    '  <span class="c-dim">  ↑↓ navigate · Tab switch section · Enter apply · ESC close</span>';
+    '  <span class="c-dim">  ↑↓ navigate · Enter apply · ESC close</span>';
 
   _configEl.innerHTML = html;
 
@@ -3176,18 +3098,9 @@ function _renderConfig() {
   opts.forEach((el, i) => {
     el.style.cursor = "pointer";
     el.addEventListener("click", () => {
-      if (i < THEMES.length) {
-        _configSection = 0;
-        _configIdx = i;
-        applyTheme(THEMES[i].id);
-        printLine(`  theme → ${THEMES[i].name}`, "c-info");
-      } else {
-        _configSection = 1;
-        _configIdx = i - THEMES.length;
-        const picked = ssList[_configIdx];
-        setActiveScreensaver(picked.id);
-        printLine(`  screensaver → ${picked.name}`, "c-info");
-      }
+      _configIdx = i;
+      applyTheme(THEMES[i].id);
+      printLine(`  theme → ${THEMES[i].name}`, "c-info");
       _renderConfig();
     });
   });
@@ -3196,57 +3109,23 @@ function _renderConfig() {
 function _configKeyHandler(e) {
   if (!_configMode) return false;
 
-  const ssList = _getScreensaverList();
-  const items = _configSection === 0 ? THEMES : ssList;
-
   if (e.key === "ArrowUp") {
     e.preventDefault();
-    if (_configIdx > 0) {
-      _configIdx--;
-    } else if (_configSection === 1) {
-      _configSection = 0;
-      _configIdx = THEMES.length - 1;
-    }
+    if (_configIdx > 0) _configIdx--;
     _renderConfig();
     return true;
   }
   if (e.key === "ArrowDown") {
     e.preventDefault();
-    if (_configIdx < items.length - 1) {
-      _configIdx++;
-    } else if (_configSection === 0) {
-      _configSection = 1;
-      _configIdx = 0;
-    }
-    _renderConfig();
-    return true;
-  }
-  if (e.key === "Tab") {
-    e.preventDefault();
-    if (_configSection === 0) {
-      _configSection = 1;
-      const activeSS = getActiveScreensaver();
-      _configIdx = ssList.findIndex((s) => s.id === activeSS);
-      if (_configIdx < 0) _configIdx = 0;
-    } else {
-      _configSection = 0;
-      _configIdx = THEMES.findIndex((t) => t.id === getActiveTheme());
-      if (_configIdx < 0) _configIdx = 0;
-    }
+    if (_configIdx < THEMES.length - 1) _configIdx++;
     _renderConfig();
     return true;
   }
   if (e.key === "Enter") {
     e.preventDefault();
-    if (_configSection === 0) {
-      const selected = THEMES[_configIdx];
-      applyTheme(selected.id);
-      printLine(`  theme → ${selected.name}`, "c-info");
-    } else {
-      const selected = ssList[_configIdx];
-      setActiveScreensaver(selected.id);
-      printLine(`  screensaver → ${selected.name}`, "c-info");
-    }
+    const selected = THEMES[_configIdx];
+    applyTheme(selected.id);
+    printLine(`  theme → ${selected.name}`, "c-info");
     _renderConfig();
     return true;
   }

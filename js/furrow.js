@@ -219,15 +219,15 @@
   function _updateMitCells(fw, fh) {
     var phase = time * 0.05;
     var maxGen = 5; // up to 32 cells
-    var cycleLen = maxGen + 2; // pause at max before restart
+    var cycleLen = maxGen + 1;
     var cp = phase % cycleLen;
     var gen = Math.min(Math.floor(cp), maxGen);
     var t = cp - gen; // 0..1 within this generation
 
-    // Fade-out at end of cycle
-    if (cp > maxGen + 1) {
-      _mitCells = [];
-      return;
+    // Crossfade: at end of last gen, fade cells out smoothly
+    var globalOpacity = 1;
+    if (gen === maxGen && t > 0.5) {
+      globalOpacity = 1 - (t - 0.5) * 2; // 1→0 over last half of final gen
     }
 
     var cx = fw / 2;
@@ -259,11 +259,11 @@
 
     for (var i = 0; i < count; i++) {
       var final = pos(i, gen);
-      var opacity = 1;
+      var opacity = globalOpacity;
 
       if (gen === 0 && cp < 1) {
         // First cell fading in
-        opacity = Math.min(cp * 1.5, 1);
+        opacity = Math.min(cp * 1.5, 1) * globalOpacity;
         _mitCells.push([cx, cy, opacity]);
       } else {
         // Interpolate from parent to final position
@@ -334,19 +334,24 @@
           Math.sin(dist * 0.5 - time * c.frameMultiplier * 1.5 + 4) *
           Math.exp(-Math.abs(dist - 26) * 0.1);
         // Orbiting electrons — bright dots on each shell
+        const TWO_PI = 6.283185307;
+        const a1 =
+          (((angle - time * c.frameMultiplier * 5) % TWO_PI) + TWO_PI) % TWO_PI;
+        const a1w = a1 > Math.PI ? a1 - TWO_PI : a1;
         const e1 =
-          Math.exp(-Math.pow(dist - 8, 2) * 0.3) *
-          Math.exp(-Math.pow(angle - time * c.frameMultiplier * 5, 2) * 2);
+          Math.exp(-Math.pow(dist - 8, 2) * 0.3) * Math.exp(-a1w * a1w * 2);
+        const a2 =
+          (((angle + time * c.frameMultiplier * 3 + 1) % TWO_PI) + TWO_PI) %
+          TWO_PI;
+        const a2w = a2 > Math.PI ? a2 - TWO_PI : a2;
         const e2 =
-          Math.exp(-Math.pow(dist - 16, 2) * 0.2) *
-          Math.exp(
-            -Math.pow(angle + time * c.frameMultiplier * 3 + 1, 2) * 1.5,
-          );
+          Math.exp(-Math.pow(dist - 16, 2) * 0.2) * Math.exp(-a2w * a2w * 1.5);
+        const a3 =
+          (((angle - time * c.frameMultiplier * 2 + 3) % TWO_PI) + TWO_PI) %
+          TWO_PI;
+        const a3w = a3 > Math.PI ? a3 - TWO_PI : a3;
         const e3 =
-          Math.exp(-Math.pow(dist - 26, 2) * 0.15) *
-          Math.exp(
-            -Math.pow(angle - time * c.frameMultiplier * 2 + 3, 2) * 1.2,
-          );
+          Math.exp(-Math.pow(dist - 26, 2) * 0.15) * Math.exp(-a3w * a3w * 1.2);
         // Cloud probability field
         const cloud =
           Math.sin(

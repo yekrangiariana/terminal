@@ -272,21 +272,8 @@
   });
 
   // ── Idle screensaver timer ──
-  function _getScreensaverChoice() {
-    try {
-      return localStorage.getItem("term-screensaver") || "cmatrix";
-    } catch {
-      return "cmatrix";
-    }
-  }
-
   function _launchScreensaver() {
-    const choice = _getScreensaverChoice();
-    if (choice === "cmatrix") {
-      if (!active) start();
-    } else if (window.furrow && !window.furrow.isActive()) {
-      window.furrow.start(parseInt(choice, 10));
-    }
+    if (!active) start();
   }
 
   function resetIdleTimer() {

@@ -345,6 +345,106 @@ body {
   width: 680px;
   height: 480px;
 }
+#win-studio {
+  top: 20px;
+  left: 40px;
+  width: 90%;
+  height: 90%;
+  max-width: calc(100vw - 60px);
+  max-height: calc(100vh - 70px);
+}
+.studio-body {
+  padding: 0 !important;
+  overflow: hidden !important;
+  position: relative;
+}
+.studio-loading {
+  position: absolute;
+  inset: 0;
+  z-index: 10;
+  background: #000;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-direction: column;
+}
+.studio-loading-inner {
+  text-align: center;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+}
+.studio-loading-logo {
+  margin-bottom: 16px;
+}
+.studio-loading-logo img {
+  width: 48px;
+  height: 48px;
+  filter: drop-shadow(0 2px 8px rgba(0, 0, 0, 0.5));
+}
+.xp-loading-text {
+  color: #fff;
+  font-family: "Franklin Gothic Medium", "Trebuchet MS", Tahoma, sans-serif;
+  font-size: 20px;
+  font-weight: normal;
+  letter-spacing: 2px;
+  margin-bottom: 2px;
+  text-shadow: 1px 1px 3px rgba(0, 0, 0, 0.6);
+}
+.xp-loading-sub {
+  color: #888;
+  font-family: "Trebuchet MS", Tahoma, sans-serif;
+  font-size: 10px;
+  letter-spacing: 0.5px;
+  margin-bottom: 20px;
+}
+.xp-loading-bar-track {
+  width: 180px;
+  height: 12px;
+  background: #1a1a1a;
+  border: 1px solid #333;
+  border-radius: 2px;
+  overflow: hidden;
+  margin: 0 auto;
+  padding: 1px;
+}
+.xp-loading-bar-fill {
+  height: 100%;
+  width: 0%;
+  background: linear-gradient(
+    to bottom,
+    #7be07b 0%,
+    #26a826 40%,
+    #1a8f1a 60%,
+    #5fd35f 100%
+  );
+  border-radius: 1px;
+  animation: xp-bar-fill 1.5s linear forwards;
+}
+@keyframes xp-bar-fill {
+  0% {
+    width: 0%;
+  }
+  100% {
+    width: 100%;
+  }
+}
+.xp-loading-copy {
+  color: #555;
+  font-family: "Trebuchet MS", Tahoma, sans-serif;
+  font-size: 9px;
+  margin-top: 12px;
+  letter-spacing: 0.3px;
+}
+.xp-window.maximized {
+  top: 0 !important;
+  left: 0 !important;
+  width: 100% !important;
+  height: calc(100vh - 30px) !important;
+  max-width: none !important;
+  max-height: none !important;
+  border-radius: 0 !important;
+}
 
 .win-titlebar {
   background: linear-gradient(
@@ -382,7 +482,8 @@ body {
   text-shadow: none;
 }
 .win-icon {
-  font-size: 14px;
+  width: 16px;
+  height: 16px;
 }
 .win-title {
   flex: 1;

@@ -4,6 +4,7 @@
    ══════════════════════════════════════════════════════════════ */
 
 const SLUGS = [
+  "building-ascii-studio",
   "building-this-terminal"
 ];
 
@@ -39,9 +40,11 @@ const SOURCE_TREE = {
     { name: "terminal.css", path: "css/terminal.css", type: "css" }
   ],
   blog: [
+    { name: "building-ascii-studio.md", path: "blog/building-ascii-studio.md", type: "md" },
     { name: "building-this-terminal.md", path: "blog/building-this-terminal.md", type: "md" }
   ],
   images: [
+    { name: "ascii-studio-logo.svg", path: "images/ascii-studio-logo.svg", type: "svg" },
     { name: "terminal.txt", path: "images/terminal.txt", type: "txt" },
     { name: "xp-logo.txt", path: "images/xp-logo.txt", type: "txt" }
   ],

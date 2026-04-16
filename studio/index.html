@@ -1,0 +1,1941 @@
+<!doctype html>
+<html lang="en" id="ascii-studio">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>ASCII Studio — Animation Pattern Designer</title>
+    <meta
+      name="description"
+      content="ASCII Studio is a free browser-based tool for creating animated ASCII art patterns using math-driven generators, symmetry modes, layer blending, and real-time preview. Design, customise, and export looping text animations."
+    />
+    <meta
+      name="keywords"
+      content="ASCII art, ASCII animation, text art generator, ASCII pattern designer, browser ASCII tool, math art, creative coding, terminal art, monospace animation"
+    />
+    <meta name="author" content="Ariana Yekrangi" />
+    <meta name="robots" content="index, follow" />
+    <link rel="canonical" href="https://ariana.wtf/studio/" />
+    <!-- Open Graph -->
+    <meta
+      property="og:title"
+      content="ASCII Studio — Animation Pattern Designer"
+    />
+    <meta
+      property="og:description"
+      content="Create animated ASCII art patterns with math-driven generators, symmetry, layer blending, and real-time preview. Free browser tool."
+    />
+    <meta property="og:type" content="website" />
+    <meta property="og:url" content="https://ariana.wtf/studio/" />
+    <!-- Twitter Card -->
+    <meta name="twitter:card" content="summary" />
+    <meta
+      name="twitter:title"
+      content="ASCII Studio — Animation Pattern Designer"
+    />
+    <meta
+      name="twitter:description"
+      content="Free browser-based ASCII animation pattern designer with math generators, symmetry modes, and live preview."
+    />
+    <link rel="stylesheet" href="studio.css" />
+  </head>
+  <body>
+    <!-- ════════════════════════════════════
+     XP DROPDOWN MENUS (absolutely positioned)
+     ════════════════════════════════════ -->
+    <div class="xp-menu" id="menu-file">
+      <div
+        class="xp-menu-item"
+        onclick="
+          newPreset();
+          closeMenus();
+        "
+      >
+        New<span class="mi-accel">Ctrl+N</span>
+      </div>
+      <div class="xp-menu-sep"></div>
+      <div
+        class="xp-menu-item"
+        onclick="
+          exportHTML();
+          closeMenus();
+        "
+      >
+        Export as HTML...<span class="mi-accel">Ctrl+E</span>
+      </div>
+      <div
+        class="xp-menu-item"
+        onclick="
+          showExportGif();
+          closeMenus();
+        "
+      >
+        Export as GIF...
+      </div>
+      <div
+        class="xp-menu-item"
+        id="menu-export-mp4"
+        onclick="
+          showExportMp4();
+          closeMenus();
+        "
+        style="display: none"
+      >
+        Export as MP4...
+      </div>
+      <div class="xp-menu-sep"></div>
+      <div
+        class="xp-menu-item"
+        onclick="
+          closeMenus();
+          if (isEmbedded) {
+            window.parent.postMessage('studio-close', '*');
+          } else {
+            window.location.href = 'desktop/';
+          }
+        "
+      >
+        Exit
+      </div>
+    </div>
+    <div class="xp-menu" id="menu-edit">
+      <div
+        class="xp-menu-item"
+        onclick="
+          randomize();
+          closeMenus();
+        "
+      >
+        Randomize<span class="mi-accel">Ctrl+R</span>
+      </div>
+      <div class="xp-menu-sep"></div>
+      <div
+        class="xp-menu-item"
+        onclick="
+          resetTime();
+          closeMenus();
+        "
+      >
+        Reset Time
+      </div>
+      <div
+        class="xp-menu-item"
+        onclick="
+          togglePlay();
+          closeMenus();
+        "
+      >
+        Play / Pause<span class="mi-accel">Space</span>
+      </div>
+      <div class="xp-menu-sep"></div>
+      <div
+        class="xp-menu-item"
+        onclick="
+          switchTab('advanced');
+          closeMenus();
+        "
+      >
+        Edit JSON...
+      </div>
+    </div>
+    <div class="xp-menu" id="menu-view">
+      <div
+        class="xp-menu-item"
+        onclick="
+          expandAllSections();
+          closeMenus();
+        "
+      >
+        Expand All Sections
+      </div>
+      <div
+        class="xp-menu-item"
+        onclick="
+          collapseAllSections();
+          closeMenus();
+        "
+      >
+        Collapse All Sections
+      </div>
+      <div class="xp-menu-sep"></div>
+      <div
+        class="xp-menu-item"
+        onclick="
+          switchTab('visual');
+          closeMenus();
+        "
+      >
+        Visual Tab
+      </div>
+      <div
+        class="xp-menu-item"
+        onclick="
+          switchTab('advanced');
+          closeMenus();
+        "
+      >
+        Advanced Tab
+      </div>
+      <div class="xp-menu-sep"></div>
+      <div
+        class="xp-menu-item"
+        onclick="
+          showMathRef();
+          closeMenus();
+        "
+      >
+        Math Reference<span class="mi-accel">Ctrl+M</span>
+      </div>
+    </div>
+    <div class="xp-menu" id="menu-help">
+      <div
+        class="xp-menu-item"
+        onclick="
+          showHelpWindow();
+          closeMenus();
+        "
+      >
+        Help Topics<span class="mi-accel">F1</span>
+      </div>
+      <div class="xp-menu-sep"></div>
+      <div
+        class="xp-menu-item"
+        onclick="
+          showAbout();
+          closeMenus();
+        "
+      >
+        About ASCII Studio
+      </div>
+    </div>
+
+    <!-- ════════════════════════════════════
+     ABOUT DIALOG
+     ════════════════════════════════════ -->
+    <div class="xp-overlay" id="about-overlay" onclick="closeAbout()"></div>
+    <div class="xp-dialog" id="about-dialog">
+      <div class="xp-dialog-titlebar">
+        <span>About ASCII Studio</span>
+        <button onclick="closeAbout()">✕</button>
+      </div>
+      <div class="xp-dialog-body about-body">
+        <div class="about-icon">
+          <img
+            src="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 48 48'%3E%3Cdefs%3E%3ClinearGradient id='asc' x1='0' y1='0' x2='0' y2='1'%3E%3Cstop offset='0' stop-color='%23445'/%3E%3Cstop offset='1' stop-color='%23112'/%3E%3C/linearGradient%3E%3C/defs%3E%3Crect x='4' y='4' width='40' height='36' rx='3' fill='url(%23asc)' stroke='%23666'/%3E%3Crect x='6' y='6' width='36' height='32' rx='1' fill='%23000d14'/%3E%3Ctext x='24' y='18' font-family='monospace' font-size='7' fill='%2300ffd5' text-anchor='middle'%3E░▒▓█▓▒░%3C/text%3E%3Ctext x='24' y='27' font-family='monospace' font-size='7' fill='%2300b396' text-anchor='middle'%3E▓░▒█▒░▓%3C/text%3E%3Ctext x='24' y='36' font-family='monospace' font-size='7' fill='%23006654' text-anchor='middle'%3E░▒▓█▓▒░%3C/text%3E%3C/svg%3E"
+            alt=""
+            width="40"
+            height="40"
+          />
+        </div>
+        <div class="about-info">
+          <strong>ASCII Studio</strong><br />
+          Animation Pattern Designer<br />
+          <span class="about-ver">Version 1.0</span>
+          <hr />
+          <p>
+            A visual tool for creating mathematical ASCII art animations. Design
+            patterns using trigonometric equations, layer blending, symmetry
+            transforms, and custom formulas — all rendered as animated text art
+            in real-time.
+          </p>
+          <hr />
+          <p class="about-credits">
+            © 2025 <strong>Ariana Yekrangi</strong><br />
+            Licensed under
+            <a
+              href="https://creativecommons.org/licenses/by-nc-nd/4.0/legalcode"
+              target="_blank"
+              rel="noopener"
+              >CC BY-NC-ND 4.0</a
+            ><br />
+            <a href="/" target="_blank">ariana.wtf</a>
+          </p>
+          <p class="about-credits">
+            Some animation concepts inspired by<br />
+            <em>ASCIIxGPT</em> by The Furrow (<a
+              href="https://creativecommons.org/licenses/by-nc-sa/4.0/legalcode"
+              target="_blank"
+              rel="noopener"
+              >CC BY-NC-SA 4.0</a
+            >)<br />
+            <a
+              href="https://thefurrow.tv/project/asciixgpt"
+              target="_blank"
+              rel="noopener"
+              >thefurrow.tv/project/asciixgpt</a
+            >
+          </p>
+        </div>
+      </div>
+      <div class="xp-dialog-footer">
+        <button class="xp-btn" onclick="closeAbout()">OK</button>
+      </div>
+    </div>
+
+    <!-- ════════════════════════════════════
+     EXPORT VIDEO DIALOG
+     ════════════════════════════════════ -->
+    <div
+      class="xp-overlay"
+      id="export-overlay"
+      onclick="closeExportDialog()"
+    ></div>
+    <div class="xp-dialog" id="export-dialog" style="width: 320px">
+      <div class="xp-dialog-titlebar">
+        <span id="export-dialog-title">Export Video</span>
+        <button onclick="closeExportDialog()">✕</button>
+      </div>
+      <div class="xp-dialog-body" style="padding: 12px 16px">
+        <div class="field" style="margin-bottom: 8px">
+          <label style="font-size: 11px">Duration (seconds)</label>
+          <input
+            type="number"
+            id="export-duration"
+            value="5"
+            min="1"
+            max="30"
+            step="1"
+            style="
+              width: 80px;
+              padding: 2px 4px;
+              border: 1px solid #7f9db9;
+              font-size: 11px;
+            "
+          />
+        </div>
+        <div class="field" style="margin-bottom: 8px">
+          <label style="font-size: 11px">Frame rate</label>
+          <select
+            id="export-fps"
+            style="
+              width: 80px;
+              padding: 2px 4px;
+              border: 1px solid #7f9db9;
+              font-size: 11px;
+            "
+          >
+            <option value="15">15 fps</option>
+            <option value="24">24 fps</option>
+            <option value="30" selected>30 fps</option>
+          </select>
+        </div>
+        <div class="field" style="margin-bottom: 8px">
+          <label style="font-size: 11px">Resolution</label>
+          <select
+            id="export-res"
+            style="
+              width: 120px;
+              padding: 2px 4px;
+              border: 1px solid #7f9db9;
+              font-size: 11px;
+            "
+          >
+            <option value="0.5">Half (faster)</option>
+            <option value="1" selected>Current size</option>
+            <option value="2">2x (high quality)</option>
+          </select>
+        </div>
+        <div id="export-progress" style="display: none; margin-top: 10px">
+          <div
+            style="font-size: 10px; color: #444; margin-bottom: 4px"
+            id="export-progress-text"
+          >
+            Recording... 0%
+          </div>
+          <div
+            style="
+              width: 100%;
+              height: 10px;
+              background: #ddd;
+              border: 1px solid #999;
+              border-radius: 2px;
+              overflow: hidden;
+            "
+          >
+            <div
+              id="export-progress-bar"
+              style="
+                width: 0%;
+                height: 100%;
+                background: linear-gradient(to bottom, #7be07b, #26a826);
+                transition: width 0.1s;
+              "
+            ></div>
+          </div>
+        </div>
+      </div>
+      <div class="xp-dialog-footer">
+        <button class="xp-btn" id="export-start-btn" onclick="startExport()">
+          Export
+        </button>
+        <button class="xp-btn" onclick="closeExportDialog()">Cancel</button>
+      </div>
+    </div>
+
+    <!-- ════════════════════════════════════
+     HELP WINDOW
+     ════════════════════════════════════ -->
+    <div class="xp-overlay" id="help-overlay" onclick="closeHelpWindow()"></div>
+    <div class="xp-help-window" id="help-window">
+      <div class="xp-dialog-titlebar">
+        <span>ASCII Studio Help</span>
+        <button onclick="closeHelpWindow()">✕</button>
+      </div>
+      <div class="xp-help-main">
+        <div class="xp-help-sidebar">
+          <div
+            class="xp-help-nav-item active"
+            onclick="showHelpTopic('overview', this)"
+          >
+            Overview
+          </div>
+          <div
+            class="xp-help-nav-item"
+            onclick="showHelpTopic('patterns', this)"
+          >
+            Patterns
+          </div>
+          <div
+            class="xp-help-nav-item"
+            onclick="showHelpTopic('constants', this)"
+          >
+            Spatial Constants
+          </div>
+          <div
+            class="xp-help-nav-item"
+            onclick="showHelpTopic('animation', this)"
+          >
+            Animation
+          </div>
+          <div
+            class="xp-help-nav-item"
+            onclick="showHelpTopic('transforms', this)"
+          >
+            Transforms
+          </div>
+          <div
+            class="xp-help-nav-item"
+            onclick="showHelpTopic('blending', this)"
+          >
+            Layer Blending
+          </div>
+          <div class="xp-help-nav-item" onclick="showHelpTopic('custom', this)">
+            Custom Equations
+          </div>
+          <div
+            class="xp-help-nav-item"
+            onclick="showHelpTopic('characters', this)"
+          >
+            Characters &amp; Colors
+          </div>
+          <div class="xp-help-nav-item" onclick="showHelpTopic('export', this)">
+            Exporting
+          </div>
+          <div
+            class="xp-help-nav-item"
+            onclick="showHelpTopic('shortcuts', this)"
+          >
+            Keyboard Shortcuts
+          </div>
+          <div
+            class="xp-help-nav-item"
+            onclick="showHelpTopic('equations', this)"
+          >
+            Equation Reference
+          </div>
+        </div>
+        <div class="xp-help-content" id="help-content">
+          <!-- Filled by JS -->
+        </div>
+      </div>
+    </div>
+
+    <!-- ════════════════════════════════════
+     MATH REFERENCE WINDOW
+     ════════════════════════════════════ -->
+    <div class="xp-mathref-window" id="mathref-window">
+      <div class="xp-dialog-titlebar">
+        <span>Math Reference</span>
+        <button onclick="closeMathRef()">✕</button>
+      </div>
+      <div class="xp-mathref-body">
+        <div class="learn-box">
+          <h4>All 11 pattern equations</h4>
+          <p class="mathref-hint">
+            Click any equation to paste it into your custom formula
+          </p>
+
+          <strong>Center Spiral</strong> — rotating arms winding outward<br />
+          <code class="snippet" onclick="useSnippet(this)" title="Click to use"
+            >sin(atan2(dy,dx) + time*fm + sin(theta*yC) +
+            gV*sin(x*xC+time))</code
+          ><br />
+          <em
+            >xC = winding tightness, yC = arm curvature, gV = breathing
+            depth</em
+          ><br /><br />
+
+          <strong>Circular</strong> — concentric rings from center<br />
+          <code class="snippet" onclick="useSnippet(this)" title="Click to use"
+            >sin(dx*dx*xC + dy*dy*yC + time*fm)</code
+          ><br />
+          <em
+            >xC/yC control ring density per axis — different values create
+            ellipses</em
+          ><br /><br />
+
+          <strong>Mosaic</strong> — grid of cells from two crossing waves<br />
+          <code class="snippet" onclick="useSnippet(this)" title="Click to use"
+            >sin(x*xC+time) * sin(y*yC+time)</code
+          ><br />
+          <em>xC = column count, yC = row count</em><br /><br />
+
+          <strong>Cross</strong> — crosshair interference pattern<br />
+          <code class="snippet" onclick="useSnippet(this)" title="Click to use"
+            >sin(dx*dx*xC+time*fm) + cos(dy*dy*yC+time*fm)</code
+          ><br />
+          <em>xC = horizontal frequency, yC = vertical frequency</em
+          ><br /><br />
+
+          <strong>Checkerboard</strong> — tiled grid with shimmering columns<br />
+          <code class="snippet" onclick="useSnippet(this)" title="Click to use"
+            >sin(x*xC) * sin(y*yC+time)</code
+          ><br />
+          <em>xC = column spacing, yC = row spacing</em><br /><br />
+
+          <strong>Diamond</strong> — diamond-shaped contour lines<br />
+          <code class="snippet" onclick="useSnippet(this)" title="Click to use"
+            >sin((abs(dx)+abs(dy))*xC+time*fm) * cos(yC*atan2(dy,dx)+time)</code
+          ><br />
+          <em>xC = diamond density, yC = angular twist</em><br /><br />
+
+          <strong>Tunnel</strong> — infinite-zoom illusion<br />
+          <code class="snippet" onclick="useSnippet(this)" title="Click to use"
+            >sin(xC/r+time*fm) * sin(theta*yC+gV*sin(r))</code
+          ><br />
+          <em>xC = zoom ring spacing, yC = twist, gV = ripple distortion</em
+          ><br /><br />
+
+          <strong>Plasma</strong> — classic demoscene undulating blobs<br />
+          <code class="snippet" onclick="useSnippet(this)" title="Click to use"
+            >(sin(x*xC*0.01+time)+sin(y*yC*0.01+time*1.5)+sin((x+y)*xC*0.005+time*0.7)+sin(r*yC*0.01+time*1.2+gV))*0.25</code
+          ><br />
+          <em>Four sine waves summed for organic, flowing color</em><br /><br />
+
+          <strong>Interference</strong> — two wave sources cancelling &amp;
+          reinforcing<br />
+          <code class="snippet" onclick="useSnippet(this)" title="Click to use"
+            >(sin(r*xC+time*fm+gV)+sin(r*yC+time*fm))*0.5</code
+          ><br />
+          <em>Bright bands where waves align, dark where they cancel</em
+          ><br /><br />
+
+          <strong>Radial Star</strong> — rose-curve flowers and petals<br />
+          <code class="snippet" onclick="useSnippet(this)" title="Click to use"
+            >sin(r*xC + cos(theta*yC)*gV + time*fm)</code
+          ><br />
+          <em>yC = petal count, gV = petal sharpness, xC = ring density</em
+          ><br /><br />
+
+          <strong>Lissajous</strong> — parametric frequency dance<br />
+          <code class="snippet" onclick="useSnippet(this)" title="Click to use"
+            >sin(x*xC*0.1+sin(time*3)*gV) * sin(y*yC*0.1+cos(time*2)*gV)</code
+          ><br />
+          <em>Two oscillators at different frequency ratios</em><br /><br />
+
+          <h4>Extra formulas to try</h4>
+          <code class="snippet" onclick="useSnippet(this)" title="Click to use"
+            >sin(r*0.2 + theta*3 + time)</code
+          >
+          <em>— Spinning flower</em><br />
+          <code class="snippet" onclick="useSnippet(this)" title="Click to use"
+            >sin(x*0.1+time)*cos(y*0.05+time*1.5)+sin(r*0.05)</code
+          >
+          <em>— Rippled waves</em><br />
+          <code class="snippet" onclick="useSnippet(this)" title="Click to use"
+            >cos(theta*5)*sin(r*0.1+time)+sin(theta*3+time*2)*cos(r*0.05)</code
+          >
+          <em>— Dual rose</em><br />
+          <code class="snippet" onclick="useSnippet(this)" title="Click to use"
+            >sin(x*y*0.001+time)+cos(r*0.1-time*0.5)</code
+          >
+          <em>— Hyperbolic ripple</em><br />
+          <code class="snippet" onclick="useSnippet(this)" title="Click to use"
+            >fract(r*0.1 + time*0.5) * sin(theta*6)</code
+          >
+          <em>— Sawtooth rose</em><br />
+          <code class="snippet" onclick="useSnippet(this)" title="Click to use"
+            >smoothstep(0.3, 0.7, sin(r*xC+time)) * noise(dx, dy+time)</code
+          >
+          <em>— Noisy threshold rings</em><br /><br />
+
+          <h4>Shader-style functions — click to try</h4>
+          <code class="snippet" onclick="useSnippet(this)" title="Click to use"
+            >fract(r*0.1 + time)</code
+          >
+          <em>— fractional part (repeating sawtooth)</em><br />
+          <code class="snippet" onclick="useSnippet(this)" title="Click to use"
+            >mod(x+time*20, 40) * mod(y, 30) * 0.001</code
+          >
+          <em>— remainder (tiling/wrapping)</em><br />
+          <code class="snippet" onclick="useSnippet(this)" title="Click to use"
+            >clamp(sin(r*xC+time), -0.5, 0.5)</code
+          >
+          <em>— constrain range (capped waves)</em><br />
+          <code class="snippet" onclick="useSnippet(this)" title="Click to use"
+            >mix(sin(r*0.1+time), cos(theta*5+time), 0.5)</code
+          >
+          <em>— interpolation (blend two patterns)</em><br />
+          <code class="snippet" onclick="useSnippet(this)" title="Click to use"
+            >step(0.5, sin(r*xC+time)) * sin(theta*yC)</code
+          >
+          <em>— hard cutoff (binary rings)</em><br />
+          <code class="snippet" onclick="useSnippet(this)" title="Click to use"
+            >smoothstep(0.2, 0.8, sin(r*0.1+time)) * sin(theta*6)</code
+          >
+          <em>— soft threshold (smooth rings)</em><br />
+          <code class="snippet" onclick="useSnippet(this)" title="Click to use"
+            >noise(dx*0.05+time, dy*0.05) + sin(r*0.1)</code
+          >
+          <em>— 2D value noise (organic texture)</em><br />
+
+          <h4>Quick reference</h4>
+          <p style="font-size: 11px; margin: 2px 0; line-height: 1.6">
+            <strong>Variables:</strong> <code>x</code> <code>y</code>
+            <code>dx</code> <code>dy</code> <code>r</code> <code>theta</code>
+            <code>time</code> <code>w</code> <code>h</code> <code>xC</code>
+            <code>yC</code> <code>fm</code> <code>gV</code><br />
+            <strong>Trig:</strong> <code>sin</code> <code>cos</code>
+            <code>tan</code> <code>asin</code> <code>acos</code>
+            <code>atan</code> <code>atan2</code><br />
+            <strong>Math:</strong> <code>abs</code> <code>sqrt</code>
+            <code>pow</code> <code>exp</code> <code>log</code>
+            <code>floor</code> <code>ceil</code> <code>round</code>
+            <code>sign</code> <code>min</code> <code>max</code><br />
+            <strong>Shader:</strong> <code>fract</code> <code>mod</code>
+            <code>clamp</code> <code>mix</code> <code>step</code>
+            <code>smoothstep</code> <code>noise</code><br />
+            <strong>Constants:</strong> <code>PI</code> <code>TAU</code>
+            <code>E</code> &nbsp; <strong>Operators:</strong> <code>+</code>
+            <code>-</code> <code>*</code> <code>/</code> <code>%</code>
+            <code>()</code>
+          </p>
+
+          <h4>Transform pipeline</h4>
+          <code
+            >screen → center offset → rotate → scale → symmetry fold →
+            turbulence warp → pattern</code
+          ><br />
+          <em
+            >Every pixel goes through this chain before reaching the pattern
+            equation.</em
+          >
+        </div>
+      </div>
+    </div>
+
+    <div id="app">
+      <div class="titlebar">
+        <img
+          class="ico"
+          src="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 48 48'%3E%3Cdefs%3E%3ClinearGradient id='asc' x1='0' y1='0' x2='0' y2='1'%3E%3Cstop offset='0' stop-color='%23445'/%3E%3Cstop offset='1' stop-color='%23112'/%3E%3C/linearGradient%3E%3C/defs%3E%3Crect x='4' y='4' width='40' height='36' rx='3' fill='url(%23asc)' stroke='%23666'/%3E%3Crect x='6' y='6' width='36' height='32' rx='1' fill='%23000d14'/%3E%3Ctext x='24' y='18' font-family='monospace' font-size='7' fill='%2300ffd5' text-anchor='middle'%3E░▒▓█▓▒░%3C/text%3E%3Ctext x='24' y='27' font-family='monospace' font-size='7' fill='%2300b396' text-anchor='middle'%3E▓░▒█▒░▓%3C/text%3E%3Ctext x='24' y='36' font-family='monospace' font-size='7' fill='%23006654' text-anchor='middle'%3E░▒▓█▓▒░%3C/text%3E%3C/svg%3E"
+          alt=""
+        />
+        <span class="t">ASCII Studio — Animation Pattern Designer</span>
+        <div class="ctrl">
+          <button class="btn-min" title="Minimize">_</button>
+          <button class="btn-max" title="Maximize">☐</button>
+          <button class="btn-close" title="Close">✕</button>
+        </div>
+      </div>
+      <div class="menubar" id="menubar">
+        <span
+          class="menu-trigger"
+          data-menu="menu-file"
+          onmousedown="toggleMenu('menu-file', this)"
+          >File</span
+        >
+        <span
+          class="menu-trigger"
+          data-menu="menu-edit"
+          onmousedown="toggleMenu('menu-edit', this)"
+          >Edit</span
+        >
+        <span
+          class="menu-trigger"
+          data-menu="menu-view"
+          onmousedown="toggleMenu('menu-view', this)"
+          >View</span
+        >
+        <span
+          class="menu-trigger"
+          data-menu="menu-help"
+          onmousedown="toggleMenu('menu-help', this)"
+          >Help</span
+        >
+      </div>
+
+      <div class="main">
+        <!-- ══ LEFT PANEL ══ -->
+        <div class="panel" id="panel">
+          <div
+            style="
+              padding: 6px 6px 0;
+              background: #e8e4da;
+              border-bottom: 1px solid #aca899;
+            "
+          >
+            <div class="tabs">
+              <div class="tab-btn active" onclick="switchTab('visual')">
+                Visual
+              </div>
+              <div class="tab-btn" onclick="switchTab('advanced')">
+                Advanced
+              </div>
+            </div>
+          </div>
+
+          <!-- ═══ VISUAL TAB ═══ -->
+          <div id="tab-visual" class="tab-content active">
+            <!-- Presets + Randomize -->
+            <div class="section">
+              <div class="section-head" onclick="toggleSection(this)">
+                <span class="arrow">▶</span> Presets &amp; Discover
+              </div>
+              <div class="section-body">
+                <div class="field">
+                  <div class="desc">
+                    Load a preset or hit Randomize to discover new patterns.
+                  </div>
+                </div>
+                <button class="randomize-btn" onclick="randomize()">
+                  Randomize
+                </button>
+                <div class="presets" id="presets"></div>
+              </div>
+            </div>
+
+            <!-- Pattern Function -->
+            <div class="section">
+              <div class="section-head" onclick="toggleSection(this)">
+                <span class="arrow">▶</span> Pattern Function
+                <button
+                  class="section-dice"
+                  onclick="
+                    event.stopPropagation();
+                    randomizePattern();
+                  "
+                  title="Randomize pattern"
+                >
+                  <svg viewBox="0 0 16 16" width="13" height="13">
+                    <rect
+                      x="1"
+                      y="1"
+                      width="14"
+                      height="14"
+                      rx="2"
+                      fill="none"
+                      stroke="currentColor"
+                      stroke-width="1.5"
+                    />
+                    <circle cx="5" cy="5" r="1.2" fill="currentColor" />
+                    <circle cx="8" cy="8" r="1.2" fill="currentColor" />
+                    <circle cx="11" cy="11" r="1.2" fill="currentColor" />
+                  </svg>
+                </button>
+              </div>
+              <div class="section-body">
+                <div class="field">
+                  <label
+                    >Pattern Type
+                    <span
+                      class="help-tip"
+                      title="Choose a base animation. Each one uses a different math formula to turn pixel positions into characters. Spirals spin outward, Circular makes rings, Mosaic makes grids, etc. Try a few — the preview updates instantly."
+                      >?</span
+                    ></label
+                  >
+                  <select id="p-pattern" onchange="onPatternChange()">
+                    <option value="centerSpiral">Center Spiral</option>
+                    <option value="circular">Circular</option>
+                    <option value="mosaic">Mosaic</option>
+                    <option value="cross">Cross</option>
+                    <option value="checkerboard">Checkerboard</option>
+                    <option value="diamond">Diamond</option>
+                    <option value="tunnel">Tunnel</option>
+                    <option value="plasma">Plasma</option>
+                    <option value="interference">Interference</option>
+                    <option value="radialStar">Radial Star</option>
+                    <option value="lissajous">Lissajous</option>
+                    <option value="custom">✎ Custom Equation</option>
+                  </select>
+                </div>
+                <div
+                  id="custom-expr-group"
+                  class="field formula-group"
+                  style="display: none"
+                >
+                  <label
+                    >Formula
+                    <span class="formula-hint"
+                      >Variables: x y r theta time dx dy w h xC yC fm gV</span
+                    ></label
+                  >
+                  <textarea
+                    id="p-custom-expr"
+                    rows="3"
+                    spellcheck="false"
+                    oninput="onFormulaInput()"
+                    onfocus="_lastFormulaTarget='a'"
+                    placeholder="e.g.  sin(r * 0.2 + theta * 3 + time)"
+                  >
+sin(x * 0.1 + time) * cos(y * 0.05 + time * 1.5)</textarea
+                  >
+                  <div id="formula-error" class="formula-error"></div>
+                  <div class="formula-actions">
+                    <span class="formula-tip"
+                      >Click equations in Math Reference to paste here</span
+                    >
+                    <button
+                      class="xp-btn formula-ref-btn"
+                      onclick="showMathRef()"
+                    >
+                      Math Ref...
+                    </button>
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            <!-- Spatial Constants -->
+            <div class="section">
+              <div class="section-head" onclick="toggleSection(this)">
+                <span class="arrow">▶</span> Spatial Constants
+                <button
+                  class="section-dice"
+                  onclick="
+                    event.stopPropagation();
+                    randomizeSpatial();
+                  "
+                  title="Vary constants — nudge values nearby"
+                >
+                  <svg viewBox="0 0 16 16" width="13" height="13">
+                    <rect
+                      x="1"
+                      y="1"
+                      width="14"
+                      height="14"
+                      rx="2"
+                      fill="none"
+                      stroke="currentColor"
+                      stroke-width="1.5"
+                    />
+                    <circle cx="5" cy="5" r="1.2" fill="currentColor" />
+                    <circle cx="8" cy="8" r="1.2" fill="currentColor" />
+                    <circle cx="11" cy="11" r="1.2" fill="currentColor" />
+                  </svg>
+                </button>
+              </div>
+              <div class="section-body">
+                <div class="field">
+                  <label
+                    >X Constant
+                    <span
+                      class="help-tip"
+                      title="Stretches or compresses the pattern horizontally. Small values (0.01–1) make wide, smooth shapes. Large values (100+) make tight, dense textures. The effect depends on the pattern — in Spirals it tightens the arms, in Mosaic it adds more columns. You can type exact values in the number box."
+                      >?</span
+                    ></label
+                  >
+                  <div class="slider-row">
+                    <input
+                      type="range"
+                      id="p-xc"
+                      min="-1000"
+                      max="1000"
+                      step="0.01"
+                      oninput="
+                        syncSlider(this);
+                        liveUpdate();
+                      "
+                    />
+                    <input
+                      type="text"
+                      class="slider-val"
+                      id="p-xc-val"
+                      title="Type any decimal (e.g. 0.00189 or 55000) — the slider covers the sweet spot, this box accepts anything"
+                      onchange="
+                        syncVal(this, 'p-xc');
+                        liveUpdate();
+                      "
+                    />
+                  </div>
+                </div>
+                <div class="field">
+                  <label
+                    >Y Constant
+                    <span
+                      class="help-tip"
+                      title="Stretches or compresses the pattern vertically. Works like X Constant but in the other direction. In Radial Star, this controls how many petals appear. When X and Y constants differ, round shapes become elongated or skewed."
+                      >?</span
+                    ></label
+                  >
+                  <div class="slider-row">
+                    <input
+                      type="range"
+                      id="p-yc"
+                      min="-1000"
+                      max="1000"
+                      step="0.01"
+                      oninput="
+                        syncSlider(this);
+                        liveUpdate();
+                      "
+                    />
+                    <input
+                      type="text"
+                      class="slider-val"
+                      id="p-yc-val"
+                      title="Type any decimal (e.g. 0.00189 or 55000) — the slider covers the sweet spot, this box accepts anything"
+                      onchange="
+                        syncVal(this, 'p-yc');
+                        liveUpdate();
+                      "
+                    />
+                  </div>
+                </div>
+                <div class="field">
+                  <label
+                    >Global Value
+                    <span
+                      class="help-tip"
+                      title="A general-purpose intensity knob. It does something different in each pattern — in Spirals it controls how much the arms breathe in and out, in Radial Star it sharpens or softens the petals, in Tunnel it adds wobble. Start at 0 and increase slowly to see its effect."
+                      >?</span
+                    ></label
+                  >
+                  <div class="slider-row">
+                    <input
+                      type="range"
+                      id="p-gv"
+                      min="0"
+                      max="20"
+                      step="0.1"
+                      oninput="
+                        syncSlider(this);
+                        liveUpdate();
+                      "
+                    />
+                    <input
+                      type="text"
+                      class="slider-val"
+                      id="p-gv-val"
+                      title="Type any decimal (e.g. 0.00189 or 55000) — the slider covers the sweet spot, this box accepts anything"
+                      onchange="
+                        syncVal(this, 'p-gv');
+                        liveUpdate();
+                      "
+                    />
+                  </div>
+                </div>
+                <p class="range-hint" id="spatial-range-hint">
+                  Slider covers the useful range. Type any value in the number box.
+                </p>
+              </div>
+            </div>
+
+            <!-- Animation & Time -->
+            <div class="section">
+              <div class="section-head" onclick="toggleSection(this)">
+                <span class="arrow">▶</span> Animation &amp; Time
+                <button
+                  class="section-dice"
+                  onclick="
+                    event.stopPropagation();
+                    randomizeAnimation();
+                  "
+                  title="Vary animation — nudge speed and motion"
+                >
+                  <svg viewBox="0 0 16 16" width="13" height="13">
+                    <rect
+                      x="1"
+                      y="1"
+                      width="14"
+                      height="14"
+                      rx="2"
+                      fill="none"
+                      stroke="currentColor"
+                      stroke-width="1.5"
+                    />
+                    <circle cx="5" cy="5" r="1.2" fill="currentColor" />
+                    <circle cx="8" cy="8" r="1.2" fill="currentColor" />
+                    <circle cx="11" cy="11" r="1.2" fill="currentColor" />
+                  </svg>
+                </button>
+              </div>
+              <div class="section-body">
+                <div class="field">
+                  <label
+                    >Frame Multiplier
+                    <span
+                      class="help-tip"
+                      title="Controls the style of the motion — how time feeds into the pattern equation. Small values (0.01) create slow, drifting movement. Larger values make it pulse or ripple faster. Negative values reverse the direction. This changes what the motion looks like, not just how fast it goes."
+                      >?</span
+                    ></label
+                  >
+                  <div class="slider-row">
+                    <input
+                      type="range"
+                      id="p-fm"
+                      min="-1"
+                      max="1"
+                      step="0.001"
+                      oninput="
+                        syncSlider(this);
+                        liveUpdate();
+                      "
+                    />
+                    <input
+                      type="text"
+                      class="slider-val"
+                      id="p-fm-val"
+                      title="Type any value (e.g. 50, 999, -100) — the slider covers the sweet spot, this box accepts anything"
+                      onchange="
+                        syncVal(this, 'p-fm');
+                        liveUpdate();
+                      "
+                    />
+                  </div>
+                </div>
+                <div class="field">
+                  <label
+                    >Animation Speed
+                    <span
+                      class="help-tip"
+                      title="How fast time moves forward — like a speed dial for the whole animation. Unlike Frame Multiplier (which changes the look of the motion), this just makes everything faster or slower. Think of it as the tempo."
+                      >?</span
+                    ></label
+                  >
+                  <div class="slider-row">
+                    <input
+                      type="range"
+                      id="p-as"
+                      min="0.01"
+                      max="2"
+                      step="0.01"
+                      oninput="
+                        syncSlider(this);
+                        liveUpdate();
+                      "
+                    />
+                    <input
+                      type="text"
+                      class="slider-val"
+                      id="p-as-val"
+                      title="Type any value (e.g. 50, 999) — the slider covers the sweet spot, this box accepts anything"
+                      onchange="
+                        syncVal(this, 'p-as');
+                        liveUpdate();
+                      "
+                    />
+                  </div>
+                </div>
+                <div class="field">
+                  <label>Quick Presets</label>
+                  <div style="display: flex; gap: 3px; flex-wrap: wrap">
+                    <span class="preset-btn" onclick="setSlider('p-fm',0.005);setSlider('p-as',0.05);liveUpdate()">Glacial</span>
+                    <span class="preset-btn" onclick="setSlider('p-fm',0.02);setSlider('p-as',0.1);liveUpdate()">Slow Drift</span>
+                    <span class="preset-btn" onclick="setSlider('p-fm',0.04);setSlider('p-as',0.15);liveUpdate()">Gentle</span>
+                    <span class="preset-btn" onclick="setSlider('p-fm',0.08);setSlider('p-as',0.3);liveUpdate()">Medium</span>
+                    <span class="preset-btn" onclick="setSlider('p-fm',0.15);setSlider('p-as',0.6);liveUpdate()">Lively</span>
+                    <span class="preset-btn" onclick="setSlider('p-fm',0.3);setSlider('p-as',1.0);liveUpdate()">Fast</span>
+                    <span class="preset-btn" onclick="setSlider('p-fm',0.6);setSlider('p-as',1.5);liveUpdate()">Hyper</span>
+                    <span class="preset-btn" onclick="setSlider('p-fm',1.0);setSlider('p-as',2.0);liveUpdate()">Chaos</span>
+                  </div>
+                </div>
+                <p class="range-hint" id="anim-range-hint">
+                  Slider: fm −1 to 1, speed 0.01 to 2. Type any value in the number box — no limit.
+                </p>
+              </div>
+            </div>
+
+            <!-- Transform & Symmetry -->
+            <div class="section">
+              <div class="section-head" onclick="toggleSection(this)">
+                <span class="arrow">▶</span> Transform &amp; Symmetry
+                <button
+                  class="section-dice"
+                  onclick="
+                    event.stopPropagation();
+                    randomizeTransform();
+                  "
+                  title="Vary transform — nudge position, scale, rotation"
+                >
+                  <svg viewBox="0 0 16 16" width="13" height="13">
+                    <rect
+                      x="1"
+                      y="1"
+                      width="14"
+                      height="14"
+                      rx="2"
+                      fill="none"
+                      stroke="currentColor"
+                      stroke-width="1.5"
+                    />
+                    <circle cx="5" cy="5" r="1.2" fill="currentColor" />
+                    <circle cx="8" cy="8" r="1.2" fill="currentColor" />
+                    <circle cx="11" cy="11" r="1.2" fill="currentColor" />
+                  </svg>
+                </button>
+              </div>
+              <div class="section-body">
+                <div class="field">
+                  <label
+                    >Center X
+                    <span
+                      class="help-tip"
+                      title="Moves the centre of the pattern left or right. At 0 the pattern is centred. Negative shifts left, positive shifts right. Useful for placing spirals or rings off to one side."
+                      >?</span
+                    ></label
+                  >
+                  <div class="slider-row">
+                    <input
+                      type="range"
+                      id="p-cx"
+                      min="-1"
+                      max="1"
+                      step="0.01"
+                      oninput="
+                        syncSlider(this);
+                        liveUpdate();
+                      "
+                    />
+                    <input
+                      type="text"
+                      class="slider-val"
+                      id="p-cx-val"
+                      onchange="
+                        syncVal(this, 'p-cx');
+                        liveUpdate();
+                      "
+                    />
+                  </div>
+                </div>
+                <div class="field">
+                  <label
+                    >Center Y
+                    <span
+                      class="help-tip"
+                      title="Moves the centre of the pattern up or down. Works the same as Center X but vertically."
+                      >?</span
+                    ></label
+                  >
+                  <div class="slider-row">
+                    <input
+                      type="range"
+                      id="p-cy"
+                      min="-1"
+                      max="1"
+                      step="0.01"
+                      oninput="
+                        syncSlider(this);
+                        liveUpdate();
+                      "
+                    />
+                    <input
+                      type="text"
+                      class="slider-val"
+                      id="p-cy-val"
+                      onchange="
+                        syncVal(this, 'p-cy');
+                        liveUpdate();
+                      "
+                    />
+                  </div>
+                </div>
+                <div class="field">
+                  <label
+                    >Rotation
+                    <span
+                      class="help-tip"
+                      title="Rotates the entire pattern around its centre, in degrees. 90 = quarter turn, 180 = upside down, 360 = full circle back to start."
+                      >?</span
+                    ></label
+                  >
+                  <div class="slider-row">
+                    <input
+                      type="range"
+                      id="p-rot"
+                      min="0"
+                      max="360"
+                      step="1"
+                      oninput="
+                        syncSlider(this);
+                        liveUpdate();
+                      "
+                    />
+                    <input
+                      type="text"
+                      class="slider-val"
+                      id="p-rot-val"
+                      onchange="
+                        syncVal(this, 'p-rot');
+                        liveUpdate();
+                      "
+                    />
+                  </div>
+                </div>
+                <div class="field">
+                  <label
+                    >Scale
+                    <span
+                      class="help-tip"
+                      title="Zooms the view. Values below 1 zoom in (showing less of the pattern, larger), values above 1 zoom out (showing more of the pattern, smaller). Default is 1."
+                      >?</span
+                    ></label
+                  >
+                  <div class="slider-row">
+                    <input
+                      type="range"
+                      id="p-scale"
+                      min="0.1"
+                      max="5"
+                      step="0.1"
+                      oninput="
+                        syncSlider(this);
+                        liveUpdate();
+                      "
+                    />
+                    <input
+                      type="text"
+                      class="slider-val"
+                      id="p-scale-val"
+                      onchange="
+                        syncVal(this, 'p-scale');
+                        liveUpdate();
+                      "
+                    />
+                  </div>
+                </div>
+                <div class="field">
+                  <label
+                    >Turbulence
+                    <span
+                      class="help-tip"
+                      title="Adds organic distortion to the pattern, as if looking through rippled glass or water. At 0 there is no effect. Increase it gradually — even small amounts (0.1–0.3) add a hand-drawn, natural feel. At 1 the warping is extreme."
+                      >?</span
+                    ></label
+                  >
+                  <div class="slider-row">
+                    <input
+                      type="range"
+                      id="p-turb"
+                      min="0"
+                      max="1"
+                      step="0.01"
+                      oninput="
+                        syncSlider(this);
+                        liveUpdate();
+                      "
+                    />
+                    <input
+                      type="text"
+                      class="slider-val"
+                      id="p-turb-val"
+                      onchange="
+                        syncVal(this, 'p-turb');
+                        liveUpdate();
+                      "
+                    />
+                  </div>
+                </div>
+                <div class="field">
+                  <label
+                    >Symmetry
+                    <span
+                      class="help-tip"
+                      title="Mirrors the pattern to create repeating symmetry. 'X axis' mirrors left↔right, 'Y axis' mirrors top↔bottom, 'Both' mirrors in all four quadrants. Radial modes (4/6/8-fold) slice the pattern like a pie and repeat each slice, creating kaleidoscope and mandala effects."
+                      >?</span
+                    ></label
+                  >
+                  <select id="p-mirror" onchange="liveUpdate()">
+                    <option value="none">None</option>
+                    <option value="x">X axis mirror</option>
+                    <option value="y">Y axis mirror</option>
+                    <option value="both">Both axes (4-fold)</option>
+                    <option value="radial-4">Radial 4-fold</option>
+                    <option value="radial-6">Radial 6-fold</option>
+                    <option value="radial-8">Radial 8-fold</option>
+                  </select>
+                </div>
+              </div>
+            </div>
+
+            <!-- Layer B — Blending -->
+            <div class="section">
+              <div class="section-head" onclick="toggleSection(this)">
+                <span class="arrow">▶</span> Layer B — Blending
+                <button
+                  class="section-dice"
+                  onclick="
+                    event.stopPropagation();
+                    randomizeLayerB();
+                  "
+                  title="Vary Layer B — nudge blend settings"
+                >
+                  <svg viewBox="0 0 16 16" width="13" height="13">
+                    <rect
+                      x="1"
+                      y="1"
+                      width="14"
+                      height="14"
+                      rx="2"
+                      fill="none"
+                      stroke="currentColor"
+                      stroke-width="1.5"
+                    />
+                    <circle cx="5" cy="5" r="1.2" fill="currentColor" />
+                    <circle cx="8" cy="8" r="1.2" fill="currentColor" />
+                    <circle cx="11" cy="11" r="1.2" fill="currentColor" />
+                  </svg>
+                </button>
+              </div>
+              <div class="section-body">
+                <div class="check-row">
+                  <input
+                    type="checkbox"
+                    id="p-lb-on"
+                    onchange="onLayerBToggle()"
+                  />
+                  <label for="p-lb-on"
+                    >Enable Layer B
+                    <span
+                      class="help-tip"
+                      title="Adds a second pattern on top of the first one, blended together. For example, combine a Spiral with a Plasma, or a Tunnel with an Interference pattern. The blend mode controls how the two layers mix, and the amount controls how much of the second layer shows through."
+                      >?</span
+                    ></label
+                  >
+                </div>
+                <div id="layer-b-controls" style="display: none">
+                  <div class="field">
+                    <label>Pattern B</label>
+                    <select id="p-lb-pattern" onchange="onPatternChangeB()">
+                      <option value="centerSpiral">Center Spiral</option>
+                      <option value="circular">Circular</option>
+                      <option value="mosaic">Mosaic</option>
+                      <option value="cross">Cross</option>
+                      <option value="checkerboard">Checkerboard</option>
+                      <option value="diamond">Diamond</option>
+                      <option value="tunnel">Tunnel</option>
+                      <option value="plasma">Plasma</option>
+                      <option value="interference">Interference</option>
+                      <option value="radialStar">Radial Star</option>
+                      <option value="lissajous">Lissajous</option>
+                      <option value="custom">✎ Custom Equation</option>
+                    </select>
+                  </div>
+                  <div
+                    id="custom-expr-group-b"
+                    class="field formula-group"
+                    style="display: none"
+                  >
+                    <label>Formula B</label>
+                    <textarea
+                      id="p-lb-custom-expr"
+                      rows="2"
+                      spellcheck="false"
+                      oninput="onFormulaInputB()"
+                      onfocus="_lastFormulaTarget='b'"
+                      placeholder="e.g.  sin(r * 0.3 + time)"
+                    >
+sin(r * 0.2 + time)</textarea
+                    >
+                    <div class="formula-actions">
+                      <span class="formula-tip"
+                        >Click equations in Math Reference to paste here</span
+                      >
+                      <button
+                        class="xp-btn formula-ref-btn"
+                        onclick="_lastFormulaTarget='b';showMathRef()"
+                      >
+                        Math Ref...
+                      </button>
+                    </div>
+                  </div>
+                  <div class="field">
+                    <label>X Constant B</label>
+                    <div class="slider-row">
+                      <input
+                        type="range"
+                        id="p-lb-xc"
+                        min="-200"
+                        max="200"
+                        step="0.01"
+                        oninput="
+                          syncSlider(this);
+                          liveUpdate();
+                        "
+                      />
+                      <input
+                        type="text"
+                        class="slider-val"
+                        id="p-lb-xc-val"
+                        onchange="
+                          syncVal(this, 'p-lb-xc');
+                          liveUpdate();
+                        "
+                      />
+                    </div>
+                  </div>
+                  <div class="field">
+                    <label>Y Constant B</label>
+                    <div class="slider-row">
+                      <input
+                        type="range"
+                        id="p-lb-yc"
+                        min="-200"
+                        max="200"
+                        step="0.01"
+                        oninput="
+                          syncSlider(this);
+                          liveUpdate();
+                        "
+                      />
+                      <input
+                        type="text"
+                        class="slider-val"
+                        id="p-lb-yc-val"
+                        onchange="
+                          syncVal(this, 'p-lb-yc');
+                          liveUpdate();
+                        "
+                      />
+                    </div>
+                  </div>
+                  <div class="field">
+                    <label>Frame Multiplier B</label>
+                    <div class="slider-row">
+                      <input
+                        type="range"
+                        id="p-lb-fm"
+                        min="-1"
+                        max="1"
+                        step="0.001"
+                        oninput="
+                          syncSlider(this);
+                          liveUpdate();
+                        "
+                      />
+                      <input
+                        type="text"
+                        class="slider-val"
+                        id="p-lb-fm-val"
+                        onchange="
+                          syncVal(this, 'p-lb-fm');
+                          liveUpdate();
+                        "
+                      />
+                    </div>
+                  </div>
+                  <div class="field">
+                    <label>Global Value B</label>
+                    <div class="slider-row">
+                      <input
+                        type="range"
+                        id="p-lb-gv"
+                        min="0"
+                        max="10"
+                        step="0.1"
+                        oninput="
+                          syncSlider(this);
+                          liveUpdate();
+                        "
+                      />
+                      <input
+                        type="text"
+                        class="slider-val"
+                        id="p-lb-gv-val"
+                        onchange="
+                          syncVal(this, 'p-lb-gv');
+                          liveUpdate();
+                        "
+                      />
+                    </div>
+                  </div>
+                  <div class="field">
+                    <label
+                      >Blend Mode
+                      <span
+                        class="help-tip"
+                        title="How the two layers combine. Add: brightens where both layers are active. Multiply: only bright where both layers are bright (darkens overall). Subtract: cuts the second layer out of the first. Min: keeps whichever is darker. Max: keeps whichever is brighter. Screen: a softer, glowing combination."
+                        >?</span
+                      ></label
+                    >
+                    <select id="p-lb-blend" onchange="liveUpdate()">
+                      <option value="add">Add</option>
+                      <option value="multiply">Multiply</option>
+                      <option value="subtract">Subtract</option>
+                      <option value="min">Min</option>
+                      <option value="max">Max</option>
+                      <option value="screen">Screen</option>
+                    </select>
+                  </div>
+                  <div class="field">
+                    <label
+                      >Blend Amount
+                      <span
+                        class="help-tip"
+                        title="Controls how much Layer B shows through. At 0, only the original pattern (Layer A) is visible. At 1, the blend is at full strength. Values in between give a mix of both."
+                        >?</span
+                      ></label
+                    >
+                    <div class="slider-row">
+                      <input
+                        type="range"
+                        id="p-lb-amt"
+                        min="0"
+                        max="1"
+                        step="0.01"
+                        oninput="
+                          syncSlider(this);
+                          liveUpdate();
+                        "
+                      />
+                      <input
+                        type="text"
+                        class="slider-val"
+                        id="p-lb-amt-val"
+                        onchange="
+                          syncVal(this, 'p-lb-amt');
+                          liveUpdate();
+                        "
+                      />
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            <!-- Character Set -->
+            <div class="section">
+              <div class="section-head" onclick="toggleSection(this)">
+                <span class="arrow">▶</span> Character Set
+                <button
+                  class="section-dice"
+                  onclick="
+                    event.stopPropagation();
+                    randomizeCharset();
+                  "
+                  title="Randomize characters"
+                >
+                  <svg viewBox="0 0 16 16" width="13" height="13">
+                    <rect
+                      x="1"
+                      y="1"
+                      width="14"
+                      height="14"
+                      rx="2"
+                      fill="none"
+                      stroke="currentColor"
+                      stroke-width="1.5"
+                    />
+                    <circle cx="5" cy="5" r="1.2" fill="currentColor" />
+                    <circle cx="8" cy="8" r="1.2" fill="currentColor" />
+                    <circle cx="11" cy="11" r="1.2" fill="currentColor" />
+                  </svg>
+                </button>
+              </div>
+              <div class="section-body">
+                <div class="field">
+                  <label
+                    >Characters (light → dense)
+                    <span
+                      class="help-tip"
+                      title="The pattern produces a value for each pixel, and that value picks a character from this string. Characters on the left represent low/quiet areas, characters on the right represent high/active areas. Using more characters gives smoother transitions. The visual weight of each character (how much ink it has) creates the texture you see."
+                      >?</span
+                    ></label
+                  >
+                  <input
+                    type="text"
+                    id="p-charset"
+                    value="░▒▓░▒▓█"
+                    style="
+                      font-family: var(--font-mono);
+                      font-size: 13px;
+                      letter-spacing: 2px;
+                    "
+                    oninput="liveUpdate()"
+                  />
+                </div>
+                <div class="field">
+                  <label>Quick Sets</label>
+                  <div style="display: flex; gap: 3px; flex-wrap: wrap">
+                    <span class="preset-btn" onclick="setCharset('░▒▓█░▒▓█')"
+                      >Blocks</span
+                    >
+                    <span
+                      class="preset-btn"
+                      onclick="setCharset('.,;:!|/\\~=#%@&*')"
+                      >Punctuation</span
+                    >
+                    <span class="preset-btn" onclick="setCharset(' .·:∙○◎●')"
+                      >Dots</span
+                    >
+                    <span class="preset-btn" onclick="setCharset('┃┏┓┛┗┙┘━')"
+                      >Box Drawing</span
+                    >
+                    <span class="preset-btn" onclick="setCharset('╬╪╫│┼─')"
+                      >Grid</span
+                    >
+                    <span class="preset-btn" onclick="setCharset('░▒▓█▓▒░')"
+                      >Gradient</span
+                    >
+                    <span
+                      class="preset-btn"
+                      onclick="setCharset(' .·:∙○◎●◎∙:· ')"
+                      >Symmetric</span
+                    >
+                    <span class="preset-btn" onclick="setCharset(' .:oO@')"
+                      >Ascii</span
+                    >
+                    <span class="preset-btn" onclick="setCharset('▁▂▃▄▅▆▇█')"
+                      >Bars</span
+                    >
+                    <span class="preset-btn" onclick="setCharset('⠁⠃⠇⡇⣇⣧⣷⣿')"
+                      >Braille</span
+                    >
+                    <span class="preset-btn" onclick="setCharset('·•●◉⬤')"
+                      >Circles</span
+                    >
+                    <span class="preset-btn" onclick="setCharset(' -=≡#')"
+                      >Stacked</span
+                    >
+                    <span class="preset-btn" onclick="setCharset('╌╎┊┆│║█')"
+                      >Lines</span
+                    >
+                    <span class="preset-btn" onclick="setCharset(' ░▒▓█▓▒░ ')"
+                      >Bounce</span
+                    >
+                    <span class="preset-btn" onclick="setCharset('0123456789')"
+                      >Digits</span
+                    >
+                    <span class="preset-btn" onclick="setCharset('♠♣♥♦★☆◆◇')"
+                      >Symbols</span
+                    >
+                    <span class="preset-btn" onclick="setCharset('▖▗▘▙▚▛▜▝▞▟')"
+                      >Quadrants</span
+                    >
+                    <span class="preset-btn" onclick="setCharset('▬▭▬▭▬▭▬▭')"
+                      >Dashes</span
+                    >
+                    <span class="preset-btn" onclick="setCharset('ס₪₪§|Ξ≥≤≥≤Ξ>')"
+                      >Machine</span
+                    >
+                    <span class="preset-btn" onclick="setCharset('\\:::/ \\:::/____')"
+                      >Slashes</span
+                    >
+                    <span class="preset-btn" onclick="setCharset('¯_(ツ)_/¯')"
+                      >Shrug</span
+                    >
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            <!-- Color Palette -->
+            <div class="section">
+              <div class="section-head" onclick="toggleSection(this)">
+                <span class="arrow">▶</span> Color Palette
+                <button
+                  class="section-dice"
+                  onclick="
+                    event.stopPropagation();
+                    randomizePalette();
+                  "
+                  title="Randomize colors"
+                >
+                  <svg viewBox="0 0 16 16" width="13" height="13">
+                    <rect
+                      x="1"
+                      y="1"
+                      width="14"
+                      height="14"
+                      rx="2"
+                      fill="none"
+                      stroke="currentColor"
+                      stroke-width="1.5"
+                    />
+                    <circle cx="5" cy="5" r="1.2" fill="currentColor" />
+                    <circle cx="8" cy="8" r="1.2" fill="currentColor" />
+                    <circle cx="11" cy="11" r="1.2" fill="currentColor" />
+                  </svg>
+                </button>
+              </div>
+              <div class="section-body">
+                <div class="check-row">
+                  <input
+                    type="checkbox"
+                    id="p-colored"
+                    checked
+                    onchange="liveUpdate()"
+                  />
+                  <label for="p-colored"
+                    >Use color palette
+                    <span
+                      class="help-tip"
+                      title="When enabled, each character is coloured using the palette below. The colour is chosen the same way as the character — low values pick from the left of the palette, high values from the right. When off, all characters are a single colour. Try palettes with similar colours for a smooth look, or contrasting colours for a vivid, electric look."
+                      >?</span
+                    ></label
+                  >
+                </div>
+                <div class="field">
+                  <label
+                    >Palette
+                    <span style="color: #999; font-weight: normal"
+                      >(click = edit, right-click = remove, + = add)</span
+                    ></label
+                  >
+                  <div class="color-row" id="color-chips"></div>
+                </div>
+                <div class="field">
+                  <label>Quick Palettes</label>
+                  <div style="display: flex; gap: 3px; flex-wrap: wrap">
+                    <span
+                      class="preset-btn"
+                      onclick="
+                        setPalette([
+                          '#43BFD4',
+                          '#BC7ED2',
+                          '#9EE1EF',
+                          '#C3ECF0',
+                          '#B9AAF3',
+                        ])
+                      "
+                      >Pastel</span
+                    >
+                    <span
+                      class="preset-btn"
+                      onclick="
+                        setPalette([
+                          '#FF7700',
+                          '#F88826',
+                          '#FF6900',
+                          '#9800FF',
+                          '#7600FF',
+                        ])
+                      "
+                      >Fire &amp; Ice</span
+                    >
+                    <span
+                      class="preset-btn"
+                      onclick="
+                        setPalette([
+                          '#ff9500',
+                          '#fed50b',
+                          '#ffea00',
+                          '#0055ff',
+                          '#003d9e',
+                        ])
+                      "
+                      >Gold &amp; Blue</span
+                    >
+                    <span
+                      class="preset-btn"
+                      onclick="
+                        setPalette([
+                          '#FF2020',
+                          '#FF6600',
+                          '#FFCC00',
+                          '#2288FF',
+                          '#22FF66',
+                          '#FF44AA',
+                          '#CC44FF',
+                        ])
+                      "
+                      >Rainbow</span
+                    >
+                    <span
+                      class="preset-btn"
+                      onclick="
+                        setPalette([
+                          '#00FF88',
+                          '#22DDAA',
+                          '#44FFBB',
+                          '#88FFCC',
+                          '#00CC66',
+                        ])
+                      "
+                      >Bio Green</span
+                    >
+                    <span
+                      class="preset-btn"
+                      onclick="
+                        setPalette([
+                          '#00CFFF',
+                          '#0088DD',
+                          '#44EEFF',
+                          '#AAEEFF',
+                          '#006699',
+                        ])
+                      "
+                      >Cyan</span
+                    >
+                    <span
+                      class="preset-btn"
+                      onclick="
+                        setPalette([
+                          '#FF4488',
+                          '#FF88AA',
+                          '#FF44DD',
+                          '#AA22FF',
+                          '#DD66FF',
+                        ])
+                      "
+                      >Neon Pink</span
+                    >
+                    <span
+                      class="preset-btn"
+                      onclick="
+                        setPalette([
+                          '#FFCC00',
+                          '#FF8800',
+                          '#FF4400',
+                          '#AA0000',
+                          '#660000',
+                        ])
+                      "
+                      >Sunset</span
+                    >
+                    <span
+                      class="preset-btn"
+                      onclick="
+                        setPalette([
+                          '#FFFFFF',
+                          '#BBBBBB',
+                          '#888888',
+                          '#444444',
+                          '#000000',
+                        ])
+                      "
+                      >B&amp;W</span
+                    >
+                    <span
+                      class="preset-btn"
+                      onclick="
+                        setPalette([
+                          '#FFFFFF',
+                          '#E0E0E0',
+                          '#C0C0C0',
+                          '#A0A0A0',
+                          '#808080',
+                          '#606060',
+                          '#404040',
+                          '#202020',
+                        ])
+                      "
+                      >Grey Ramp</span
+                    >
+                    <span
+                      class="preset-btn"
+                      onclick="
+                        setPalette([
+                          '#000000',
+                          '#1A1A1A',
+                          '#333333',
+                          '#4D4D4D',
+                          '#666666',
+                        ])
+                      "
+                      >Dark Grey</span
+                    >
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            <!-- Metadata -->
+            <div class="section">
+              <div class="section-head" onclick="toggleSection(this)">
+                <span class="arrow">▶</span> Metadata
+              </div>
+              <div class="section-body">
+                <div class="field">
+                  <label>Animation Name</label>
+                  <input
+                    type="text"
+                    id="p-name"
+                    value="My Animation"
+                    oninput="liveUpdate()"
+                  />
+                </div>
+              </div>
+            </div>
+          </div>
+          <!-- /tab-visual -->
+
+          <!-- ═══ ADVANCED TAB ═══ -->
+          <div id="tab-advanced" class="tab-content">
+            <div class="section">
+              <div class="section-head">
+                <span class="arrow">▶</span> JSON Configuration
+              </div>
+              <div class="section-body">
+                <textarea id="code-editor" spellcheck="false"></textarea>
+                <button
+                  class="xp-btn"
+                  onclick="applyCode()"
+                  style="align-self: flex-start; margin-top: 4px"
+                >
+                  Apply
+                </button>
+              </div>
+            </div>
+          </div>
+        </div>
+        <!-- /panel -->
+
+        <!-- ══ RIGHT — PREVIEW ══ -->
+        <div class="preview">
+          <div class="preview-toolbar">
+            <button class="xp-btn" id="btn-play" onclick="togglePlay()">
+              Pause
+            </button>
+            <button class="xp-btn" onclick="resetTime()">Reset</button>
+            <div class="sep"></div>
+            <span class="lbl">Font:</span>
+            <select id="p-fontsize" onchange="setupCanvas()">
+              <option value="10">10px</option>
+              <option value="12">12px</option>
+              <option value="14" selected>14px</option>
+              <option value="16">16px</option>
+              <option value="20">20px</option>
+            </select>
+            <div style="flex: 1"></div>
+            <button class="xp-btn" onclick="goFullscreen()" title="Full screen">
+              Full Screen
+            </button>
+          </div>
+          <canvas id="preview-canvas"></canvas>
+        </div>
+      </div>
+
+      <div class="statusbar">
+        <span id="sb-size">0×0</span>
+        <span class="sb-sep"></span>
+        <span id="sb-fps">0 fps</span>
+        <span class="sb-sep"></span>
+        <span id="sb-name">My Animation</span>
+        <span style="margin-left: auto; color: #999"
+          >© 2025 Ariana Yekrangi — Some animations inspired by ASCIIxGPT (The
+          Furrow)</span
+        >
+      </div>
+    </div>
+
+    <div id="taskbar">
+      <button class="start-btn">
+        <span style="font-size: 13px">⊞</span> Start
+      </button>
+      <div class="task-item active">ASCII Studio</div>
+      <div class="task-clock" id="clock"></div>
+    </div>
+
+    <script src="studio.js"></script>
+  </body>
+</html>

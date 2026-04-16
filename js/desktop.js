@@ -810,6 +810,7 @@ const WINDOW_LABELS = {
   "win-reader": "📖 Article",
   "win-notepad": "📝 Notepad",
   "win-mycomputer": "💻 My Computer",
+  "win-studio": "✦ ASCII Studio",
 };
 
 // Track which windows are minimized (hidden but still in taskbar)
@@ -842,6 +843,73 @@ function openWindow(id) {
   updateTaskbar();
   document.getElementById("start-menu").hidden = true;
 }
+
+let _studioLoaded = false;
+function openStudio() {
+  openWindow("win-studio");
+  const iframe = document.getElementById("studio-iframe");
+  const loading = document.getElementById("studio-loading");
+  if (!_studioLoaded && iframe) {
+    _studioLoaded = true;
+    loading.hidden = false;
+    iframe.style.visibility = "hidden";
+    iframe.src = "studio/index.html?embedded=1";
+    const bootStart = Date.now();
+    const minBootTime = 1500; // let the boot animation play fully
+    iframe.addEventListener(
+      "load",
+      () => {
+        const elapsed = Date.now() - bootStart;
+        const remaining = Math.max(0, minBootTime - elapsed);
+        setTimeout(() => {
+          loading.hidden = true;
+          iframe.style.visibility = "";
+        }, remaining);
+      },
+      { once: true },
+    );
+  }
+}
+
+// Store original rect for maximize toggle
+const _origRect = {};
+
+function maximizeWindow(id) {
+  const win = document.getElementById(id);
+  if (!win) return;
+  if (win.classList.contains("maximized")) {
+    // Restore
+    win.classList.remove("maximized");
+    const r = _origRect[id];
+    if (r) {
+      win.style.top = r.top;
+      win.style.left = r.left;
+      win.style.width = r.width;
+      win.style.height = r.height;
+    }
+  } else {
+    // Save current inline styles (may be empty if CSS-positioned)
+    _origRect[id] = {
+      top: win.style.top,
+      left: win.style.left,
+      width: win.style.width,
+      height: win.style.height,
+    };
+    // Clear inline styles so .maximized CSS !important rules apply cleanly
+    win.style.top = "";
+    win.style.left = "";
+    win.style.width = "";
+    win.style.height = "";
+    win.classList.add("maximized");
+  }
+}
+
+// Listen for postMessage from embedded studio iframe
+window.addEventListener("message", (e) => {
+  if (e.data === "studio-close") closeWindow("win-studio");
+  else if (e.data === "studio-minimize") minimizeWindow("win-studio");
+  else if (e.data === "studio-maximize") maximizeWindow("win-studio");
+});
 
 function updateTaskbar() {
   const bar = document.getElementById("taskbar-items");
@@ -880,10 +948,16 @@ let _sel = null;
 function dragStart(e, id) {
   bringToFront(id);
   const win = document.getElementById(id);
+  // Prevent maximized windows from being dragged
+  if (win.classList.contains("maximized")) return;
   const rect = win.getBoundingClientRect();
   const clientX = e.touches ? e.touches[0].clientX : e.clientX;
   const clientY = e.touches ? e.touches[0].clientY : e.clientY;
   _drag = { id, ox: clientX - rect.left, oy: clientY - rect.top };
+  // Disable pointer events on all iframes so they don't steal mousemove
+  document
+    .querySelectorAll("iframe")
+    .forEach((f) => (f.style.pointerEvents = "none"));
   e.preventDefault();
 }
 
@@ -941,6 +1015,11 @@ document.addEventListener(
 );
 
 document.addEventListener("mouseup", () => {
+  if (_drag) {
+    document
+      .querySelectorAll("iframe")
+      .forEach((f) => (f.style.pointerEvents = ""));
+  }
   _drag = null;
   if (_sel) {
     _sel = null;
@@ -950,6 +1029,11 @@ document.addEventListener("mouseup", () => {
 });
 
 document.addEventListener("touchend", () => {
+  if (_drag) {
+    document
+      .querySelectorAll("iframe")
+      .forEach((f) => (f.style.pointerEvents = ""));
+  }
   _drag = null;
 });
 
@@ -1186,6 +1270,12 @@ function enterDesktop() {
   document.getElementById("captcha-overlay").remove();
   document.getElementById("desktop").hidden = false;
   playStartupSound();
+
+  // Deep-link: auto-open ASCII Studio if hash requests it
+  if (location.hash === "#ascii-studio") {
+    openStudio();
+    history.replaceState(null, "", location.pathname);
+  }
 }
 
 // Enter key on captcha input
