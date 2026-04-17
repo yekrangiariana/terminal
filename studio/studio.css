@@ -1182,6 +1182,10 @@ body {
 .xp-help-content li {
   margin-bottom: 3px;
 }
+.xp-help-content canvas[data-demo] {
+  border: 1px solid #e0e0e0;
+  border-radius: 3px;
+}
 
 /* ══════════════════════════════════════
    MATH REFERENCE WINDOW

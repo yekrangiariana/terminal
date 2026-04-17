@@ -545,6 +545,12 @@
           >
             Equation Reference
           </div>
+          <div
+            class="xp-help-nav-item"
+            onclick="showHelpTopic('about', this)"
+          >
+            About / Corrections
+          </div>
         </div>
         <div class="xp-help-content" id="help-content">
           <!-- Filled by JS -->
@@ -818,6 +824,30 @@
             <div class="section" id="scene-section">
               <div class="section-head" onclick="toggleSection(this)">
                 <span class="arrow">▶</span> Scenes
+                <button
+                  class="section-dice"
+                  onclick="
+                    event.stopPropagation();
+                    randomizeScene();
+                  "
+                  title="Randomize scene"
+                >
+                  <svg viewBox="0 0 16 16" width="13" height="13">
+                    <rect
+                      x="1"
+                      y="1"
+                      width="14"
+                      height="14"
+                      rx="2"
+                      fill="none"
+                      stroke="currentColor"
+                      stroke-width="1.5"
+                    />
+                    <circle cx="5" cy="5" r="1.2" fill="currentColor" />
+                    <circle cx="8" cy="8" r="1.2" fill="currentColor" />
+                    <circle cx="11" cy="11" r="1.2" fill="currentColor" />
+                  </svg>
+                </button>
               </div>
               <div class="section-body">
                 <div class="field">
@@ -2226,6 +2256,8 @@ sin(r * 0.2 + time)</textarea
       <div class="task-clock" id="clock"></div>
     </div>
 
+    <script src="help-topics.js"></script>
+    <script src="documentation/help-demos.js"></script>
     <script src="studio.js"></script>
   </body>
 </html>
