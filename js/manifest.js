@@ -21,6 +21,7 @@ const SOURCE_TREE = {
     { name: ".nojekyll", path: ".nojekyll", type: "nojekyll" }
   ],
   js: [
+    { name: "apps.js", path: "js/apps.js", type: "js" },
     { name: "clock.js", path: "js/clock.js", type: "js" },
     { name: "cmatrix.js", path: "js/cmatrix.js", type: "js" },
     { name: "desktop.js", path: "js/desktop.js", type: "js" },

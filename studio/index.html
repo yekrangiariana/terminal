@@ -488,6 +488,15 @@
           >
             Overview
           </div>
+          <div class="xp-help-nav-item" onclick="showHelpTopic('scenes', this)">
+            Scenes
+          </div>
+          <div
+            class="xp-help-nav-item"
+            onclick="showHelpTopic('ascii-art', this)"
+          >
+            ASCII Art
+          </div>
           <div
             class="xp-help-nav-item"
             onclick="showHelpTopic('patterns', this)"
@@ -520,9 +529,6 @@
           </div>
           <div class="xp-help-nav-item" onclick="showHelpTopic('custom', this)">
             Custom Equations
-          </div>
-          <div class="xp-help-nav-item" onclick="showHelpTopic('scenes', this)">
-            Scenes
           </div>
           <div
             class="xp-help-nav-item"
@@ -845,6 +851,19 @@
                     <circle cx="11" cy="11" r="1.2" fill="currentColor" />
                   </svg>
                 </button>
+                <button
+                  class="section-reset"
+                  onclick="
+                    event.stopPropagation();
+                    resetScene();
+                  "
+                  title="Reset scene to defaults"
+                >
+                  <svg viewBox="0 0 16 16" width="13" height="13">
+                    <path d="M4 2 A6 6 0 1 1 2 8" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/>
+                    <polyline points="1,1 4,2 3,5" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/>
+                  </svg>
+                </button>
               </div>
               <div class="section-body">
                 <div class="field">
@@ -966,6 +985,19 @@
                     <circle cx="11" cy="11" r="1.2" fill="currentColor" />
                   </svg>
                 </button>
+                <button
+                  class="section-reset"
+                  onclick="
+                    event.stopPropagation();
+                    resetPattern();
+                  "
+                  title="Reset pattern to defaults"
+                >
+                  <svg viewBox="0 0 16 16" width="13" height="13">
+                    <path d="M4 2 A6 6 0 1 1 2 8" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/>
+                    <polyline points="1,1 4,2 3,5" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/>
+                  </svg>
+                </button>
               </div>
               <div class="section-body">
                 <div class="field">
@@ -1053,6 +1085,19 @@ sin(x * 0.1 + time) * cos(y * 0.05 + time * 1.5)</textarea
                     <circle cx="5" cy="5" r="1.2" fill="currentColor" />
                     <circle cx="8" cy="8" r="1.2" fill="currentColor" />
                     <circle cx="11" cy="11" r="1.2" fill="currentColor" />
+                  </svg>
+                </button>
+                <button
+                  class="section-reset"
+                  onclick="
+                    event.stopPropagation();
+                    resetSpatial();
+                  "
+                  title="Reset constants to defaults"
+                >
+                  <svg viewBox="0 0 16 16" width="13" height="13">
+                    <path d="M4 2 A6 6 0 1 1 2 8" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/>
+                    <polyline points="1,1 4,2 3,5" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/>
                   </svg>
                 </button>
               </div>
@@ -1189,6 +1234,19 @@ sin(x * 0.1 + time) * cos(y * 0.05 + time * 1.5)</textarea
                     <circle cx="5" cy="5" r="1.2" fill="currentColor" />
                     <circle cx="8" cy="8" r="1.2" fill="currentColor" />
                     <circle cx="11" cy="11" r="1.2" fill="currentColor" />
+                  </svg>
+                </button>
+                <button
+                  class="section-reset"
+                  onclick="
+                    event.stopPropagation();
+                    resetAnimation();
+                  "
+                  title="Reset animation to defaults"
+                >
+                  <svg viewBox="0 0 16 16" width="13" height="13">
+                    <path d="M4 2 A6 6 0 1 1 2 8" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/>
+                    <polyline points="1,1 4,2 3,5" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/>
                   </svg>
                 </button>
               </div>
@@ -1369,6 +1427,19 @@ sin(x * 0.1 + time) * cos(y * 0.05 + time * 1.5)</textarea
                     <circle cx="5" cy="5" r="1.2" fill="currentColor" />
                     <circle cx="8" cy="8" r="1.2" fill="currentColor" />
                     <circle cx="11" cy="11" r="1.2" fill="currentColor" />
+                  </svg>
+                </button>
+                <button
+                  class="section-reset"
+                  onclick="
+                    event.stopPropagation();
+                    resetTransform();
+                  "
+                  title="Reset transform to defaults"
+                >
+                  <svg viewBox="0 0 16 16" width="13" height="13">
+                    <path d="M4 2 A6 6 0 1 1 2 8" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/>
+                    <polyline points="1,1 4,2 3,5" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/>
                   </svg>
                 </button>
               </div>
@@ -1581,6 +1652,19 @@ sin(x * 0.1 + time) * cos(y * 0.05 + time * 1.5)</textarea
                     <circle cx="5" cy="5" r="1.2" fill="currentColor" />
                     <circle cx="8" cy="8" r="1.2" fill="currentColor" />
                     <circle cx="11" cy="11" r="1.2" fill="currentColor" />
+                  </svg>
+                </button>
+                <button
+                  class="section-reset"
+                  onclick="
+                    event.stopPropagation();
+                    resetLayerB();
+                  "
+                  title="Reset Layer B to defaults"
+                >
+                  <svg viewBox="0 0 16 16" width="13" height="13">
+                    <path d="M4 2 A6 6 0 1 1 2 8" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/>
+                    <polyline points="1,1 4,2 3,5" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/>
                   </svg>
                 </button>
               </div>
@@ -1831,6 +1915,19 @@ sin(r * 0.2 + time)</textarea
                     <circle cx="11" cy="11" r="1.2" fill="currentColor" />
                   </svg>
                 </button>
+                <button
+                  class="section-reset"
+                  onclick="
+                    event.stopPropagation();
+                    resetCharset();
+                  "
+                  title="Reset characters to defaults"
+                >
+                  <svg viewBox="0 0 16 16" width="13" height="13">
+                    <path d="M4 2 A6 6 0 1 1 2 8" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/>
+                    <polyline points="1,1 4,2 3,5" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/>
+                  </svg>
+                </button>
               </div>
               <div class="section-body">
                 <div class="field">
@@ -1959,6 +2056,19 @@ sin(r * 0.2 + time)</textarea
                     <circle cx="5" cy="5" r="1.2" fill="currentColor" />
                     <circle cx="8" cy="8" r="1.2" fill="currentColor" />
                     <circle cx="11" cy="11" r="1.2" fill="currentColor" />
+                  </svg>
+                </button>
+                <button
+                  class="section-reset"
+                  onclick="
+                    event.stopPropagation();
+                    resetPalette();
+                  "
+                  title="Reset colors to defaults"
+                >
+                  <svg viewBox="0 0 16 16" width="13" height="13">
+                    <path d="M4 2 A6 6 0 1 1 2 8" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/>
+                    <polyline points="1,1 4,2 3,5" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/>
                   </svg>
                 </button>
               </div>

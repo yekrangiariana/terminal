@@ -298,6 +298,20 @@ body {
 .section-dice:hover {
   opacity: 1;
 }
+.section-reset {
+  border: none;
+  background: none;
+  cursor: pointer;
+  padding: 0 4px;
+  opacity: 0.45;
+  transition: opacity 0.15s;
+  display: flex;
+  align-items: center;
+  color: inherit;
+}
+.section-reset:hover {
+  opacity: 1;
+}
 .section-body {
   padding: 8px 10px 10px;
   display: flex;
@@ -777,6 +791,10 @@ body {
   opacity: 0.6;
 }
 .section.art-override .section-dice {
+  opacity: 0.3;
+  pointer-events: none;
+}
+.section.art-override .section-reset {
   opacity: 0.3;
   pointer-events: none;
 }

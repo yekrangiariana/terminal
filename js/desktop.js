@@ -177,6 +177,39 @@ function explorerBack() {
   }
 }
 
+function explorerForward() {
+  if (_explorerHistoryIdx < _explorerHistory.length - 1) {
+    _explorerHistoryIdx++;
+    _explorerCurrent = _explorerHistory[_explorerHistoryIdx];
+    renderExplorerPage(_explorerCurrent);
+  }
+}
+
+// Back/Forward actions — delegate to iframe history in app mode
+function explorerBackAction() {
+  if (_explorerCurrent.startsWith("app:")) {
+    const appId = _explorerCurrent.replace("app:", "");
+    const iframe = document.getElementById(`explorer-app-${appId}`);
+    if (iframe && iframe.contentWindow) {
+      try { iframe.contentWindow.history.back(); } catch(e) {}
+    }
+  } else {
+    explorerBack();
+  }
+}
+
+function explorerFwdAction() {
+  if (_explorerCurrent.startsWith("app:")) {
+    const appId = _explorerCurrent.replace("app:", "");
+    const iframe = document.getElementById(`explorer-app-${appId}`);
+    if (iframe && iframe.contentWindow) {
+      try { iframe.contentWindow.history.forward(); } catch(e) {}
+    }
+  } else {
+    explorerForward();
+  }
+}
+
 function populateExplorer() {
   // Initial load
   if (_explorerHistory.length === 0) {
@@ -187,7 +220,17 @@ function populateExplorer() {
 }
 
 function renderExplorerPage(page) {
-  const info = EXPLORER_PAGES[page] || EXPLORER_PAGES.mycomputer;
+  // Resolve page info — app pages are dynamic
+  let info;
+  if (page.startsWith("app:")) {
+    const appId = page.replace("app:", "");
+    const app = (typeof APPS !== "undefined" ? APPS : []).find((a) => a.id === appId);
+    info = app
+      ? { title: app.name, icon: app.icon, address: app.url }
+      : EXPLORER_PAGES.mycomputer;
+  } else {
+    info = EXPLORER_PAGES[page] || EXPLORER_PAGES.mycomputer;
+  }
   document.getElementById("explorer-title").textContent = info.title;
   document.getElementById("explorer-icon").textContent = info.icon;
   document.getElementById("explorer-address").textContent = info.address;
@@ -197,7 +240,25 @@ function renderExplorerPage(page) {
   updateTaskbar();
 
   const backBtn = document.getElementById("explorer-back-btn");
-  if (backBtn) backBtn.disabled = _explorerHistoryIdx <= 0;
+  const fwdBtn = document.getElementById("explorer-fwd-btn");
+  if (page.startsWith("app:")) {
+    // In app mode, back/forward control iframe history — always enabled
+    if (backBtn) backBtn.disabled = false;
+    if (fwdBtn) fwdBtn.disabled = false;
+  } else {
+    if (backBtn) backBtn.disabled = _explorerHistoryIdx <= 0;
+    if (fwdBtn) fwdBtn.disabled = _explorerHistoryIdx >= _explorerHistory.length - 1;
+  }
+
+  // Clean up app mode when navigating away
+  const content = document.querySelector("#win-mycomputer .explorer-content");
+  if (!page.startsWith("app:")) {
+    content.classList.remove("explorer-app-mode");
+    // Hide all app iframes (but keep them alive for re-use)
+    document.querySelectorAll(".explorer-app-iframe").forEach((f) => {
+      f.style.display = "none";
+    });
+  }
 
   const sidebar = document.getElementById("explorer-sidebar");
   const main = document.getElementById("explorer-main");
@@ -208,6 +269,8 @@ function renderExplorerPage(page) {
   else if (page === "mypics") renderMyPics(sidebar, main, countEl);
   else if (page === "source" || page.startsWith("source/"))
     renderSourceCode(sidebar, main, countEl, page);
+  else if (page.startsWith("app:"))
+    renderAppPage(sidebar, main, countEl, page);
 }
 
 // ── Sidebar builder ─────────────────────────────────────────────────────────
@@ -300,8 +363,22 @@ function renderMyComputer(sidebar, main, countEl) {
     html += `</div>`;
   }
 
+  // Installed programs (from apps.js)
+  if (typeof APPS !== "undefined" && APPS.length > 0) {
+    html += `<div class="explorer-section-header">Programs</div>`;
+    html += `<div class="explorer-file-grid">`;
+    APPS.forEach((app) => {
+      html += `<div class="explorer-item" onclick="${_isMobile ? `explorerNavigate('app:${app.id}')` : `selectExplorerItem(this)`}" ondblclick="explorerNavigate('app:${app.id}')">
+        <div class="explorer-item-icon">${app.icon}</div>
+        <div class="explorer-item-name">${app.name}</div>
+      </div>`;
+    });
+    html += `</div>`;
+  }
+
   main.innerHTML = html;
-  if (countEl) countEl.textContent = `${3 + activeCats.length} items`;
+  const totalItems = 3 + activeCats.length + (typeof APPS !== "undefined" ? APPS.length : 0);
+  if (countEl) countEl.textContent = `${totalItems} items`;
 }
 
 function explorerFolderItem(icon, name, onclick) {
@@ -502,6 +579,69 @@ function renderSourceCode(sidebar, main, countEl, page) {
     if (countEl)
       countEl.textContent = `${files.length} file${files.length !== 1 ? "s" : ""}`;
   }
+}
+
+// ── App page (iframe inside Explorer) ───────────────────────────────────────
+const _appIframeLoaded = {};
+
+function renderAppPage(sidebar, main, countEl, page) {
+  const appId = page.replace("app:", "");
+  const app = (typeof APPS !== "undefined" ? APPS : []).find((a) => a.id === appId);
+  if (!app) return;
+
+  const content = document.querySelector("#win-mycomputer .explorer-content");
+  content.classList.add("explorer-app-mode");
+
+  sidebar.innerHTML = buildSidebar([
+    {
+      title: "Application",
+      items: [
+        { icon: app.icon, label: app.name, onclick: "" },
+      ],
+    },
+    {
+      title: "Other Places",
+      items: [
+        {
+          icon: "💻",
+          label: "My Computer",
+          onclick: "explorerNavigate('mycomputer')",
+        },
+      ],
+    },
+  ]);
+
+  if (_appIframeLoaded[appId]) {
+    // Already loaded — just show existing iframe
+    const existing = document.getElementById(`explorer-app-${appId}`);
+    // Hide any other app iframes
+    document.querySelectorAll(".explorer-app-iframe").forEach((f) => {
+      f.style.display = "none";
+    });
+    if (existing) {
+      existing.style.display = "";
+      main.innerHTML = "";
+      main.appendChild(existing);
+    }
+  } else {
+    // First load — create iframe
+    _appIframeLoaded[appId] = true;
+
+    // Hide any other app iframes
+    document.querySelectorAll(".explorer-app-iframe").forEach((f) => {
+      f.style.display = "none";
+    });
+
+    main.innerHTML = "";
+
+    const iframe = document.createElement("iframe");
+    iframe.id = `explorer-app-${appId}`;
+    iframe.className = "explorer-app-iframe";
+    iframe.src = app.url;
+    main.appendChild(iframe);
+  }
+
+  if (countEl) countEl.textContent = app.name;
 }
 
 async function openSourceFile(path) {
@@ -974,8 +1114,15 @@ document.addEventListener("mousemove", (e) => {
   if (_drag) {
     const win = document.getElementById(_drag.id);
     if (win) {
-      win.style.left = e.clientX - _drag.ox + "px";
-      win.style.top = e.clientY - _drag.oy + "px";
+      let x = e.clientX - _drag.ox;
+      let y = e.clientY - _drag.oy;
+      // Keep titlebar on-screen
+      const minVisible = 40;
+      const taskbarH = 28;
+      x = Math.max(-win.offsetWidth + minVisible, Math.min(x, window.innerWidth - minVisible));
+      y = Math.max(0, Math.min(y, window.innerHeight - taskbarH - 8));
+      win.style.left = x + "px";
+      win.style.top = y + "px";
     }
   }
   if (_sel) {
@@ -1014,8 +1161,14 @@ document.addEventListener(
       const t = e.touches[0];
       const win = document.getElementById(_drag.id);
       if (win) {
-        win.style.left = t.clientX - _drag.ox + "px";
-        win.style.top = t.clientY - _drag.oy + "px";
+        let x = t.clientX - _drag.ox;
+        let y = t.clientY - _drag.oy;
+        const minVisible = 40;
+        const taskbarH = 28;
+        x = Math.max(-win.offsetWidth + minVisible, Math.min(x, window.innerWidth - minVisible));
+        y = Math.max(0, Math.min(y, window.innerHeight - taskbarH - 8));
+        win.style.left = x + "px";
+        win.style.top = y + "px";
       }
       e.preventDefault();
     }
@@ -1340,7 +1493,19 @@ if (_isMobile) {
 
 // Skip captcha if already passed this session
 if (sessionStorage.getItem("captchaPassed") === "1") {
-  enterDesktop();
+  // No user gesture yet — skip sound, play on first click
+  document.getElementById("captcha-overlay")?.remove();
+  document.getElementById("desktop").hidden = false;
+  const _playOnce = () => {
+    playStartupSound();
+    document.removeEventListener("click", _playOnce);
+  };
+  document.addEventListener("click", _playOnce);
+
+  if (location.hash === "#ascii-studio") {
+    openStudio();
+    history.replaceState(null, "", location.pathname);
+  }
 } else {
   // Auto-focus captcha input immediately
   document.getElementById("captcha-input")?.focus();
