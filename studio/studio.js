@@ -4752,7 +4752,9 @@ function randomizeScene() {
     scene.params.forEach(function (param) {
       var el = document.getElementById("scene-p-" + param.key);
       if (!el) return;
-      var lo = param.min, hi = param.max, st = param.step || 0.01;
+      var lo = param.min,
+        hi = param.max,
+        st = param.step || 0.01;
       var val = lo + Math.random() * (hi - lo);
       val = Math.round(val / st) * st;
       if (val < lo) val = lo;
