@@ -191,7 +191,9 @@ function explorerBackAction() {
     const appId = _explorerCurrent.replace("app:", "");
     const iframe = document.getElementById(`explorer-app-${appId}`);
     if (iframe && iframe.contentWindow) {
-      try { iframe.contentWindow.history.back(); } catch(e) {}
+      try {
+        iframe.contentWindow.history.back();
+      } catch (e) {}
     }
   } else {
     explorerBack();
@@ -203,7 +205,9 @@ function explorerFwdAction() {
     const appId = _explorerCurrent.replace("app:", "");
     const iframe = document.getElementById(`explorer-app-${appId}`);
     if (iframe && iframe.contentWindow) {
-      try { iframe.contentWindow.history.forward(); } catch(e) {}
+      try {
+        iframe.contentWindow.history.forward();
+      } catch (e) {}
     }
   } else {
     explorerForward();
@@ -224,7 +228,9 @@ function renderExplorerPage(page) {
   let info;
   if (page.startsWith("app:")) {
     const appId = page.replace("app:", "");
-    const app = (typeof APPS !== "undefined" ? APPS : []).find((a) => a.id === appId);
+    const app = (typeof APPS !== "undefined" ? APPS : []).find(
+      (a) => a.id === appId,
+    );
     info = app
       ? { title: app.name, icon: app.icon, address: app.url }
       : EXPLORER_PAGES.mycomputer;
@@ -247,7 +253,8 @@ function renderExplorerPage(page) {
     if (fwdBtn) fwdBtn.disabled = false;
   } else {
     if (backBtn) backBtn.disabled = _explorerHistoryIdx <= 0;
-    if (fwdBtn) fwdBtn.disabled = _explorerHistoryIdx >= _explorerHistory.length - 1;
+    if (fwdBtn)
+      fwdBtn.disabled = _explorerHistoryIdx >= _explorerHistory.length - 1;
   }
 
   // Clean up app mode when navigating away
@@ -269,8 +276,7 @@ function renderExplorerPage(page) {
   else if (page === "mypics") renderMyPics(sidebar, main, countEl);
   else if (page === "source" || page.startsWith("source/"))
     renderSourceCode(sidebar, main, countEl, page);
-  else if (page.startsWith("app:"))
-    renderAppPage(sidebar, main, countEl, page);
+  else if (page.startsWith("app:")) renderAppPage(sidebar, main, countEl, page);
 }
 
 // ── Sidebar builder ─────────────────────────────────────────────────────────
@@ -377,7 +383,8 @@ function renderMyComputer(sidebar, main, countEl) {
   }
 
   main.innerHTML = html;
-  const totalItems = 3 + activeCats.length + (typeof APPS !== "undefined" ? APPS.length : 0);
+  const totalItems =
+    3 + activeCats.length + (typeof APPS !== "undefined" ? APPS.length : 0);
   if (countEl) countEl.textContent = `${totalItems} items`;
 }
 
@@ -586,7 +593,9 @@ const _appIframeLoaded = {};
 
 function renderAppPage(sidebar, main, countEl, page) {
   const appId = page.replace("app:", "");
-  const app = (typeof APPS !== "undefined" ? APPS : []).find((a) => a.id === appId);
+  const app = (typeof APPS !== "undefined" ? APPS : []).find(
+    (a) => a.id === appId,
+  );
   if (!app) return;
 
   const content = document.querySelector("#win-mycomputer .explorer-content");
@@ -595,9 +604,7 @@ function renderAppPage(sidebar, main, countEl, page) {
   sidebar.innerHTML = buildSidebar([
     {
       title: "Application",
-      items: [
-        { icon: app.icon, label: app.name, onclick: "" },
-      ],
+      items: [{ icon: app.icon, label: app.name, onclick: "" }],
     },
     {
       title: "Other Places",
@@ -1119,7 +1126,10 @@ document.addEventListener("mousemove", (e) => {
       // Keep titlebar on-screen
       const minVisible = 40;
       const taskbarH = 28;
-      x = Math.max(-win.offsetWidth + minVisible, Math.min(x, window.innerWidth - minVisible));
+      x = Math.max(
+        -win.offsetWidth + minVisible,
+        Math.min(x, window.innerWidth - minVisible),
+      );
       y = Math.max(0, Math.min(y, window.innerHeight - taskbarH - 8));
       win.style.left = x + "px";
       win.style.top = y + "px";
@@ -1165,7 +1175,10 @@ document.addEventListener(
         let y = t.clientY - _drag.oy;
         const minVisible = 40;
         const taskbarH = 28;
-        x = Math.max(-win.offsetWidth + minVisible, Math.min(x, window.innerWidth - minVisible));
+        x = Math.max(
+          -win.offsetWidth + minVisible,
+          Math.min(x, window.innerWidth - minVisible),
+        );
         y = Math.max(0, Math.min(y, window.innerHeight - taskbarH - 8));
         win.style.left = x + "px";
         win.style.top = y + "px";

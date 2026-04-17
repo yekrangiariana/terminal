@@ -2670,12 +2670,44 @@ function _dlaSpawnWalker(w, h) {
 SCENES.reactionDiffusion = {
   label: "Reaction-Diffusion",
   params: [
-    { key: "feed", label: "Feed Rate", min: 0.01, max: 0.08, step: 0.001, default: 0.037, tip: "How fast chemical A is added" },
-    { key: "kill", label: "Kill Rate", min: 0.04, max: 0.075, step: 0.001, default: 0.06, tip: "How fast chemical B is removed" },
-    { key: "diffA", label: "Diffuse A", min: 0.5, max: 1.5, step: 0.05, default: 1.0, tip: "Diffusion rate of chemical A" },
-    { key: "diffB", label: "Diffuse B", min: 0.2, max: 0.8, step: 0.05, default: 0.5, tip: "Diffusion rate of chemical B" }
+    {
+      key: "feed",
+      label: "Feed Rate",
+      min: 0.01,
+      max: 0.08,
+      step: 0.001,
+      default: 0.037,
+      tip: "How fast chemical A is added",
+    },
+    {
+      key: "kill",
+      label: "Kill Rate",
+      min: 0.04,
+      max: 0.075,
+      step: 0.001,
+      default: 0.06,
+      tip: "How fast chemical B is removed",
+    },
+    {
+      key: "diffA",
+      label: "Diffuse A",
+      min: 0.5,
+      max: 1.5,
+      step: 0.05,
+      default: 1.0,
+      tip: "Diffusion rate of chemical A",
+    },
+    {
+      key: "diffB",
+      label: "Diffuse B",
+      min: 0.2,
+      max: 0.8,
+      step: 0.05,
+      default: 0.5,
+      tip: "Diffusion rate of chemical B",
+    },
   ],
-  init: function(w, h, p) {
+  init: function (w, h, p) {
     var n = w * h;
     var a = new Float32Array(n);
     var b = new Float32Array(n);
@@ -2689,22 +2721,38 @@ SCENES.reactionDiffusion = {
       for (var dy = -rad; dy <= rad; dy++) {
         for (var dx = -rad; dx <= rad; dx++) {
           if (dx * dx + dy * dy <= rad * rad) {
-            var px = (cx + dx + w) % w, py = (cy + dy + h) % h;
+            var px = (cx + dx + w) % w,
+              py = (cy + dy + h) % h;
             b[py * w + px] = 1;
           }
         }
       }
     }
-    _sceneState = { a: a, b: b, a2: new Float32Array(n), b2: new Float32Array(n), tickAccum: 0 };
+    _sceneState = {
+      a: a,
+      b: b,
+      a2: new Float32Array(n),
+      b2: new Float32Array(n),
+      tickAccum: 0,
+    };
   },
-  update: function(dt, w, h, p, grid) {
+  update: function (dt, w, h, p, grid) {
     var st = _sceneState;
-    if (!st.a || st.a.length !== w * h) { this.init(w, h, p); st = _sceneState; }
+    if (!st.a || st.a.length !== w * h) {
+      this.init(w, h, p);
+      st = _sceneState;
+    }
     st.tickAccum += dt * 60;
     var ticks = Math.min(Math.floor(st.tickAccum), 8);
     st.tickAccum -= ticks;
-    var a = st.a, b = st.b, a2 = st.a2, b2 = st.b2;
-    var dA = p.diffA, dB = p.diffB, f = p.feed, k = p.kill;
+    var a = st.a,
+      b = st.b,
+      a2 = st.a2,
+      b2 = st.b2;
+    var dA = p.diffA,
+      dB = p.diffB,
+      f = p.feed,
+      k = p.kill;
     for (var t = 0; t < ticks; t++) {
       for (var y = 0; y < h; y++) {
         for (var x = 0; x < w; x++) {
@@ -2719,19 +2767,26 @@ SCENES.reactionDiffusion = {
           var abb = a[i] * b[i] * b[i];
           a2[i] = a[i] + (dA * lapA - abb + f * (1 - a[i])) * 0.9;
           b2[i] = b[i] + (dB * lapB + abb - (k + f) * b[i]) * 0.9;
-          if (a2[i] < 0) a2[i] = 0; if (a2[i] > 1) a2[i] = 1;
-          if (b2[i] < 0) b2[i] = 0; if (b2[i] > 1) b2[i] = 1;
+          if (a2[i] < 0) a2[i] = 0;
+          if (a2[i] > 1) a2[i] = 1;
+          if (b2[i] < 0) b2[i] = 0;
+          if (b2[i] > 1) b2[i] = 1;
         }
       }
       // Swap buffers
-      var tmp = st.a; st.a = a = a2; st.a2 = tmp;
-      tmp = st.b; st.b = b = b2; st.b2 = tmp;
-      a2 = st.a2; b2 = st.b2;
+      var tmp = st.a;
+      st.a = a = a2;
+      st.a2 = tmp;
+      tmp = st.b;
+      st.b = b = b2;
+      st.b2 = tmp;
+      a2 = st.a2;
+      b2 = st.b2;
     }
     for (var i = 0; i < w * h; i++) {
       grid[i] = (a[i] - b[i]) * 4 - 2;
     }
-  }
+  },
 };
 
 // ─────────────────────────────────────
@@ -2740,20 +2795,55 @@ SCENES.reactionDiffusion = {
 SCENES.fallingSand = {
   label: "Falling Sand",
   params: [
-    { key: "spawnRate", label: "Spawn Rate", min: 0.01, max: 0.3, step: 0.01, default: 0.1, tip: "How much sand falls per frame" },
-    { key: "gravity", label: "Gravity", min: 0.5, max: 5, step: 0.5, default: 2, tip: "How fast sand falls" },
-    { key: "spread", label: "Spread", min: 0, max: 1, step: 0.1, default: 0.5, tip: "How much sand slides sideways" },
-    { key: "erosion", label: "Erosion", min: 0, max: 0.05, step: 0.005, default: 0.01, tip: "How fast piled sand decays" }
+    {
+      key: "spawnRate",
+      label: "Spawn Rate",
+      min: 0.01,
+      max: 0.3,
+      step: 0.01,
+      default: 0.1,
+      tip: "How much sand falls per frame",
+    },
+    {
+      key: "gravity",
+      label: "Gravity",
+      min: 0.5,
+      max: 5,
+      step: 0.5,
+      default: 2,
+      tip: "How fast sand falls",
+    },
+    {
+      key: "spread",
+      label: "Spread",
+      min: 0,
+      max: 1,
+      step: 0.1,
+      default: 0.5,
+      tip: "How much sand slides sideways",
+    },
+    {
+      key: "erosion",
+      label: "Erosion",
+      min: 0,
+      max: 0.05,
+      step: 0.005,
+      default: 0.01,
+      tip: "How fast piled sand decays",
+    },
   ],
-  init: function(w, h, p) {
+  init: function (w, h, p) {
     _sceneState = {
       cells: new Float32Array(w * h),
-      tickAccum: 0
+      tickAccum: 0,
     };
   },
-  update: function(dt, w, h, p, grid) {
+  update: function (dt, w, h, p, grid) {
     var st = _sceneState;
-    if (!st.cells || st.cells.length !== w * h) { this.init(w, h, p); st = _sceneState; }
+    if (!st.cells || st.cells.length !== w * h) {
+      this.init(w, h, p);
+      st = _sceneState;
+    }
     var cells = st.cells;
     st.tickAccum += dt * 30 * p.gravity;
     var ticks = Math.min(Math.floor(st.tickAccum), 6);
@@ -2779,11 +2869,17 @@ SCENES.fallingSand = {
           } else if (p.spread > 0) {
             // Try sliding diagonally
             var dir = Math.random() < 0.5 ? -1 : 1;
-            var nx1 = x + dir, nx2 = x - dir;
+            var nx1 = x + dir,
+              nx2 = x - dir;
             if (nx1 >= 0 && nx1 < w && cells[(y + 1) * w + nx1] <= 0) {
               cells[(y + 1) * w + nx1] = cells[i] * (0.8 + Math.random() * 0.2);
               cells[i] = 0;
-            } else if (nx2 >= 0 && nx2 < w && cells[(y + 1) * w + nx2] <= 0 && Math.random() < p.spread) {
+            } else if (
+              nx2 >= 0 &&
+              nx2 < w &&
+              cells[(y + 1) * w + nx2] <= 0 &&
+              Math.random() < p.spread
+            ) {
               cells[(y + 1) * w + nx2] = cells[i] * (0.8 + Math.random() * 0.2);
               cells[i] = 0;
             }
@@ -2801,7 +2897,7 @@ SCENES.fallingSand = {
     for (var i = 0; i < w * h; i++) {
       grid[i] = cells[i] > 0 ? cells[i] * 2 - 1 : -2;
     }
-  }
+  },
 };
 
 // ─────────────────────────────────────
@@ -2810,22 +2906,57 @@ SCENES.fallingSand = {
 SCENES.lightning = {
   label: "Lightning",
   params: [
-    { key: "strikeRate", label: "Strike Rate", min: 0.1, max: 3, step: 0.1, default: 0.8, tip: "How often lightning strikes" },
-    { key: "branches", label: "Branches", min: 0, max: 0.4, step: 0.02, default: 0.15, tip: "Chance of branching at each step" },
-    { key: "fade", label: "Fade Speed", min: 0.8, max: 0.99, step: 0.01, default: 0.92, tip: "How quickly the flash fades" },
-    { key: "jitter", label: "Jitter", min: 0.1, max: 3, step: 0.1, default: 1.5, tip: "How much the bolt wanders sideways" }
+    {
+      key: "strikeRate",
+      label: "Strike Rate",
+      min: 0.1,
+      max: 3,
+      step: 0.1,
+      default: 0.8,
+      tip: "How often lightning strikes",
+    },
+    {
+      key: "branches",
+      label: "Branches",
+      min: 0,
+      max: 0.4,
+      step: 0.02,
+      default: 0.15,
+      tip: "Chance of branching at each step",
+    },
+    {
+      key: "fade",
+      label: "Fade Speed",
+      min: 0.8,
+      max: 0.99,
+      step: 0.01,
+      default: 0.92,
+      tip: "How quickly the flash fades",
+    },
+    {
+      key: "jitter",
+      label: "Jitter",
+      min: 0.1,
+      max: 3,
+      step: 0.1,
+      default: 1.5,
+      tip: "How much the bolt wanders sideways",
+    },
   ],
-  init: function(w, h, p) {
+  init: function (w, h, p) {
     _sceneState = {
       glow: new Float32Array(w * h),
       bolts: [],
       strikeAccum: 0,
-      tickAccum: 0
+      tickAccum: 0,
     };
   },
-  update: function(dt, w, h, p, grid) {
+  update: function (dt, w, h, p, grid) {
     var st = _sceneState;
-    if (!st.glow || st.glow.length !== w * h) { this.init(w, h, p); st = _sceneState; }
+    if (!st.glow || st.glow.length !== w * h) {
+      this.init(w, h, p);
+      st = _sceneState;
+    }
     var glow = st.glow;
 
     // Fade existing glow
@@ -2853,8 +2984,10 @@ SCENES.lightning = {
           var gi = Math.floor(bolt.y) * w + ix;
           glow[gi] = Math.min(glow[gi] + bolt.life * 2, 3);
           // Slight width glow
-          if (ix > 0) glow[gi - 1] = Math.min(glow[gi - 1] + bolt.life * 0.5, 2);
-          if (ix < w - 1) glow[gi + 1] = Math.min(glow[gi + 1] + bolt.life * 0.5, 2);
+          if (ix > 0)
+            glow[gi - 1] = Math.min(glow[gi - 1] + bolt.life * 0.5, 2);
+          if (ix < w - 1)
+            glow[gi + 1] = Math.min(glow[gi + 1] + bolt.life * 0.5, 2);
         }
         bolt.y++;
         bolt.x += (Math.random() - 0.5) * p.jitter * 2 + bolt.dx;
@@ -2863,7 +2996,12 @@ SCENES.lightning = {
         bolt.life *= 0.98;
         // Branch
         if (Math.random() < p.branches && bolt.life > 0.3) {
-          newBolts.push({ x: bolt.x, y: bolt.y, dx: (Math.random() - 0.5) * p.jitter, life: bolt.life * 0.6 });
+          newBolts.push({
+            x: bolt.x,
+            y: bolt.y,
+            dx: (Math.random() - 0.5) * p.jitter,
+            life: bolt.life * 0.6,
+          });
         }
       }
       if (bolt.y < h && bolt.life > 0.1) {
@@ -2876,7 +3014,7 @@ SCENES.lightning = {
     for (var i = 0; i < w * h; i++) {
       grid[i] = glow[i] > 0.01 ? glow[i] * 1.5 - 1 : -2;
     }
-  }
+  },
 };
 
 // ─────────────────────────────────────
