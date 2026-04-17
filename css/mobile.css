@@ -557,6 +557,19 @@ html {
     border-radius: 0;
   }
 
+  /* Studio — fullscreen on mobile */
+  #win-studio {
+    left: 0 !important;
+    top: 0 !important;
+    width: 100vw !important;
+    height: calc(100vh - 40px) !important;
+    max-height: calc(100vh - 40px) !important;
+    border-radius: 0;
+  }
+  #win-studio .win-body {
+    height: calc(100vh - 40px - 36px);
+  }
+
   /* Explorer — hide sidebar, stack toolbar on mobile */
   .explorer-sidebar {
     display: none;
