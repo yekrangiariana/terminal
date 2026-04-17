@@ -8,6 +8,49 @@ var TICK_MS = 33,
   TWO_PI = Math.PI * 2;
 
 // ══════════════════════════════════════
+//  RANDOMIZE LOCKS
+// ══════════════════════════════════════
+var _rndLocks = {
+  scene: false,
+  pattern: false,
+  spatial: false,
+  animation: false,
+  transform: false,
+  layerB: false,
+  charset: false,
+  palette: false,
+};
+
+// Sub-fields available for detailed locking
+var _rndSubFields = {
+  spatial: [
+    ["xConstant", "X Constant"],
+    ["yConstant", "Y Constant"],
+    ["globalVal", "Global Value"],
+  ],
+  animation: [
+    ["frameMultiplier", "Frame Multiplier"],
+    ["animationSpeed", "Animation Speed"],
+  ],
+  transform: [
+    ["centerX", "Center X"],
+    ["centerY", "Center Y"],
+    ["rotation", "Rotation"],
+    ["scale", "Scale"],
+    ["turbulence", "Turbulence"],
+    ["mirrorAxis", "Symmetry"],
+  ],
+};
+
+// Check if a field is locked — supports section-level or sub-field-level locks
+function _isLocked(section, field) {
+  var v = _rndLocks[section];
+  if (v === true) return true;
+  if (v && typeof v === "object" && field) return !!v[field];
+  return false;
+}
+
+// ══════════════════════════════════════
 //  UNDO / REDO
 // ══════════════════════════════════════
 var _undoStack = [];
@@ -80,7 +123,8 @@ function undo() {
       _restoreSceneParams(prev.sceneParams);
     }
     if (prev.artSceneBlend !== undefined) _artSceneBlend = prev.artSceneBlend;
-    if (prev.artSceneAmount !== undefined) _artSceneAmount = prev.artSceneAmount;
+    if (prev.artSceneAmount !== undefined)
+      _artSceneAmount = prev.artSceneAmount;
   } else {
     config = prev;
     deactivateScene();
@@ -114,7 +158,8 @@ function redo() {
       _restoreSceneParams(next.sceneParams);
     }
     if (next.artSceneBlend !== undefined) _artSceneBlend = next.artSceneBlend;
-    if (next.artSceneAmount !== undefined) _artSceneAmount = next.artSceneAmount;
+    if (next.artSceneAmount !== undefined)
+      _artSceneAmount = next.artSceneAmount;
   } else {
     config = next;
     deactivateScene();
@@ -2781,9 +2826,11 @@ function _buildSceneParamsUI(key) {
   // ── Art + Scene blend controls ──
   if (_artGrid) {
     var sep = document.createElement("div");
-    sep.style.cssText = "border-top:1px solid #aaa; margin:8px 0 6px; padding-top:6px;";
+    sep.style.cssText =
+      "border-top:1px solid #aaa; margin:8px 0 6px; padding-top:6px;";
     var sepLabel = document.createElement("label");
-    sepLabel.style.cssText = "font-weight:bold; font-size:11px; margin-bottom:4px; display:block;";
+    sepLabel.style.cssText =
+      "font-weight:bold; font-size:11px; margin-bottom:4px; display:block;";
     sepLabel.textContent = "Art + Scene Blend";
     sep.appendChild(sepLabel);
     wrap.appendChild(sep);
@@ -2795,7 +2842,8 @@ function _buildSceneParamsUI(key) {
     modeLabel.textContent = "Effect ";
     var modeTip = document.createElement("span");
     modeTip.className = "help-tip";
-    modeTip.title = "Mask = scene fills your shape. Add = scene layered on top. Multiply = scene modulates art. Screen = brightening blend.";
+    modeTip.title =
+      "Mask = scene fills your shape. Add = scene layered on top. Multiply = scene modulates art. Screen = brightening blend.";
     modeTip.textContent = "?";
     modeLabel.appendChild(modeTip);
     modeField.appendChild(modeLabel);
@@ -2805,7 +2853,7 @@ function _buildSceneParamsUI(key) {
       ["mask", "Mask (scene fills shape)"],
       ["add", "Add (scene on top)"],
       ["multiply", "Multiply"],
-      ["screen", "Screen (brighten)"]
+      ["screen", "Screen (brighten)"],
     ];
     for (var m = 0; m < modes.length; m++) {
       var opt = document.createElement("option");
@@ -2829,7 +2877,8 @@ function _buildSceneParamsUI(key) {
     strLabel.textContent = "Strength ";
     var strTip = document.createElement("span");
     strTip.className = "help-tip";
-    strTip.title = "How much the scene affects your art. 0 = art only, 1 = full effect.";
+    strTip.title =
+      "How much the scene affects your art. 0 = art only, 1 = full effect.";
     strTip.textContent = "?";
     strLabel.appendChild(strTip);
     strField.appendChild(strLabel);
@@ -2846,7 +2895,9 @@ function _buildSceneParamsUI(key) {
       syncSlider(this);
       _artSceneAmount = parseFloat(this.value);
     };
-    strSlider.onpointerdown = function () { pushUndo(); };
+    strSlider.onpointerdown = function () {
+      pushUndo();
+    };
     strRow.appendChild(strSlider);
     var strVal = document.createElement("input");
     strVal.type = "text";
@@ -2856,7 +2907,9 @@ function _buildSceneParamsUI(key) {
     strVal.onchange = function () {
       pushUndo();
       syncVal(this, "art-scene-amount");
-      _artSceneAmount = parseFloat(document.getElementById("art-scene-amount").value);
+      _artSceneAmount = parseFloat(
+        document.getElementById("art-scene-amount").value,
+      );
       if (!playing) render();
     };
     strRow.appendChild(strVal);
@@ -3353,7 +3406,9 @@ function render() {
           case "mask":
             // Scene adds animated detail within art shape, preserving art brightness
             var mask = (artVal + 1) * 0.5; // 0..1
-            if (mask < 0.05) { continue; } // outside shape
+            if (mask < 0.05) {
+              continue;
+            } // outside shape
             value = artVal + sceneVal * mask * amt * 0.5;
             break;
           case "add":
@@ -3467,6 +3522,19 @@ function goFullscreen() {
       el.msRequestFullscreen
     ).call(el);
   }
+}
+
+function openMobileApp() {
+  document.getElementById("mobile-block").style.display = "none";
+  var el = document.documentElement;
+  var rfs =
+    el.requestFullscreen ||
+    el.webkitRequestFullscreen ||
+    el.msRequestFullscreen;
+  if (rfs) rfs.call(el);
+  setTimeout(function () {
+    setupCanvas();
+  }, 300);
 }
 document.addEventListener("fullscreenchange", function () {
   setupCanvas();
@@ -4083,46 +4151,54 @@ function _randomizeVisuals() {
   ];
   var useLayerB = Math.random() > 0.65;
 
-  config.charset = pick(charsets);
-  config.colors = pick(palettes).slice();
-  config.colored = Math.random() > 0.15;
-  config.animationSpeed = rng(0.1, 0.6);
-  config.mirrorAxis = pick(symmetries);
-  config.centerX = rng(-0.2, 0.2);
-  config.centerY = rng(-0.2, 0.2);
-  config.rotation = Math.round(rng(0, 360));
-  config.scale = rng(0.7, 1.8);
-  config.turbulence = Math.random() > 0.6 ? rng(0.05, 0.3) : 0;
-  config.layerB = useLayerB
-    ? {
-        enabled: true,
-        pattern: pick(patterns),
-        xConstant: rng(-50, 50),
-        yConstant: rng(-50, 50),
-        frameMultiplier: rng(-0.1, 0.1),
-        globalVal: rng(0, 3),
-        blendMode: pick([
-          "add",
-          "multiply",
-          "subtract",
-          "min",
-          "max",
-          "screen",
-        ]),
-        blendAmount: rng(0.2, 0.7),
-        customExpr: pick(customFormulas),
-      }
-    : {
-        enabled: false,
-        pattern: "circular",
-        xConstant: 0.01,
-        yConstant: 0.01,
-        frameMultiplier: 0.05,
-        globalVal: 1,
-        blendMode: "add",
-        blendAmount: 0.5,
-        customExpr: "sin(r*0.2+time)",
-      };
+  if (!_isLocked("charset")) config.charset = pick(charsets);
+  if (!_isLocked("palette")) {
+    config.colors = pick(palettes).slice();
+    config.colored = Math.random() > 0.15;
+  }
+  if (!_isLocked("animation", "animationSpeed"))
+    config.animationSpeed = rng(0.1, 0.6);
+  if (!_isLocked("transform", "mirrorAxis"))
+    config.mirrorAxis = pick(symmetries);
+  if (!_isLocked("transform", "centerX")) config.centerX = rng(-0.2, 0.2);
+  if (!_isLocked("transform", "centerY")) config.centerY = rng(-0.2, 0.2);
+  if (!_isLocked("transform", "rotation"))
+    config.rotation = Math.round(rng(0, 360));
+  if (!_isLocked("transform", "scale")) config.scale = rng(0.7, 1.8);
+  if (!_isLocked("transform", "turbulence"))
+    config.turbulence = Math.random() > 0.6 ? rng(0.05, 0.3) : 0;
+  if (!_isLocked("layerB")) {
+    config.layerB = useLayerB
+      ? {
+          enabled: true,
+          pattern: pick(patterns),
+          xConstant: rng(-50, 50),
+          yConstant: rng(-50, 50),
+          frameMultiplier: rng(-0.1, 0.1),
+          globalVal: rng(0, 3),
+          blendMode: pick([
+            "add",
+            "multiply",
+            "subtract",
+            "min",
+            "max",
+            "screen",
+          ]),
+          blendAmount: rng(0.2, 0.7),
+          customExpr: pick(customFormulas),
+        }
+      : {
+          enabled: false,
+          pattern: "circular",
+          xConstant: 0.01,
+          yConstant: 0.01,
+          frameMultiplier: 0.05,
+          globalVal: 1,
+          blendMode: "add",
+          blendAmount: 0.5,
+          customExpr: "sin(r*0.2+time)",
+        };
+  }
 }
 
 function randomize() {
@@ -4130,42 +4206,53 @@ function randomize() {
 
   // ── Scene-aware randomise ──
   if (_activeScene) {
-    var keys = Object.keys(SCENES);
-    var key = keys[Math.floor(Math.random() * keys.length)];
-    // Set up new scene (skip activateScene to avoid double undo)
-    _activeScene = key;
-    _sceneLastTs = 0;
-    var scene = SCENES[key];
-    _sceneW = columns || 80;
-    _sceneH = rows || 40;
-    _sceneGrid = new Float32Array(_sceneW * _sceneH);
-    _buildSceneParamsUI(key);
-    // Randomise this scene's params within their declared ranges
-    if (scene.params && scene.params.length) {
-      scene.params.forEach(function (param) {
-        var el = document.getElementById("scene-p-" + param.key);
-        if (!el) return;
-        var lo = param.min,
-          hi = param.max,
-          st = param.step || 0.01;
-        var val = lo + Math.random() * (hi - lo);
-        val = Math.round(val / st) * st;
-        if (val < lo) val = lo;
-        if (val > hi) val = hi;
-        el.value = val;
-        el.dispatchEvent(new Event("input"));
-      });
+    if (!_isLocked("scene")) {
+      var keys = Object.keys(SCENES);
+      var key = keys[Math.floor(Math.random() * keys.length)];
+      // Set up new scene (skip activateScene to avoid double undo)
+      _activeScene = key;
+      _sceneLastTs = 0;
+      var scene = SCENES[key];
+      _sceneW = columns || 80;
+      _sceneH = rows || 40;
+      _sceneGrid = new Float32Array(_sceneW * _sceneH);
+      _buildSceneParamsUI(key);
+      // Randomise this scene's params within their declared ranges
+      if (scene.params && scene.params.length) {
+        scene.params.forEach(function (param) {
+          var el = document.getElementById("scene-p-" + param.key);
+          if (!el) return;
+          var lo = param.min,
+            hi = param.max,
+            st = param.step || 0.01;
+          var val = lo + Math.random() * (hi - lo);
+          val = Math.round(val / st) * st;
+          if (val < lo) val = lo;
+          if (val > hi) val = hi;
+          el.value = val;
+          el.dispatchEvent(new Event("input"));
+        });
+      }
+      var p = _getSceneParams(key);
+      scene.init(_sceneW, _sceneH, p);
+      scene.update(0.033, _sceneW, _sceneH, p, _sceneGrid);
+    } else {
+      // Scene locked — just re-init current scene with existing params
+      var scene = SCENES[_activeScene];
+      var p = _getSceneParams(_activeScene);
+      if (scene) {
+        scene.init(_sceneW, _sceneH, p);
+        scene.update(0.033, _sceneW, _sceneH, p, _sceneGrid);
+      }
     }
-    var p = _getSceneParams(key);
-    scene.init(_sceneW, _sceneH, p);
-    scene.update(0.033, _sceneW, _sceneH, p, _sceneGrid);
     if (!playing) togglePlay();
     // Also randomise the compatible visual settings
     _randomizeVisuals();
     // Randomise art+scene blend if art is loaded
     if (_artGrid) {
       var blendModes = ["mask", "add", "multiply", "screen"];
-      _artSceneBlend = blendModes[Math.floor(Math.random() * blendModes.length)];
+      _artSceneBlend =
+        blendModes[Math.floor(Math.random() * blendModes.length)];
       _artSceneAmount = 0.3 + Math.random() * 0.7;
     }
     config.name = "Random — " + (SCENES[key] ? SCENES[key].label : key);
@@ -4278,6 +4365,8 @@ function randomize() {
   // If ASCII art is loaded, keep using it as the pattern
   var hasArt = !!_artGrid;
   if (hasArt) p = "asciiArt";
+  // If pattern is locked, keep the current pattern
+  if (_isLocked("pattern") && !hasArt) p = config.pattern;
 
   // Pattern-tuned constants — biased toward the clean zone for each pattern
   var xc, yc, fm, gv;
@@ -4358,57 +4447,80 @@ function randomize() {
 
   var useLayerB = Math.random() > 0.65;
 
+  // Build new config, preserving locked sections from current config
+  var prevConfig = JSON.parse(JSON.stringify(config));
+
   config = {
     name: hasArt ? "Random — " + _artFileName : "Random — " + p,
-    pattern: p,
-    charset: pick(charsets),
-    colors: pick(palettes).slice(),
-    xConstant: xc,
-    yConstant: yc,
-    frameMultiplier: fm,
-    animationSpeed: rng(0.1, 0.6),
-    mirrorAxis: pick(symmetries),
-    globalVal: gv,
-    colored: Math.random() > 0.15,
-    centerX: rng(-0.2, 0.2),
-    centerY: rng(-0.2, 0.2),
-    rotation: Math.round(rng(0, 360)),
-    scale: rng(0.7, 1.8),
-    turbulence: Math.random() > 0.6 ? rng(0.05, 0.3) : 0,
-    customExpr:
-      p === "custom"
+    // Pattern + spatial (these are tightly coupled via the switch above)
+    pattern: _isLocked("pattern") ? prevConfig.pattern : p,
+    customExpr: _isLocked("pattern")
+      ? prevConfig.customExpr
+      : p === "custom"
         ? pick(customFormulas)
-        : config.customExpr || "sin(r*0.2+time)",
-    layerB: useLayerB
-      ? {
-          enabled: true,
-          pattern: pick(patterns),
-          xConstant: rng(-50, 50),
-          yConstant: rng(-50, 50),
-          frameMultiplier: rng(-0.1, 0.1),
-          globalVal: rng(0, 3),
-          blendMode: pick([
-            "add",
-            "multiply",
-            "subtract",
-            "min",
-            "max",
-            "screen",
-          ]),
-          blendAmount: rng(0.2, 0.7),
-          customExpr: pick(customFormulas),
-        }
-      : {
-          enabled: false,
-          pattern: "circular",
-          xConstant: 0.01,
-          yConstant: 0.01,
-          frameMultiplier: 0.05,
-          globalVal: 1,
-          blendMode: "add",
-          blendAmount: 0.5,
-          customExpr: "sin(r*0.2+time)",
-        },
+        : prevConfig.customExpr || "sin(r*0.2+time)",
+    xConstant: _isLocked("spatial", "xConstant") ? prevConfig.xConstant : xc,
+    yConstant: _isLocked("spatial", "yConstant") ? prevConfig.yConstant : yc,
+    globalVal: _isLocked("spatial", "globalVal") ? prevConfig.globalVal : gv,
+    frameMultiplier: _isLocked("animation", "frameMultiplier")
+      ? prevConfig.frameMultiplier
+      : fm,
+    animationSpeed: _isLocked("animation", "animationSpeed")
+      ? prevConfig.animationSpeed
+      : rng(0.1, 0.6),
+    charset: _isLocked("charset") ? prevConfig.charset : pick(charsets),
+    colors: _isLocked("palette") ? prevConfig.colors : pick(palettes).slice(),
+    colored: _isLocked("palette") ? prevConfig.colored : Math.random() > 0.15,
+    mirrorAxis: _isLocked("transform", "mirrorAxis")
+      ? prevConfig.mirrorAxis
+      : pick(symmetries),
+    centerX: _isLocked("transform", "centerX")
+      ? prevConfig.centerX
+      : rng(-0.2, 0.2),
+    centerY: _isLocked("transform", "centerY")
+      ? prevConfig.centerY
+      : rng(-0.2, 0.2),
+    rotation: _isLocked("transform", "rotation")
+      ? prevConfig.rotation
+      : Math.round(rng(0, 360)),
+    scale: _isLocked("transform", "scale") ? prevConfig.scale : rng(0.7, 1.8),
+    turbulence: _isLocked("transform", "turbulence")
+      ? prevConfig.turbulence
+      : Math.random() > 0.6
+        ? rng(0.05, 0.3)
+        : 0,
+    layerB: _isLocked("layerB")
+      ? prevConfig.layerB
+      : useLayerB
+        ? {
+            enabled: true,
+            pattern: pick(patterns),
+            xConstant: rng(-50, 50),
+            yConstant: rng(-50, 50),
+            frameMultiplier: rng(-0.1, 0.1),
+            globalVal: rng(0, 3),
+            blendMode: pick([
+              "add",
+              "multiply",
+              "subtract",
+              "min",
+              "max",
+              "screen",
+            ]),
+            blendAmount: rng(0.2, 0.7),
+            customExpr: pick(customFormulas),
+          }
+        : {
+            enabled: false,
+            pattern: "circular",
+            xConstant: 0.01,
+            yConstant: 0.01,
+            frameMultiplier: 0.05,
+            globalVal: 1,
+            blendMode: "add",
+            blendAmount: 0.5,
+            customExpr: "sin(r*0.2+time)",
+          },
   };
 
   time = 0;
@@ -5536,6 +5648,170 @@ function newPreset() {
 }
 
 // ══════════════════════════════════════
+//  RANDOMIZE LOCK PANEL
+// ══════════════════════════════════════
+function toggleRndLockPanel() {
+  var panel = document.getElementById("rnd-lock-panel");
+  if (!panel) return;
+  var show = panel.style.display === "none" || !panel.style.display;
+  if (show) {
+    _buildRndLockPanel();
+    panel.style.display = "block";
+  } else {
+    panel.style.display = "none";
+  }
+}
+
+var _lockSVG =
+  '<svg width="14" height="14" viewBox="0 0 16 16"><path d="M4 7V5a4 4 0 1 1 8 0v2" fill="none" stroke="#555" stroke-width="1.8" stroke-linecap="round"/><rect x="2" y="7" width="12" height="8" rx="1.5" fill="#c0a020" stroke="#806010" stroke-width="1"/><circle cx="8" cy="11.5" r="1.2" fill="#604000"/></svg>';
+var _unlockSVG =
+  '<svg width="14" height="14" viewBox="0 0 16 16"><path d="M12 7V5a4 4 0 0 0-8 0" fill="none" stroke="#999" stroke-width="1.8" stroke-linecap="round"/><rect x="2" y="7" width="12" height="8" rx="1.5" fill="#d4d0c8" stroke="#999" stroke-width="1"/><circle cx="8" cy="11.5" r="1.2" fill="#999"/></svg>';
+var _partialSVG =
+  '<svg width="14" height="14" viewBox="0 0 16 16"><path d="M12 7V5a4 4 0 0 0-8 0" fill="none" stroke="#806010" stroke-width="1.8" stroke-linecap="round"/><rect x="2" y="7" width="12" height="8" rx="1.5" fill="#d8c060" stroke="#806010" stroke-width="1"/><circle cx="8" cy="11.5" r="1.2" fill="#604000"/></svg>';
+
+function _buildRndLockPanel() {
+  var body = document.getElementById("rnd-lock-body");
+  if (!body) return;
+  body.innerHTML = "";
+  var isScene = !!_activeScene;
+  var sections = isScene
+    ? [
+        ["scene", "Scene"],
+        ["animation", "Animation"],
+        ["transform", "Transform"],
+        ["layerB", "Layer B"],
+        ["charset", "Character Set"],
+        ["palette", "Colour Palette"],
+      ]
+    : [
+        ["pattern", "Pattern"],
+        ["spatial", "Spatial Constants"],
+        ["animation", "Animation"],
+        ["transform", "Transform"],
+        ["layerB", "Layer B"],
+        ["charset", "Character Set"],
+        ["palette", "Colour Palette"],
+      ];
+  for (var i = 0; i < sections.length; i++) {
+    var key = sections[i][0];
+    var label = sections[i][1];
+    var locked = _rndLocks[key] === true;
+    var hasSubs = !!_rndSubFields[key];
+    var hasSubLocks =
+      typeof _rndLocks[key] === "object" && _rndLocks[key] !== null;
+
+    // Section row
+    var row = document.createElement("div");
+    row.className = "rnd-lock-row";
+    if (locked) row.classList.add("locked");
+    row.onclick = (function (k, r) {
+      return function (e) {
+        if (e.target.closest && e.target.closest(".rnd-lock-expand")) return;
+        if (_rndLocks[k] === true) {
+          _rndLocks[k] = false;
+        } else if (typeof _rndLocks[k] === "object") {
+          // Has sub-locks — toggle to fully locked
+          _rndLocks[k] = true;
+        } else {
+          _rndLocks[k] = true;
+        }
+        _buildRndLockPanel();
+      };
+    })(key, row);
+    var icon = document.createElement("span");
+    icon.className = "rnd-lock-icon";
+    icon.innerHTML = locked ? _lockSVG : hasSubLocks ? _partialSVG : _unlockSVG;
+    row.appendChild(icon);
+    var txt = document.createElement("span");
+    txt.className = "rnd-lock-label";
+    txt.textContent = label;
+    row.appendChild(txt);
+
+    // Expand button for sections with sub-fields
+    if (hasSubs) {
+      var exp = document.createElement("span");
+      exp.className = "rnd-lock-expand";
+      exp.textContent = "▾";
+      exp.title = "Lock individual fields";
+      exp.onclick = (function (k) {
+        return function (e) {
+          e.stopPropagation();
+          // Toggle into sub-field mode
+          if (_rndLocks[k] === true) {
+            // Expand from fully locked — set all sub-fields locked
+            var obj = {};
+            _rndSubFields[k].forEach(function (sf) {
+              obj[sf[0]] = true;
+            });
+            _rndLocks[k] = obj;
+          } else if (typeof _rndLocks[k] === "object") {
+            // Collapse back — if all locked, set true; if all unlocked, set false
+            var allLocked = true,
+              allUnlocked = true;
+            _rndSubFields[k].forEach(function (sf) {
+              if (_rndLocks[k][sf[0]]) allUnlocked = false;
+              else allLocked = false;
+            });
+            _rndLocks[k] = allLocked ? true : false;
+          } else {
+            // Expand from unlocked — set all sub-fields unlocked
+            var obj = {};
+            _rndSubFields[k].forEach(function (sf) {
+              obj[sf[0]] = false;
+            });
+            _rndLocks[k] = obj;
+          }
+          _buildRndLockPanel();
+        };
+      })(key);
+      row.appendChild(exp);
+    }
+
+    body.appendChild(row);
+
+    // Sub-field rows if expanded
+    if (hasSubs && hasSubLocks) {
+      var subs = _rndSubFields[key];
+      var lockObj = _rndLocks[key];
+      for (var j = 0; j < subs.length; j++) {
+        var sf = subs[j];
+        var subRow = document.createElement("div");
+        subRow.className = "rnd-lock-sub";
+        if (lockObj[sf[0]]) subRow.classList.add("locked");
+        subRow.onclick = (function (k, field, sr) {
+          return function (e) {
+            e.stopPropagation();
+            _rndLocks[k][field] = !_rndLocks[k][field];
+            sr.classList.toggle("locked", _rndLocks[k][field]);
+            sr.querySelector(".rnd-lock-icon").innerHTML = _rndLocks[k][field]
+              ? _lockSVG
+              : _unlockSVG;
+          };
+        })(key, sf[0], subRow);
+        var subIcon = document.createElement("span");
+        subIcon.className = "rnd-lock-icon";
+        subIcon.innerHTML = lockObj[sf[0]] ? _lockSVG : _unlockSVG;
+        subRow.appendChild(subIcon);
+        var subTxt = document.createElement("span");
+        subTxt.className = "rnd-lock-label";
+        subTxt.textContent = sf[1];
+        subRow.appendChild(subTxt);
+        body.appendChild(subRow);
+      }
+    }
+  }
+}
+
+// Close lock panel when clicking outside
+document.addEventListener("mousedown", function (e) {
+  var panel = document.getElementById("rnd-lock-panel");
+  if (!panel || panel.style.display === "none") return;
+  var btn = document.getElementById("rnd-lock-btn");
+  if (panel.contains(e.target) || (btn && btn.contains(e.target))) return;
+  panel.style.display = "none";
+});
+
+// ══════════════════════════════════════
 //  KEYBOARD SHORTCUTS
 // ══════════════════════════════════════
 document.addEventListener("keydown", function (e) {
@@ -5543,8 +5819,11 @@ document.addEventListener("keydown", function (e) {
   var tag = (e.target.tagName || "").toLowerCase();
 
   // Arrow key increment/decrement on slider value inputs
-  if (tag === "input" && e.target.classList.contains("slider-val") &&
-      (e.key === "ArrowUp" || e.key === "ArrowDown")) {
+  if (
+    tag === "input" &&
+    e.target.classList.contains("slider-val") &&
+    (e.key === "ArrowUp" || e.key === "ArrowDown")
+  ) {
     e.preventDefault();
     var sliderId = e.target.id.replace(/-val$/, "");
     var slider = document.getElementById(sliderId);
@@ -5712,9 +5991,13 @@ document.addEventListener(
 );
 
 window.addEventListener("load", function () {
-  // Mobile device detection — show XP error dialog
-  if (/Android|iPhone|iPad|iPod|webOS|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent) ||
-      (navigator.maxTouchPoints > 1 && window.innerWidth < 900)) {
+  // Mobile device detection — show warning dialog
+  if (
+    /Android|iPhone|iPad|iPod|webOS|BlackBerry|IEMobile|Opera Mini/i.test(
+      navigator.userAgent,
+    ) ||
+    (navigator.maxTouchPoints > 1 && window.innerWidth < 1200)
+  ) {
     var block = document.getElementById("mobile-block");
     if (block) block.style.display = "block";
   }
