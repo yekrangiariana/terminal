@@ -43,7 +43,9 @@
   }
 
   .preview {
-    flex: 0 0 40%;
+    flex: none;
+    height: 40vh;
+    height: 40dvh;
     min-height: 0;
   }
 
@@ -54,9 +56,10 @@
   }
 
   .panel {
-    flex: 0 0 60%;
+    flex: 1;
     width: 100%;
     min-width: 0;
+    min-height: 0;
     border-right: none;
     border-top: 1px solid var(--xp-border);
   }
