@@ -39,13 +39,13 @@
   }
 
   .main {
+    flex: 1;
+    min-height: 0;
     flex-direction: column-reverse;
   }
 
   .preview {
-    flex: none;
-    height: 40vh;
-    height: 40dvh;
+    flex: 0 0 40%;
     min-height: 0;
   }
 
@@ -62,6 +62,7 @@
     min-height: 0;
     border-right: none;
     border-top: 1px solid var(--xp-border);
+    overflow-y: auto;
   }
 
   #preview-canvas {
