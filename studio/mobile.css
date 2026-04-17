@@ -62,7 +62,8 @@
     min-height: 0;
     border-right: none;
     border-top: 1px solid var(--xp-border);
-    overflow-y: auto;
+    overflow-y: scroll;
+    scrollbar-width: auto;
   }
 
   #preview-canvas {

@@ -497,6 +497,22 @@ html {
     padding: 6px;
   }
 
+  /* Maximized windows use 40px taskbar on mobile */
+  .xp-window.maximized {
+    height: calc(100vh - 40px);
+    max-height: none;
+  }
+  .xp-window.maximized .win-body {
+    max-height: none;
+  }
+
+  /* Studio body — no padding, fill available space */
+  .studio-body {
+    max-height: none;
+    padding: 0;
+    overflow: hidden;
+  }
+
   /* File items — larger for touch */
   .file-item {
     padding: 8px 4px 6px;
@@ -679,22 +695,6 @@ html {
   /* No selection rect on mobile (rubber-band doesn't work well on touch) */
   #selection-rect {
     display: none !important;
-  }
-}
-
-/* Studio — fullscreen on all touch devices (including foldables > 768px) */
-@media (pointer: coarse) {
-  #win-studio {
-    left: 0 !important;
-    top: 0 !important;
-    width: 100vw !important;
-    height: calc(100vh - 40px) !important;
-    max-height: calc(100vh - 40px) !important;
-    border-radius: 0;
-    resize: none;
-  }
-  #win-studio .win-body {
-    height: calc(100vh - 40px - 36px);
   }
 }
 

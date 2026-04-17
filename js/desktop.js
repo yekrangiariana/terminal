@@ -847,6 +847,15 @@ function openWindow(id) {
 let _studioLoaded = false;
 function openStudio() {
   openWindow("win-studio");
+  // Auto-maximize on touch devices
+  var win = document.getElementById("win-studio");
+  if (
+    win &&
+    !win.classList.contains("maximized") &&
+    navigator.maxTouchPoints > 1
+  ) {
+    maximizeWindow("win-studio");
+  }
   const iframe = document.getElementById("studio-iframe");
   const loading = document.getElementById("studio-loading");
   if (!_studioLoaded && iframe) {
