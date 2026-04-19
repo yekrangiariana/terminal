@@ -212,6 +212,11 @@ body {
   background: #d4d0c8;
   margin: 2px 4px;
 }
+.xp-menu-presets {
+  padding: 8px;
+  min-width: 200px;
+  max-width: 320px;
+}
 
 /* ══════════════════════════════════════
    LAYOUT
@@ -251,6 +256,23 @@ body {
   height: 16px;
   background: linear-gradient(to bottom, #f0ede4, #d4d0c8);
   border: 1px solid var(--xp-border);
+}
+
+/* ══════════════════════════════════════
+   ZONE DIVIDERS
+   ══════════════════════════════════════ */
+.zone-divider {
+  padding: 6px 10px 4px;
+  background: #e2ddd2;
+  border-bottom: 1px solid #c4bfb4;
+  border-top: 1px solid #c4bfb4;
+}
+.zone-label {
+  font-size: 9px;
+  font-weight: 700;
+  letter-spacing: 1.5px;
+  text-transform: uppercase;
+  color: #7a7466;
 }
 
 /* ══════════════════════════════════════
@@ -311,6 +333,21 @@ body {
 }
 .section-reset:hover {
   opacity: 1;
+}
+.section-remove {
+  border: none;
+  background: none;
+  cursor: pointer;
+  padding: 0 4px;
+  opacity: 0.35;
+  transition: opacity 0.15s, color 0.15s;
+  display: flex;
+  align-items: center;
+  color: inherit;
+}
+.section-remove:hover {
+  opacity: 1;
+  color: #c00;
 }
 .section-body {
   padding: 8px 10px 10px;
@@ -1064,6 +1101,35 @@ body {
   padding: 4px 16px;
 }
 
+/* ── Welcome screen ── */
+.welcome-options {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  margin-bottom: 4px;
+}
+.welcome-radio {
+  display: flex;
+  align-items: baseline;
+  gap: 6px;
+  font-size: 11px;
+  color: #222;
+  cursor: pointer;
+  padding: 2px 0;
+}
+.welcome-radio input[type="radio"] {
+  margin: 0;
+  position: relative;
+  top: 1px;
+}
+.welcome-radio span strong {
+  font-weight: bold;
+}
+.welcome-picker {
+  border-top: 1px solid #d4d0c8;
+  padding-top: 10px;
+}
+
 /* About dialog specifics */
 .about-body {
   display: flex;
@@ -1144,6 +1210,15 @@ body {
   cursor: pointer;
   font-size: 11px;
   color: #000;
+  border-left: 3px solid transparent;
+}
+.xp-help-nav-group {
+  font-size: 9px;
+  font-weight: bold;
+  color: #888;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+  padding: 7px 10px 2px;
   border-left: 3px solid transparent;
 }
 .xp-help-nav-item:hover {
@@ -1414,6 +1489,18 @@ body.embedded #taskbar {
   padding: 4px 10px;
   border-bottom: 1px solid #d4d0c8;
   background: #f6f3eb;
+}
+.rnd-lock-group {
+  font-size: 9px;
+  font-weight: bold;
+  color: #888;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+  padding: 6px 10px 2px;
+  border-top: 1px solid #d4d0c8;
+}
+.rnd-lock-group:first-child {
+  border-top: none;
 }
 .rnd-lock-row {
   display: flex;

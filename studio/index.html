@@ -118,6 +118,53 @@
       </div>
     </div>
 
+
+    <!-- ════════════════════════════════════
+     WELCOME SCREEN
+     ════════════════════════════════════ -->
+    <div class="xp-overlay" id="welcome-overlay"></div>
+    <div class="xp-dialog" id="welcome-dialog" style="width: 420px">
+      <div class="xp-dialog-titlebar">
+        <span>ASCII Studio</span>
+        <button onclick="closeWelcome()">✕</button>
+      </div>
+      <div class="xp-dialog-body" style="padding: 16px 20px">
+        <div style="display: flex; gap: 14px; align-items: flex-start">
+          <img
+            src="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 48 48'%3E%3Cdefs%3E%3ClinearGradient id='asc' x1='0' y1='0' x2='0' y2='1'%3E%3Cstop offset='0' stop-color='%23445'/%3E%3Cstop offset='1' stop-color='%23112'/%3E%3C/linearGradient%3E%3C/defs%3E%3Crect x='4' y='4' width='40' height='36' rx='3' fill='url(%23asc)' stroke='%23666'/%3E%3Crect x='6' y='6' width='36' height='32' rx='1' fill='%23000d14'/%3E%3Ctext x='24' y='18' font-family='monospace' font-size='7' fill='%2300ffd5' text-anchor='middle'%3E░▒▓█▓▒░%3C/text%3E%3Ctext x='24' y='27' font-family='monospace' font-size='7' fill='%2300b396' text-anchor='middle'%3E▓░▒█▒░▓%3C/text%3E%3Ctext x='24' y='36' font-family='monospace' font-size='7' fill='%23006654' text-anchor='middle'%3E░▒▓█▓▒░%3C/text%3E%3C/svg%3E"
+            alt="" width="40" height="40" style="flex-shrink: 0"
+          />
+          <div>
+            <p style="margin: 0 0 12px; font-size: 11px; color: #222">
+              Welcome to ASCII Studio. How would you like to start?
+            </p>
+            <div class="welcome-options">
+              <label class="welcome-radio">
+                <input type="radio" name="welcome-choice" value="new" checked />
+                <span><strong>New design</strong> — blank canvas with defaults</span>
+              </label>
+              <label class="welcome-radio">
+                <input type="radio" name="welcome-choice" value="preset" />
+                <span><strong>Start from a preset</strong> — pick a pre-built animation</span>
+              </label>
+              <label class="welcome-radio">
+                <input type="radio" name="welcome-choice" value="random" />
+                <span><strong>Random design</strong> — generate a random combination</span>
+              </label>
+            </div>
+          </div>
+        </div>
+        <div id="welcome-picker" class="welcome-picker" style="display: none">
+          <p id="welcome-picker-label" style="margin: 0 0 8px; font-size: 11px; font-weight: bold"></p>
+          <div id="welcome-picker-grid" class="presets" style="max-height: 200px; overflow-y: auto"></div>
+        </div>
+      </div>
+      <div class="xp-dialog-footer">
+        <button class="xp-btn" onclick="welcomeOK()">OK</button>
+        <button class="xp-btn" onclick="closeWelcome()">Cancel</button>
+      </div>
+    </div>
+
     <!-- ════════════════════════════════════
      XP DROPDOWN MENUS (absolutely positioned)
      ════════════════════════════════════ -->
@@ -260,11 +307,20 @@
       <div
         class="xp-menu-item"
         onclick="
-          switchTab('visual');
+          switchTab('source');
           closeMenus();
         "
       >
-        Visual Tab
+        Source Tab
+      </div>
+      <div
+        class="xp-menu-item"
+        onclick="
+          switchTab('style');
+          closeMenus();
+        "
+      >
+        Style Tab
       </div>
       <div
         class="xp-menu-item"
@@ -306,6 +362,9 @@
       >
         About ASCII Studio
       </div>
+    </div>
+    <div class="xp-menu xp-menu-presets" id="menu-presets">
+      <div class="presets" id="presets"></div>
     </div>
 
     <!-- ════════════════════════════════════
@@ -488,6 +547,13 @@
           >
             Overview
           </div>
+          <div class="xp-help-nav-group">Sources</div>
+          <div
+            class="xp-help-nav-item"
+            onclick="showHelpTopic('patterns', this)"
+          >
+            Patterns
+          </div>
           <div class="xp-help-nav-item" onclick="showHelpTopic('scenes', this)">
             Scenes
           </div>
@@ -499,15 +565,16 @@
           </div>
           <div
             class="xp-help-nav-item"
-            onclick="showHelpTopic('patterns', this)"
+            onclick="showHelpTopic('blending', this)"
           >
-            Patterns
+            Layer Blending
           </div>
+          <div class="xp-help-nav-group">Style</div>
           <div
             class="xp-help-nav-item"
-            onclick="showHelpTopic('constants', this)"
+            onclick="showHelpTopic('characters', this)"
           >
-            Spatial Constants
+            Characters &amp; Colors
           </div>
           <div
             class="xp-help-nav-item"
@@ -521,20 +588,9 @@
           >
             Transforms
           </div>
-          <div
-            class="xp-help-nav-item"
-            onclick="showHelpTopic('blending', this)"
-          >
-            Layer Blending
-          </div>
+          <div class="xp-help-nav-group">Reference</div>
           <div class="xp-help-nav-item" onclick="showHelpTopic('custom', this)">
             Custom Equations
-          </div>
-          <div
-            class="xp-help-nav-item"
-            onclick="showHelpTopic('characters', this)"
-          >
-            Characters &amp; Colors
           </div>
           <div class="xp-help-nav-item" onclick="showHelpTopic('export', this)">
             Exporting
@@ -784,6 +840,12 @@
           onmousedown="toggleMenu('menu-help', this)"
           >Help</span
         >
+        <span
+          class="menu-trigger"
+          data-menu="menu-presets"
+          onmousedown="toggleMenu('menu-presets', this)"
+          >Presets</span
+        >
       </div>
 
       <div class="main">
@@ -797,8 +859,11 @@
             "
           >
             <div class="tabs">
-              <div class="tab-btn active" onclick="switchTab('visual')">
-                Visual
+              <div class="tab-btn active" onclick="switchTab('source')">
+                Source
+              </div>
+              <div class="tab-btn" onclick="switchTab('style')">
+                Style
               </div>
               <div class="tab-btn" onclick="switchTab('advanced')">
                 Advanced
@@ -806,170 +871,8 @@
             </div>
           </div>
 
-          <!-- ═══ VISUAL TAB ═══ -->
-          <div id="tab-visual" class="tab-content active">
-            <!-- Presets + Randomize -->
-            <div class="section">
-              <div class="section-head" onclick="toggleSection(this)">
-                <span class="arrow">▶</span> Presets
-              </div>
-              <div class="section-body">
-                <div class="field">
-                  <div class="desc">
-                    Load a preset to start from a known look.
-                  </div>
-                </div>
-                <div class="presets" id="presets"></div>
-              </div>
-            </div>
-
-            <!-- Scenes (simulation-based) -->
-            <div class="section" id="scene-section">
-              <div class="section-head" onclick="toggleSection(this)">
-                <span class="arrow">▶</span> Scenes
-                <button
-                  class="section-dice"
-                  onclick="
-                    event.stopPropagation();
-                    randomizeScene();
-                  "
-                  title="Randomize scene"
-                >
-                  <svg viewBox="0 0 16 16" width="13" height="13">
-                    <rect
-                      x="1"
-                      y="1"
-                      width="14"
-                      height="14"
-                      rx="2"
-                      fill="none"
-                      stroke="currentColor"
-                      stroke-width="1.5"
-                    />
-                    <circle cx="5" cy="5" r="1.2" fill="currentColor" />
-                    <circle cx="8" cy="8" r="1.2" fill="currentColor" />
-                    <circle cx="11" cy="11" r="1.2" fill="currentColor" />
-                  </svg>
-                </button>
-                <button
-                  class="section-reset"
-                  onclick="
-                    event.stopPropagation();
-                    resetScene();
-                  "
-                  title="Reset scene to defaults"
-                >
-                  <svg viewBox="0 0 16 16" width="13" height="13">
-                    <path
-                      d="M4 2 A6 6 0 1 1 2 8"
-                      fill="none"
-                      stroke="currentColor"
-                      stroke-width="1.5"
-                      stroke-linecap="round"
-                    />
-                    <polyline
-                      points="1,1 4,2 3,5"
-                      fill="none"
-                      stroke="currentColor"
-                      stroke-width="1.5"
-                      stroke-linecap="round"
-                      stroke-linejoin="round"
-                    />
-                  </svg>
-                </button>
-              </div>
-              <div class="section-body">
-                <div class="field">
-                  <div class="desc">
-                    Simulation-based animations — particles, life, growth. Pick
-                    one and tweak the sliders.
-                  </div>
-                </div>
-                <span
-                  id="scene-active-label"
-                  style="
-                    display: none;
-                    font-weight: bold;
-                    font-size: 11px;
-                    margin-bottom: 4px;
-                  "
-                ></span>
-                <div id="scene-list" class="presets"></div>
-                <div id="scene-params" style="display: none"></div>
-                <p
-                  id="scene-compat-hint"
-                  class="range-hint"
-                  style="display: none; margin-top: 6px"
-                >
-                  Scenes replace the pattern equation. Transforms, character
-                  set, colors, Layer B and animation speed still apply.
-                </p>
-                <button
-                  id="scene-exit-btn"
-                  class="xp-btn xp-btn-sm"
-                  style="display: none; margin-top: 6px"
-                  onclick="deactivateScene()"
-                >
-                  Back to Patterns
-                </button>
-              </div>
-            </div>
-
-            <!-- ASCII Art Upload -->
-            <div class="section" id="ascii-art-section">
-              <div class="section-head" onclick="toggleSection(this)">
-                <span class="arrow">▶</span> Your ASCII Art
-              </div>
-              <div class="section-body">
-                <div class="field">
-                  <div class="desc">
-                    Upload a <strong>.txt</strong> file to use as the base
-                    pattern. Your art drives the shapes — animation, palette,
-                    blending, and transforms all apply on top.
-                  </div>
-                </div>
-                <div
-                  id="art-drop-zone"
-                  class="art-drop-zone"
-                  ondragover="
-                    event.preventDefault();
-                    this.classList.add('dragover');
-                  "
-                  ondragleave="this.classList.remove('dragover')"
-                  ondrop="handleArtDrop(event)"
-                >
-                  <span id="art-drop-label"
-                    >Drop .txt here or click to browse</span
-                  >
-                  <input
-                    type="file"
-                    id="art-file-input"
-                    accept=".txt,text/plain"
-                    style="display: none"
-                    onchange="handleArtFile(this)"
-                  />
-                </div>
-                <div id="art-info" class="art-info" style="display: none">
-                  <span id="art-file-name"></span>
-                  <span id="art-dimensions"></span>
-                  <button
-                    class="xp-btn xp-btn-sm"
-                    onclick="resetArtStyles()"
-                    title="Reset all styles to clean defaults — keeps your art"
-                  >
-                    Reset Styles
-                  </button>
-                  <button
-                    class="xp-btn xp-btn-sm"
-                    onclick="clearArt()"
-                    title="Remove uploaded art and return to math pattern"
-                  >
-                    Remove
-                  </button>
-                </div>
-              </div>
-            </div>
-
+          <!-- ═══ SOURCE TAB ═══ -->
+          <div id="tab-source" class="tab-content active">
             <!-- Pattern Function -->
             <div class="section" id="pattern-section">
               <div class="section-head" onclick="toggleSection(this)">
@@ -1024,6 +927,19 @@
                     />
                   </svg>
                 </button>
+                <button
+                  class="section-remove"
+                  onclick="
+                    event.stopPropagation();
+                    removePattern();
+                  "
+                  title="Disable pattern"
+                >
+                  <svg viewBox="0 0 16 16" width="13" height="13">
+                    <line x1="4" y1="4" x2="12" y2="12" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"/>
+                    <line x1="12" y1="4" x2="4" y2="12" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"/>
+                  </svg>
+                </button>
               </div>
               <div class="section-body">
                 <div class="field">
@@ -1036,6 +952,7 @@
                     ></label
                   >
                   <select id="p-pattern" onchange="onPatternChange()">
+                    <option value="none">None (disabled)</option>
                     <option value="centerSpiral">Center Spiral</option>
                     <option value="circular">Circular</option>
                     <option value="mosaic">Mosaic</option>
@@ -1084,63 +1001,7 @@ sin(x * 0.1 + time) * cos(y * 0.05 + time * 1.5)</textarea
                     </button>
                   </div>
                 </div>
-              </div>
-            </div>
-            <div class="section" id="spatial-section">
-              <div class="section-head" onclick="toggleSection(this)">
-                <span class="arrow">▶</span> Spatial Constants
-                <button
-                  class="section-dice"
-                  onclick="
-                    event.stopPropagation();
-                    randomizeSpatial();
-                  "
-                  title="Vary constants — nudge values nearby"
-                >
-                  <svg viewBox="0 0 16 16" width="13" height="13">
-                    <rect
-                      x="1"
-                      y="1"
-                      width="14"
-                      height="14"
-                      rx="2"
-                      fill="none"
-                      stroke="currentColor"
-                      stroke-width="1.5"
-                    />
-                    <circle cx="5" cy="5" r="1.2" fill="currentColor" />
-                    <circle cx="8" cy="8" r="1.2" fill="currentColor" />
-                    <circle cx="11" cy="11" r="1.2" fill="currentColor" />
-                  </svg>
-                </button>
-                <button
-                  class="section-reset"
-                  onclick="
-                    event.stopPropagation();
-                    resetSpatial();
-                  "
-                  title="Reset constants to defaults"
-                >
-                  <svg viewBox="0 0 16 16" width="13" height="13">
-                    <path
-                      d="M4 2 A6 6 0 1 1 2 8"
-                      fill="none"
-                      stroke="currentColor"
-                      stroke-width="1.5"
-                      stroke-linecap="round"
-                    />
-                    <polyline
-                      points="1,1 4,2 3,5"
-                      fill="none"
-                      stroke="currentColor"
-                      stroke-width="1.5"
-                      stroke-linecap="round"
-                      stroke-linejoin="round"
-                    />
-                  </svg>
-                </button>
-              </div>
-              <div class="section-body">
+                <div id="spatial-controls">
                 <div class="field">
                   <label
                     >X Constant
@@ -1244,6 +1105,876 @@ sin(x * 0.1 + time) * cos(y * 0.05 + time * 1.5)</textarea
                   Slider covers the useful range. Type any value in the number
                   box.
                 </p>
+                </div>
+              </div>
+            </div>
+
+            <!-- Scenes (simulation-based) -->
+            <div class="section" id="scene-section">
+              <div class="section-head" onclick="toggleSection(this)">
+                <span class="arrow">▶</span> Scenes
+                <button
+                  class="section-dice"
+                  onclick="
+                    event.stopPropagation();
+                    randomizeScene();
+                  "
+                  title="Randomize scene"
+                >
+                  <svg viewBox="0 0 16 16" width="13" height="13">
+                    <rect
+                      x="1"
+                      y="1"
+                      width="14"
+                      height="14"
+                      rx="2"
+                      fill="none"
+                      stroke="currentColor"
+                      stroke-width="1.5"
+                    />
+                    <circle cx="5" cy="5" r="1.2" fill="currentColor" />
+                    <circle cx="8" cy="8" r="1.2" fill="currentColor" />
+                    <circle cx="11" cy="11" r="1.2" fill="currentColor" />
+                  </svg>
+                </button>
+                <button
+                  class="section-reset"
+                  onclick="
+                    event.stopPropagation();
+                    resetScene();
+                  "
+                  title="Reset scene to defaults"
+                >
+                  <svg viewBox="0 0 16 16" width="13" height="13">
+                    <path
+                      d="M4 2 A6 6 0 1 1 2 8"
+                      fill="none"
+                      stroke="currentColor"
+                      stroke-width="1.5"
+                      stroke-linecap="round"
+                    />
+                    <polyline
+                      points="1,1 4,2 3,5"
+                      fill="none"
+                      stroke="currentColor"
+                      stroke-width="1.5"
+                      stroke-linecap="round"
+                      stroke-linejoin="round"
+                    />
+                  </svg>
+                </button>
+                <button
+                  class="section-remove"
+                  onclick="
+                    event.stopPropagation();
+                    deactivateScene();
+                  "
+                  title="Remove scene"
+                >
+                  <svg viewBox="0 0 16 16" width="13" height="13">
+                    <line x1="4" y1="4" x2="12" y2="12" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"/>
+                    <line x1="12" y1="4" x2="4" y2="12" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"/>
+                  </svg>
+                </button>
+              </div>
+              <div class="section-body">
+                <div class="field">
+                  <div class="desc">
+                    Simulation-based animations — particles, life, growth. Pick
+                    one and tweak the sliders.
+                  </div>
+                </div>
+                <span
+                  id="scene-active-label"
+                  style="
+                    display: none;
+                    font-weight: bold;
+                    font-size: 11px;
+                    margin-bottom: 4px;
+                  "
+                ></span>
+                <div id="scene-list" class="presets"></div>
+                <div id="scene-params" style="display: none"></div>
+                <p
+                  id="scene-compat-hint"
+                  class="range-hint"
+                  style="display: none; margin-top: 6px"
+                >
+                  Scenes replace the pattern equation. Transforms, character
+                  set, colors, Layer B and animation speed still apply.
+                </p>
+                <button
+                  id="scene-exit-btn"
+                  class="xp-btn xp-btn-sm"
+                  style="display: none; margin-top: 6px"
+                  onclick="deactivateScene()"
+                >
+                  Back to Patterns
+                </button>
+              </div>
+            </div>
+
+            <!-- ASCII Art Upload -->
+            <div class="section" id="ascii-art-section">
+              <div class="section-head" onclick="toggleSection(this)">
+                <span class="arrow">▶</span> Your ASCII Art
+                <button
+                  class="section-remove"
+                  style="margin-left: auto"
+                  onclick="
+                    event.stopPropagation();
+                    clearArt();
+                  "
+                  title="Remove uploaded art"
+                >
+                  <svg viewBox="0 0 16 16" width="13" height="13">
+                    <line x1="4" y1="4" x2="12" y2="12" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"/>
+                    <line x1="12" y1="4" x2="4" y2="12" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"/>
+                  </svg>
+                </button>
+              </div>
+              <div class="section-body">
+                <div class="field">
+                  <div class="desc">
+                    Upload a <strong>.txt</strong> file to add as a
+                    compositing layer. Blends with pattern, scene, and Layer B.
+                  </div>
+                </div>
+                <div
+                  id="art-drop-zone"
+                  class="art-drop-zone"
+                  ondragover="
+                    event.preventDefault();
+                    this.classList.add('dragover');
+                  "
+                  ondragleave="this.classList.remove('dragover')"
+                  ondrop="handleArtDrop(event)"
+                >
+                  <span id="art-drop-label"
+                    >Drop .txt here or click to browse</span
+                  >
+                  <input
+                    type="file"
+                    id="art-file-input"
+                    accept=".txt,text/plain"
+                    style="display: none"
+                    onchange="handleArtFile(this)"
+                  />
+                </div>
+                <div id="art-info" class="art-info" style="display: none">
+                  <span id="art-file-name"></span>
+                  <span id="art-dimensions"></span>
+                  <button
+                    class="xp-btn xp-btn-sm"
+                    onclick="resetArtStyles()"
+                    title="Reset all styles to clean defaults — keeps your art"
+                  >
+                    Reset Styles
+                  </button>
+                  <button
+                    class="xp-btn xp-btn-sm"
+                    onclick="clearArt()"
+                    title="Remove uploaded art"
+                  >
+                    Remove
+                  </button>
+                </div>
+                <div id="art-blend-controls" style="display: none"></div>
+              </div>
+            </div>
+
+            <!-- Layer B — Blending -->
+            <div class="section">
+              <div class="section-head" onclick="toggleSection(this)">
+                <span class="arrow">▶</span> Layer B — Blending
+                <button
+                  class="section-dice"
+                  onclick="
+                    event.stopPropagation();
+                    randomizeLayerB();
+                  "
+                  title="Vary Layer B — nudge blend settings"
+                >
+                  <svg viewBox="0 0 16 16" width="13" height="13">
+                    <rect
+                      x="1"
+                      y="1"
+                      width="14"
+                      height="14"
+                      rx="2"
+                      fill="none"
+                      stroke="currentColor"
+                      stroke-width="1.5"
+                    />
+                    <circle cx="5" cy="5" r="1.2" fill="currentColor" />
+                    <circle cx="8" cy="8" r="1.2" fill="currentColor" />
+                    <circle cx="11" cy="11" r="1.2" fill="currentColor" />
+                  </svg>
+                </button>
+                <button
+                  class="section-reset"
+                  onclick="
+                    event.stopPropagation();
+                    resetLayerB();
+                  "
+                  title="Reset Layer B to defaults"
+                >
+                  <svg viewBox="0 0 16 16" width="13" height="13">
+                    <path
+                      d="M4 2 A6 6 0 1 1 2 8"
+                      fill="none"
+                      stroke="currentColor"
+                      stroke-width="1.5"
+                      stroke-linecap="round"
+                    />
+                    <polyline
+                      points="1,1 4,2 3,5"
+                      fill="none"
+                      stroke="currentColor"
+                      stroke-width="1.5"
+                      stroke-linecap="round"
+                      stroke-linejoin="round"
+                    />
+                  </svg>
+                </button>
+                <button
+                  class="section-remove"
+                  onclick="
+                    event.stopPropagation();
+                    removeLayerB();
+                  "
+                  title="Disable Layer B"
+                >
+                  <svg viewBox="0 0 16 16" width="13" height="13">
+                    <line x1="4" y1="4" x2="12" y2="12" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"/>
+                    <line x1="12" y1="4" x2="4" y2="12" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"/>
+                  </svg>
+                </button>
+              </div>
+              <div class="section-body">
+                <div class="check-row">
+                  <input
+                    type="checkbox"
+                    id="p-lb-on"
+                    onchange="onLayerBToggle()"
+                  />
+                  <label for="p-lb-on"
+                    >Enable Layer B
+                    <span
+                      class="help-tip"
+                      title="Adds a second pattern on top of the first one, blended together. For example, combine a Spiral with a Plasma, or a Tunnel with an Interference pattern. The blend mode controls how the two layers mix, and the amount controls how much of the second layer shows through."
+                      >?</span
+                    ></label
+                  >
+                </div>
+                <div id="layer-b-controls" style="display: none">
+                  <div class="field">
+                    <label>Pattern B</label>
+                    <select id="p-lb-pattern" onchange="onPatternChangeB()">
+                      <option value="centerSpiral">Center Spiral</option>
+                      <option value="circular">Circular</option>
+                      <option value="mosaic">Mosaic</option>
+                      <option value="cross">Cross</option>
+                      <option value="checkerboard">Checkerboard</option>
+                      <option value="diamond">Diamond</option>
+                      <option value="tunnel">Tunnel</option>
+                      <option value="plasma">Plasma</option>
+                      <option value="interference">Interference</option>
+                      <option value="radialStar">Radial Star</option>
+                      <option value="lissajous">Lissajous</option>
+                      <option value="custom">✎ Custom Equation</option>
+                    </select>
+                  </div>
+                  <div
+                    id="custom-expr-group-b"
+                    class="field formula-group"
+                    style="display: none"
+                  >
+                    <label>Formula B</label>
+                    <textarea
+                      id="p-lb-custom-expr"
+                      rows="2"
+                      spellcheck="false"
+                      oninput="onFormulaInputB()"
+                      onfocus="_lastFormulaTarget = 'b'"
+                      placeholder="e.g.  sin(r * 0.3 + time)"
+                    >
+sin(r * 0.2 + time)</textarea
+                    >
+                    <div class="formula-actions">
+                      <span class="formula-tip"
+                        >Click equations in Math Reference to paste here</span
+                      >
+                      <button
+                        class="xp-btn formula-ref-btn"
+                        onclick="
+                          _lastFormulaTarget = 'b';
+                          showMathRef();
+                        "
+                      >
+                        Math Ref...
+                      </button>
+                    </div>
+                  </div>
+                  <div class="field">
+                    <label>X Constant B</label>
+                    <div class="slider-row">
+                      <input
+                        type="range"
+                        id="p-lb-xc"
+                        min="-200"
+                        max="200"
+                        step="0.01"
+                        oninput="
+                          syncSlider(this);
+                          liveUpdate();
+                        "
+                      />
+                      <input
+                        type="text"
+                        class="slider-val"
+                        id="p-lb-xc-val"
+                        onchange="
+                          syncVal(this, 'p-lb-xc');
+                          liveUpdate();
+                        "
+                      />
+                    </div>
+                  </div>
+                  <div class="field">
+                    <label>Y Constant B</label>
+                    <div class="slider-row">
+                      <input
+                        type="range"
+                        id="p-lb-yc"
+                        min="-200"
+                        max="200"
+                        step="0.01"
+                        oninput="
+                          syncSlider(this);
+                          liveUpdate();
+                        "
+                      />
+                      <input
+                        type="text"
+                        class="slider-val"
+                        id="p-lb-yc-val"
+                        onchange="
+                          syncVal(this, 'p-lb-yc');
+                          liveUpdate();
+                        "
+                      />
+                    </div>
+                  </div>
+                  <div class="field">
+                    <label>Frame Multiplier B</label>
+                    <div class="slider-row">
+                      <input
+                        type="range"
+                        id="p-lb-fm"
+                        min="-1"
+                        max="1"
+                        step="0.001"
+                        oninput="
+                          syncSlider(this);
+                          liveUpdate();
+                        "
+                      />
+                      <input
+                        type="text"
+                        class="slider-val"
+                        id="p-lb-fm-val"
+                        onchange="
+                          syncVal(this, 'p-lb-fm');
+                          liveUpdate();
+                        "
+                      />
+                    </div>
+                  </div>
+                  <div class="field">
+                    <label>Global Value B</label>
+                    <div class="slider-row">
+                      <input
+                        type="range"
+                        id="p-lb-gv"
+                        min="0"
+                        max="10"
+                        step="0.1"
+                        oninput="
+                          syncSlider(this);
+                          liveUpdate();
+                        "
+                      />
+                      <input
+                        type="text"
+                        class="slider-val"
+                        id="p-lb-gv-val"
+                        onchange="
+                          syncVal(this, 'p-lb-gv');
+                          liveUpdate();
+                        "
+                      />
+                    </div>
+                  </div>
+                  <div class="field">
+                    <label
+                      >Blend Mode
+                      <span
+                        class="help-tip"
+                        title="How the two layers combine. Add: brightens where both layers are active. Multiply: only bright where both layers are bright (darkens overall). Subtract: cuts the second layer out of the first. Min: keeps whichever is darker. Max: keeps whichever is brighter. Screen: a softer, glowing combination."
+                        >?</span
+                      ></label
+                    >
+                    <select id="p-lb-blend" onchange="liveUpdate()">
+                      <option value="add">Add</option>
+                      <option value="multiply">Multiply</option>
+                      <option value="subtract">Subtract</option>
+                      <option value="min">Min</option>
+                      <option value="max">Max</option>
+                      <option value="screen">Screen</option>
+                    </select>
+                  </div>
+                  <div class="field">
+                    <label
+                      >Blend Amount
+                      <span
+                        class="help-tip"
+                        title="Controls how much Layer B shows through. At 0, only the original pattern (Layer A) is visible. At 1, the blend is at full strength. Values in between give a mix of both."
+                        >?</span
+                      ></label
+                    >
+                    <div class="slider-row">
+                      <input
+                        type="range"
+                        id="p-lb-amt"
+                        min="0"
+                        max="1"
+                        step="0.01"
+                        oninput="
+                          syncSlider(this);
+                          liveUpdate();
+                        "
+                      />
+                      <input
+                        type="text"
+                        class="slider-val"
+                        id="p-lb-amt-val"
+                        onchange="
+                          syncVal(this, 'p-lb-amt');
+                          liveUpdate();
+                        "
+                      />
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </div>
+
+          </div>
+          <!-- /tab-source -->
+
+          <!-- ═══ STYLE TAB ═══ -->
+          <div id="tab-style" class="tab-content">
+            <!-- Character Set -->
+            <div class="section">
+              <div class="section-head" onclick="toggleSection(this)">
+                <span class="arrow">▶</span> Character Set
+                <button
+                  class="section-dice"
+                  onclick="
+                    event.stopPropagation();
+                    randomizeCharset();
+                  "
+                  title="Randomize characters"
+                >
+                  <svg viewBox="0 0 16 16" width="13" height="13">
+                    <rect
+                      x="1"
+                      y="1"
+                      width="14"
+                      height="14"
+                      rx="2"
+                      fill="none"
+                      stroke="currentColor"
+                      stroke-width="1.5"
+                    />
+                    <circle cx="5" cy="5" r="1.2" fill="currentColor" />
+                    <circle cx="8" cy="8" r="1.2" fill="currentColor" />
+                    <circle cx="11" cy="11" r="1.2" fill="currentColor" />
+                  </svg>
+                </button>
+                <button
+                  class="section-reset"
+                  onclick="
+                    event.stopPropagation();
+                    resetCharset();
+                  "
+                  title="Reset characters to defaults"
+                >
+                  <svg viewBox="0 0 16 16" width="13" height="13">
+                    <path
+                      d="M4 2 A6 6 0 1 1 2 8"
+                      fill="none"
+                      stroke="currentColor"
+                      stroke-width="1.5"
+                      stroke-linecap="round"
+                    />
+                    <polyline
+                      points="1,1 4,2 3,5"
+                      fill="none"
+                      stroke="currentColor"
+                      stroke-width="1.5"
+                      stroke-linecap="round"
+                      stroke-linejoin="round"
+                    />
+                  </svg>
+                </button>
+              </div>
+              <div class="section-body">
+                <div class="field">
+                  <label
+                    >Characters (light → dense)
+                    <span
+                      class="help-tip"
+                      title="The pattern produces a value for each pixel, and that value picks a character from this string. Characters on the left represent low/quiet areas, characters on the right represent high/active areas. Using more characters gives smoother transitions. The visual weight of each character (how much ink it has) creates the texture you see."
+                      >?</span
+                    ></label
+                  >
+                  <input
+                    type="text"
+                    id="p-charset"
+                    value="░▒▓░▒▓█"
+                    style="
+                      font-family: var(--font-mono);
+                      font-size: 13px;
+                      letter-spacing: 2px;
+                    "
+                    oninput="liveUpdate()"
+                  />
+                </div>
+                <div class="field">
+                  <label>Quick Sets</label>
+                  <div style="display: flex; gap: 3px; flex-wrap: wrap">
+                    <span class="preset-btn" onclick="setCharset('░▒▓█░▒▓█')"
+                      >Blocks</span
+                    >
+                    <span
+                      class="preset-btn"
+                      onclick="setCharset('.,;:!|/\\~=#%@&*')"
+                      >Punctuation</span
+                    >
+                    <span class="preset-btn" onclick="setCharset(' .·:∙○◎●')"
+                      >Dots</span
+                    >
+                    <span class="preset-btn" onclick="setCharset('┃┏┓┛┗┙┘━')"
+                      >Box Drawing</span
+                    >
+                    <span class="preset-btn" onclick="setCharset('╬╪╫│┼─')"
+                      >Grid</span
+                    >
+                    <span class="preset-btn" onclick="setCharset('░▒▓█▓▒░')"
+                      >Gradient</span
+                    >
+                    <span
+                      class="preset-btn"
+                      onclick="setCharset(' .·:∙○◎●◎∙:· ')"
+                      >Symmetric</span
+                    >
+                    <span class="preset-btn" onclick="setCharset(' .:oO@')"
+                      >Ascii</span
+                    >
+                    <span class="preset-btn" onclick="setCharset('▁▂▃▄▅▆▇█')"
+                      >Bars</span
+                    >
+                    <span class="preset-btn" onclick="setCharset('⠁⠃⠇⡇⣇⣧⣷⣿')"
+                      >Braille</span
+                    >
+                    <span class="preset-btn" onclick="setCharset('·•●◉⬤')"
+                      >Circles</span
+                    >
+                    <span class="preset-btn" onclick="setCharset(' -=≡#')"
+                      >Stacked</span
+                    >
+                    <span class="preset-btn" onclick="setCharset('╌╎┊┆│║█')"
+                      >Lines</span
+                    >
+                    <span class="preset-btn" onclick="setCharset(' ░▒▓█▓▒░ ')"
+                      >Bounce</span
+                    >
+                    <span class="preset-btn" onclick="setCharset('0123456789')"
+                      >Digits</span
+                    >
+                    <span class="preset-btn" onclick="setCharset('♠♣♥♦★☆◆◇')"
+                      >Symbols</span
+                    >
+                    <span class="preset-btn" onclick="setCharset('▖▗▘▙▚▛▜▝▞▟')"
+                      >Quadrants</span
+                    >
+                    <span class="preset-btn" onclick="setCharset('▬▭▬▭▬▭▬▭')"
+                      >Dashes</span
+                    >
+                    <span
+                      class="preset-btn"
+                      onclick="setCharset('ס₪₪§|Ξ≥≤≥≤Ξ>')"
+                      >Machine</span
+                    >
+                    <span
+                      class="preset-btn"
+                      onclick="setCharset('\\:::/ \\:::/____')"
+                      >Slashes</span
+                    >
+                    <span class="preset-btn" onclick="setCharset('¯_(ツ)_/¯')"
+                      >Shrug</span
+                    >
+                  </div>
+                </div>
+                <div class="field">
+                  <label>Font Size</label>
+                  <select id="p-fontsize" onchange="setupCanvas()" style="width: auto">
+                    <option value="10">10 px</option>
+                    <option value="12">12 px</option>
+                    <option value="14" selected>14 px</option>
+                    <option value="16">16 px</option>
+                    <option value="20">20 px</option>
+                  </select>
+                </div>
+              </div>
+            </div>
+
+            <!-- Color Palette -->
+            <div class="section">
+              <div class="section-head" onclick="toggleSection(this)">
+                <span class="arrow">▶</span> Color Palette
+                <button
+                  class="section-dice"
+                  onclick="
+                    event.stopPropagation();
+                    randomizePalette();
+                  "
+                  title="Randomize colors"
+                >
+                  <svg viewBox="0 0 16 16" width="13" height="13">
+                    <rect
+                      x="1"
+                      y="1"
+                      width="14"
+                      height="14"
+                      rx="2"
+                      fill="none"
+                      stroke="currentColor"
+                      stroke-width="1.5"
+                    />
+                    <circle cx="5" cy="5" r="1.2" fill="currentColor" />
+                    <circle cx="8" cy="8" r="1.2" fill="currentColor" />
+                    <circle cx="11" cy="11" r="1.2" fill="currentColor" />
+                  </svg>
+                </button>
+                <button
+                  class="section-reset"
+                  onclick="
+                    event.stopPropagation();
+                    resetPalette();
+                  "
+                  title="Reset colors to defaults"
+                >
+                  <svg viewBox="0 0 16 16" width="13" height="13">
+                    <path
+                      d="M4 2 A6 6 0 1 1 2 8"
+                      fill="none"
+                      stroke="currentColor"
+                      stroke-width="1.5"
+                      stroke-linecap="round"
+                    />
+                    <polyline
+                      points="1,1 4,2 3,5"
+                      fill="none"
+                      stroke="currentColor"
+                      stroke-width="1.5"
+                      stroke-linecap="round"
+                      stroke-linejoin="round"
+                    />
+                  </svg>
+                </button>
+              </div>
+              <div class="section-body">
+                <div class="check-row">
+                  <input
+                    type="checkbox"
+                    id="p-colored"
+                    checked
+                    onchange="liveUpdate()"
+                  />
+                  <label for="p-colored"
+                    >Use color palette
+                    <span
+                      class="help-tip"
+                      title="When enabled, each character is coloured using the palette below. The colour is chosen the same way as the character — low values pick from the left of the palette, high values from the right. When off, all characters are a single colour. Try palettes with similar colours for a smooth look, or contrasting colours for a vivid, electric look."
+                      >?</span
+                    ></label
+                  >
+                </div>
+                <div class="field">
+                  <label
+                    >Palette
+                    <span style="color: #999; font-weight: normal"
+                      >(click = edit, right-click = remove, + = add)</span
+                    ></label
+                  >
+                  <div class="color-row" id="color-chips"></div>
+                </div>
+                <div class="field">
+                  <label>Quick Palettes</label>
+                  <div style="display: flex; gap: 3px; flex-wrap: wrap">
+                    <span
+                      class="preset-btn"
+                      onclick="
+                        setPalette([
+                          '#43BFD4',
+                          '#BC7ED2',
+                          '#9EE1EF',
+                          '#C3ECF0',
+                          '#B9AAF3',
+                        ])
+                      "
+                      >Pastel</span
+                    >
+                    <span
+                      class="preset-btn"
+                      onclick="
+                        setPalette([
+                          '#FF7700',
+                          '#F88826',
+                          '#FF6900',
+                          '#9800FF',
+                          '#7600FF',
+                        ])
+                      "
+                      >Fire &amp; Ice</span
+                    >
+                    <span
+                      class="preset-btn"
+                      onclick="
+                        setPalette([
+                          '#ff9500',
+                          '#fed50b',
+                          '#ffea00',
+                          '#0055ff',
+                          '#003d9e',
+                        ])
+                      "
+                      >Gold &amp; Blue</span
+                    >
+                    <span
+                      class="preset-btn"
+                      onclick="
+                        setPalette([
+                          '#FF2020',
+                          '#FF6600',
+                          '#FFCC00',
+                          '#2288FF',
+                          '#22FF66',
+                          '#FF44AA',
+                          '#CC44FF',
+                        ])
+                      "
+                      >Rainbow</span
+                    >
+                    <span
+                      class="preset-btn"
+                      onclick="
+                        setPalette([
+                          '#00FF88',
+                          '#22DDAA',
+                          '#44FFBB',
+                          '#88FFCC',
+                          '#00CC66',
+                        ])
+                      "
+                      >Bio Green</span
+                    >
+                    <span
+                      class="preset-btn"
+                      onclick="
+                        setPalette([
+                          '#00CFFF',
+                          '#0088DD',
+                          '#44EEFF',
+                          '#AAEEFF',
+                          '#006699',
+                        ])
+                      "
+                      >Cyan</span
+                    >
+                    <span
+                      class="preset-btn"
+                      onclick="
+                        setPalette([
+                          '#FF4488',
+                          '#FF88AA',
+                          '#FF44DD',
+                          '#AA22FF',
+                          '#DD66FF',
+                        ])
+                      "
+                      >Neon Pink</span
+                    >
+                    <span
+                      class="preset-btn"
+                      onclick="
+                        setPalette([
+                          '#FFCC00',
+                          '#FF8800',
+                          '#FF4400',
+                          '#AA0000',
+                          '#660000',
+                        ])
+                      "
+                      >Sunset</span
+                    >
+                    <span
+                      class="preset-btn"
+                      onclick="
+                        setPalette([
+                          '#FFFFFF',
+                          '#BBBBBB',
+                          '#888888',
+                          '#444444',
+                          '#000000',
+                        ])
+                      "
+                      >B&amp;W</span
+                    >
+                    <span
+                      class="preset-btn"
+                      onclick="
+                        setPalette([
+                          '#FFFFFF',
+                          '#E0E0E0',
+                          '#C0C0C0',
+                          '#A0A0A0',
+                          '#808080',
+                          '#606060',
+                          '#404040',
+                          '#202020',
+                        ])
+                      "
+                      >Grey Ramp</span
+                    >
+                    <span
+                      class="preset-btn"
+                      onclick="
+                        setPalette([
+                          '#000000',
+                          '#1A1A1A',
+                          '#333333',
+                          '#4D4D4D',
+                          '#666666',
+                        ])
+                      "
+                      >Dark Grey</span
+                    >
+                  </div>
+                </div>
               </div>
             </div>
 
@@ -1691,673 +2422,6 @@ sin(x * 0.1 + time) * cos(y * 0.05 + time * 1.5)</textarea
               </div>
             </div>
 
-            <!-- Layer B — Blending -->
-            <div class="section">
-              <div class="section-head" onclick="toggleSection(this)">
-                <span class="arrow">▶</span> Layer B — Blending
-                <button
-                  class="section-dice"
-                  onclick="
-                    event.stopPropagation();
-                    randomizeLayerB();
-                  "
-                  title="Vary Layer B — nudge blend settings"
-                >
-                  <svg viewBox="0 0 16 16" width="13" height="13">
-                    <rect
-                      x="1"
-                      y="1"
-                      width="14"
-                      height="14"
-                      rx="2"
-                      fill="none"
-                      stroke="currentColor"
-                      stroke-width="1.5"
-                    />
-                    <circle cx="5" cy="5" r="1.2" fill="currentColor" />
-                    <circle cx="8" cy="8" r="1.2" fill="currentColor" />
-                    <circle cx="11" cy="11" r="1.2" fill="currentColor" />
-                  </svg>
-                </button>
-                <button
-                  class="section-reset"
-                  onclick="
-                    event.stopPropagation();
-                    resetLayerB();
-                  "
-                  title="Reset Layer B to defaults"
-                >
-                  <svg viewBox="0 0 16 16" width="13" height="13">
-                    <path
-                      d="M4 2 A6 6 0 1 1 2 8"
-                      fill="none"
-                      stroke="currentColor"
-                      stroke-width="1.5"
-                      stroke-linecap="round"
-                    />
-                    <polyline
-                      points="1,1 4,2 3,5"
-                      fill="none"
-                      stroke="currentColor"
-                      stroke-width="1.5"
-                      stroke-linecap="round"
-                      stroke-linejoin="round"
-                    />
-                  </svg>
-                </button>
-              </div>
-              <div class="section-body">
-                <div class="check-row">
-                  <input
-                    type="checkbox"
-                    id="p-lb-on"
-                    onchange="onLayerBToggle()"
-                  />
-                  <label for="p-lb-on"
-                    >Enable Layer B
-                    <span
-                      class="help-tip"
-                      title="Adds a second pattern on top of the first one, blended together. For example, combine a Spiral with a Plasma, or a Tunnel with an Interference pattern. The blend mode controls how the two layers mix, and the amount controls how much of the second layer shows through."
-                      >?</span
-                    ></label
-                  >
-                </div>
-                <div id="layer-b-controls" style="display: none">
-                  <div class="field">
-                    <label>Pattern B</label>
-                    <select id="p-lb-pattern" onchange="onPatternChangeB()">
-                      <option value="centerSpiral">Center Spiral</option>
-                      <option value="circular">Circular</option>
-                      <option value="mosaic">Mosaic</option>
-                      <option value="cross">Cross</option>
-                      <option value="checkerboard">Checkerboard</option>
-                      <option value="diamond">Diamond</option>
-                      <option value="tunnel">Tunnel</option>
-                      <option value="plasma">Plasma</option>
-                      <option value="interference">Interference</option>
-                      <option value="radialStar">Radial Star</option>
-                      <option value="lissajous">Lissajous</option>
-                      <option value="custom">✎ Custom Equation</option>
-                    </select>
-                  </div>
-                  <div
-                    id="custom-expr-group-b"
-                    class="field formula-group"
-                    style="display: none"
-                  >
-                    <label>Formula B</label>
-                    <textarea
-                      id="p-lb-custom-expr"
-                      rows="2"
-                      spellcheck="false"
-                      oninput="onFormulaInputB()"
-                      onfocus="_lastFormulaTarget = 'b'"
-                      placeholder="e.g.  sin(r * 0.3 + time)"
-                    >
-sin(r * 0.2 + time)</textarea
-                    >
-                    <div class="formula-actions">
-                      <span class="formula-tip"
-                        >Click equations in Math Reference to paste here</span
-                      >
-                      <button
-                        class="xp-btn formula-ref-btn"
-                        onclick="
-                          _lastFormulaTarget = 'b';
-                          showMathRef();
-                        "
-                      >
-                        Math Ref...
-                      </button>
-                    </div>
-                  </div>
-                  <div class="field">
-                    <label>X Constant B</label>
-                    <div class="slider-row">
-                      <input
-                        type="range"
-                        id="p-lb-xc"
-                        min="-200"
-                        max="200"
-                        step="0.01"
-                        oninput="
-                          syncSlider(this);
-                          liveUpdate();
-                        "
-                      />
-                      <input
-                        type="text"
-                        class="slider-val"
-                        id="p-lb-xc-val"
-                        onchange="
-                          syncVal(this, 'p-lb-xc');
-                          liveUpdate();
-                        "
-                      />
-                    </div>
-                  </div>
-                  <div class="field">
-                    <label>Y Constant B</label>
-                    <div class="slider-row">
-                      <input
-                        type="range"
-                        id="p-lb-yc"
-                        min="-200"
-                        max="200"
-                        step="0.01"
-                        oninput="
-                          syncSlider(this);
-                          liveUpdate();
-                        "
-                      />
-                      <input
-                        type="text"
-                        class="slider-val"
-                        id="p-lb-yc-val"
-                        onchange="
-                          syncVal(this, 'p-lb-yc');
-                          liveUpdate();
-                        "
-                      />
-                    </div>
-                  </div>
-                  <div class="field">
-                    <label>Frame Multiplier B</label>
-                    <div class="slider-row">
-                      <input
-                        type="range"
-                        id="p-lb-fm"
-                        min="-1"
-                        max="1"
-                        step="0.001"
-                        oninput="
-                          syncSlider(this);
-                          liveUpdate();
-                        "
-                      />
-                      <input
-                        type="text"
-                        class="slider-val"
-                        id="p-lb-fm-val"
-                        onchange="
-                          syncVal(this, 'p-lb-fm');
-                          liveUpdate();
-                        "
-                      />
-                    </div>
-                  </div>
-                  <div class="field">
-                    <label>Global Value B</label>
-                    <div class="slider-row">
-                      <input
-                        type="range"
-                        id="p-lb-gv"
-                        min="0"
-                        max="10"
-                        step="0.1"
-                        oninput="
-                          syncSlider(this);
-                          liveUpdate();
-                        "
-                      />
-                      <input
-                        type="text"
-                        class="slider-val"
-                        id="p-lb-gv-val"
-                        onchange="
-                          syncVal(this, 'p-lb-gv');
-                          liveUpdate();
-                        "
-                      />
-                    </div>
-                  </div>
-                  <div class="field">
-                    <label
-                      >Blend Mode
-                      <span
-                        class="help-tip"
-                        title="How the two layers combine. Add: brightens where both layers are active. Multiply: only bright where both layers are bright (darkens overall). Subtract: cuts the second layer out of the first. Min: keeps whichever is darker. Max: keeps whichever is brighter. Screen: a softer, glowing combination."
-                        >?</span
-                      ></label
-                    >
-                    <select id="p-lb-blend" onchange="liveUpdate()">
-                      <option value="add">Add</option>
-                      <option value="multiply">Multiply</option>
-                      <option value="subtract">Subtract</option>
-                      <option value="min">Min</option>
-                      <option value="max">Max</option>
-                      <option value="screen">Screen</option>
-                    </select>
-                  </div>
-                  <div class="field">
-                    <label
-                      >Blend Amount
-                      <span
-                        class="help-tip"
-                        title="Controls how much Layer B shows through. At 0, only the original pattern (Layer A) is visible. At 1, the blend is at full strength. Values in between give a mix of both."
-                        >?</span
-                      ></label
-                    >
-                    <div class="slider-row">
-                      <input
-                        type="range"
-                        id="p-lb-amt"
-                        min="0"
-                        max="1"
-                        step="0.01"
-                        oninput="
-                          syncSlider(this);
-                          liveUpdate();
-                        "
-                      />
-                      <input
-                        type="text"
-                        class="slider-val"
-                        id="p-lb-amt-val"
-                        onchange="
-                          syncVal(this, 'p-lb-amt');
-                          liveUpdate();
-                        "
-                      />
-                    </div>
-                  </div>
-                </div>
-              </div>
-            </div>
-
-            <!-- Character Set -->
-            <div class="section">
-              <div class="section-head" onclick="toggleSection(this)">
-                <span class="arrow">▶</span> Character Set
-                <button
-                  class="section-dice"
-                  onclick="
-                    event.stopPropagation();
-                    randomizeCharset();
-                  "
-                  title="Randomize characters"
-                >
-                  <svg viewBox="0 0 16 16" width="13" height="13">
-                    <rect
-                      x="1"
-                      y="1"
-                      width="14"
-                      height="14"
-                      rx="2"
-                      fill="none"
-                      stroke="currentColor"
-                      stroke-width="1.5"
-                    />
-                    <circle cx="5" cy="5" r="1.2" fill="currentColor" />
-                    <circle cx="8" cy="8" r="1.2" fill="currentColor" />
-                    <circle cx="11" cy="11" r="1.2" fill="currentColor" />
-                  </svg>
-                </button>
-                <button
-                  class="section-reset"
-                  onclick="
-                    event.stopPropagation();
-                    resetCharset();
-                  "
-                  title="Reset characters to defaults"
-                >
-                  <svg viewBox="0 0 16 16" width="13" height="13">
-                    <path
-                      d="M4 2 A6 6 0 1 1 2 8"
-                      fill="none"
-                      stroke="currentColor"
-                      stroke-width="1.5"
-                      stroke-linecap="round"
-                    />
-                    <polyline
-                      points="1,1 4,2 3,5"
-                      fill="none"
-                      stroke="currentColor"
-                      stroke-width="1.5"
-                      stroke-linecap="round"
-                      stroke-linejoin="round"
-                    />
-                  </svg>
-                </button>
-              </div>
-              <div class="section-body">
-                <div class="field">
-                  <label
-                    >Characters (light → dense)
-                    <span
-                      class="help-tip"
-                      title="The pattern produces a value for each pixel, and that value picks a character from this string. Characters on the left represent low/quiet areas, characters on the right represent high/active areas. Using more characters gives smoother transitions. The visual weight of each character (how much ink it has) creates the texture you see."
-                      >?</span
-                    ></label
-                  >
-                  <input
-                    type="text"
-                    id="p-charset"
-                    value="░▒▓░▒▓█"
-                    style="
-                      font-family: var(--font-mono);
-                      font-size: 13px;
-                      letter-spacing: 2px;
-                    "
-                    oninput="liveUpdate()"
-                  />
-                </div>
-                <div class="field">
-                  <label>Quick Sets</label>
-                  <div style="display: flex; gap: 3px; flex-wrap: wrap">
-                    <span class="preset-btn" onclick="setCharset('░▒▓█░▒▓█')"
-                      >Blocks</span
-                    >
-                    <span
-                      class="preset-btn"
-                      onclick="setCharset('.,;:!|/\\~=#%@&*')"
-                      >Punctuation</span
-                    >
-                    <span class="preset-btn" onclick="setCharset(' .·:∙○◎●')"
-                      >Dots</span
-                    >
-                    <span class="preset-btn" onclick="setCharset('┃┏┓┛┗┙┘━')"
-                      >Box Drawing</span
-                    >
-                    <span class="preset-btn" onclick="setCharset('╬╪╫│┼─')"
-                      >Grid</span
-                    >
-                    <span class="preset-btn" onclick="setCharset('░▒▓█▓▒░')"
-                      >Gradient</span
-                    >
-                    <span
-                      class="preset-btn"
-                      onclick="setCharset(' .·:∙○◎●◎∙:· ')"
-                      >Symmetric</span
-                    >
-                    <span class="preset-btn" onclick="setCharset(' .:oO@')"
-                      >Ascii</span
-                    >
-                    <span class="preset-btn" onclick="setCharset('▁▂▃▄▅▆▇█')"
-                      >Bars</span
-                    >
-                    <span class="preset-btn" onclick="setCharset('⠁⠃⠇⡇⣇⣧⣷⣿')"
-                      >Braille</span
-                    >
-                    <span class="preset-btn" onclick="setCharset('·•●◉⬤')"
-                      >Circles</span
-                    >
-                    <span class="preset-btn" onclick="setCharset(' -=≡#')"
-                      >Stacked</span
-                    >
-                    <span class="preset-btn" onclick="setCharset('╌╎┊┆│║█')"
-                      >Lines</span
-                    >
-                    <span class="preset-btn" onclick="setCharset(' ░▒▓█▓▒░ ')"
-                      >Bounce</span
-                    >
-                    <span class="preset-btn" onclick="setCharset('0123456789')"
-                      >Digits</span
-                    >
-                    <span class="preset-btn" onclick="setCharset('♠♣♥♦★☆◆◇')"
-                      >Symbols</span
-                    >
-                    <span class="preset-btn" onclick="setCharset('▖▗▘▙▚▛▜▝▞▟')"
-                      >Quadrants</span
-                    >
-                    <span class="preset-btn" onclick="setCharset('▬▭▬▭▬▭▬▭')"
-                      >Dashes</span
-                    >
-                    <span
-                      class="preset-btn"
-                      onclick="setCharset('ס₪₪§|Ξ≥≤≥≤Ξ>')"
-                      >Machine</span
-                    >
-                    <span
-                      class="preset-btn"
-                      onclick="setCharset('\\:::/ \\:::/____')"
-                      >Slashes</span
-                    >
-                    <span class="preset-btn" onclick="setCharset('¯_(ツ)_/¯')"
-                      >Shrug</span
-                    >
-                  </div>
-                </div>
-              </div>
-            </div>
-
-            <!-- Color Palette -->
-            <div class="section">
-              <div class="section-head" onclick="toggleSection(this)">
-                <span class="arrow">▶</span> Color Palette
-                <button
-                  class="section-dice"
-                  onclick="
-                    event.stopPropagation();
-                    randomizePalette();
-                  "
-                  title="Randomize colors"
-                >
-                  <svg viewBox="0 0 16 16" width="13" height="13">
-                    <rect
-                      x="1"
-                      y="1"
-                      width="14"
-                      height="14"
-                      rx="2"
-                      fill="none"
-                      stroke="currentColor"
-                      stroke-width="1.5"
-                    />
-                    <circle cx="5" cy="5" r="1.2" fill="currentColor" />
-                    <circle cx="8" cy="8" r="1.2" fill="currentColor" />
-                    <circle cx="11" cy="11" r="1.2" fill="currentColor" />
-                  </svg>
-                </button>
-                <button
-                  class="section-reset"
-                  onclick="
-                    event.stopPropagation();
-                    resetPalette();
-                  "
-                  title="Reset colors to defaults"
-                >
-                  <svg viewBox="0 0 16 16" width="13" height="13">
-                    <path
-                      d="M4 2 A6 6 0 1 1 2 8"
-                      fill="none"
-                      stroke="currentColor"
-                      stroke-width="1.5"
-                      stroke-linecap="round"
-                    />
-                    <polyline
-                      points="1,1 4,2 3,5"
-                      fill="none"
-                      stroke="currentColor"
-                      stroke-width="1.5"
-                      stroke-linecap="round"
-                      stroke-linejoin="round"
-                    />
-                  </svg>
-                </button>
-              </div>
-              <div class="section-body">
-                <div class="check-row">
-                  <input
-                    type="checkbox"
-                    id="p-colored"
-                    checked
-                    onchange="liveUpdate()"
-                  />
-                  <label for="p-colored"
-                    >Use color palette
-                    <span
-                      class="help-tip"
-                      title="When enabled, each character is coloured using the palette below. The colour is chosen the same way as the character — low values pick from the left of the palette, high values from the right. When off, all characters are a single colour. Try palettes with similar colours for a smooth look, or contrasting colours for a vivid, electric look."
-                      >?</span
-                    ></label
-                  >
-                </div>
-                <div class="field">
-                  <label
-                    >Palette
-                    <span style="color: #999; font-weight: normal"
-                      >(click = edit, right-click = remove, + = add)</span
-                    ></label
-                  >
-                  <div class="color-row" id="color-chips"></div>
-                </div>
-                <div class="field">
-                  <label>Quick Palettes</label>
-                  <div style="display: flex; gap: 3px; flex-wrap: wrap">
-                    <span
-                      class="preset-btn"
-                      onclick="
-                        setPalette([
-                          '#43BFD4',
-                          '#BC7ED2',
-                          '#9EE1EF',
-                          '#C3ECF0',
-                          '#B9AAF3',
-                        ])
-                      "
-                      >Pastel</span
-                    >
-                    <span
-                      class="preset-btn"
-                      onclick="
-                        setPalette([
-                          '#FF7700',
-                          '#F88826',
-                          '#FF6900',
-                          '#9800FF',
-                          '#7600FF',
-                        ])
-                      "
-                      >Fire &amp; Ice</span
-                    >
-                    <span
-                      class="preset-btn"
-                      onclick="
-                        setPalette([
-                          '#ff9500',
-                          '#fed50b',
-                          '#ffea00',
-                          '#0055ff',
-                          '#003d9e',
-                        ])
-                      "
-                      >Gold &amp; Blue</span
-                    >
-                    <span
-                      class="preset-btn"
-                      onclick="
-                        setPalette([
-                          '#FF2020',
-                          '#FF6600',
-                          '#FFCC00',
-                          '#2288FF',
-                          '#22FF66',
-                          '#FF44AA',
-                          '#CC44FF',
-                        ])
-                      "
-                      >Rainbow</span
-                    >
-                    <span
-                      class="preset-btn"
-                      onclick="
-                        setPalette([
-                          '#00FF88',
-                          '#22DDAA',
-                          '#44FFBB',
-                          '#88FFCC',
-                          '#00CC66',
-                        ])
-                      "
-                      >Bio Green</span
-                    >
-                    <span
-                      class="preset-btn"
-                      onclick="
-                        setPalette([
-                          '#00CFFF',
-                          '#0088DD',
-                          '#44EEFF',
-                          '#AAEEFF',
-                          '#006699',
-                        ])
-                      "
-                      >Cyan</span
-                    >
-                    <span
-                      class="preset-btn"
-                      onclick="
-                        setPalette([
-                          '#FF4488',
-                          '#FF88AA',
-                          '#FF44DD',
-                          '#AA22FF',
-                          '#DD66FF',
-                        ])
-                      "
-                      >Neon Pink</span
-                    >
-                    <span
-                      class="preset-btn"
-                      onclick="
-                        setPalette([
-                          '#FFCC00',
-                          '#FF8800',
-                          '#FF4400',
-                          '#AA0000',
-                          '#660000',
-                        ])
-                      "
-                      >Sunset</span
-                    >
-                    <span
-                      class="preset-btn"
-                      onclick="
-                        setPalette([
-                          '#FFFFFF',
-                          '#BBBBBB',
-                          '#888888',
-                          '#444444',
-                          '#000000',
-                        ])
-                      "
-                      >B&amp;W</span
-                    >
-                    <span
-                      class="preset-btn"
-                      onclick="
-                        setPalette([
-                          '#FFFFFF',
-                          '#E0E0E0',
-                          '#C0C0C0',
-                          '#A0A0A0',
-                          '#808080',
-                          '#606060',
-                          '#404040',
-                          '#202020',
-                        ])
-                      "
-                      >Grey Ramp</span
-                    >
-                    <span
-                      class="preset-btn"
-                      onclick="
-                        setPalette([
-                          '#000000',
-                          '#1A1A1A',
-                          '#333333',
-                          '#4D4D4D',
-                          '#666666',
-                        ])
-                      "
-                      >Dark Grey</span
-                    >
-                  </div>
-                </div>
-              </div>
-            </div>
-
             <!-- Metadata -->
             <div class="section">
               <div class="section-head" onclick="toggleSection(this)">
@@ -2376,7 +2440,7 @@ sin(r * 0.2 + time)</textarea
               </div>
             </div>
           </div>
-          <!-- /tab-visual -->
+          <!-- /tab-style -->
 
           <!-- ═══ ADVANCED TAB ═══ -->
           <div id="tab-advanced" class="tab-content">
@@ -2428,15 +2492,6 @@ sin(r * 0.2 + time)</textarea
               </div>
             </div>
             <button class="xp-btn" onclick="resetTime()">Reset</button>
-            <div class="sep"></div>
-            <span class="lbl">Font:</span>
-            <select id="p-fontsize" onchange="setupCanvas()">
-              <option value="10">10px</option>
-              <option value="12">12px</option>
-              <option value="14" selected>14px</option>
-              <option value="16">16px</option>
-              <option value="20">20px</option>
-            </select>
             <div style="flex: 1"></div>
             <button class="xp-btn" onclick="goFullscreen()" title="Full screen">
               Full Screen

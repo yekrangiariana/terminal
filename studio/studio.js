@@ -83,8 +83,10 @@ function _snapshotState() {
     config: config,
     scene: _activeScene || null,
     sceneParams: sp,
-    artSceneBlend: _artSceneBlend,
-    artSceneAmount: _artSceneAmount,
+    sceneBlendMode: _sceneBlendMode,
+    sceneBlendAmount: _sceneBlendAmount,
+    artBlendMode: _artBlendMode,
+    artBlendAmount: _artBlendAmount,
   });
 }
 
@@ -122,9 +124,10 @@ function undo() {
     if (prev.sceneParams && _activeScene) {
       _restoreSceneParams(prev.sceneParams);
     }
-    if (prev.artSceneBlend !== undefined) _artSceneBlend = prev.artSceneBlend;
-    if (prev.artSceneAmount !== undefined)
-      _artSceneAmount = prev.artSceneAmount;
+    if (prev.sceneBlendMode !== undefined) _sceneBlendMode = prev.sceneBlendMode;
+    if (prev.sceneBlendAmount !== undefined) _sceneBlendAmount = prev.sceneBlendAmount;
+    if (prev.artBlendMode !== undefined) _artBlendMode = prev.artBlendMode;
+    if (prev.artBlendAmount !== undefined) _artBlendAmount = prev.artBlendAmount;
   } else {
     config = prev;
     deactivateScene();
@@ -157,9 +160,10 @@ function redo() {
     if (next.sceneParams && _activeScene) {
       _restoreSceneParams(next.sceneParams);
     }
-    if (next.artSceneBlend !== undefined) _artSceneBlend = next.artSceneBlend;
-    if (next.artSceneAmount !== undefined)
-      _artSceneAmount = next.artSceneAmount;
+    if (next.sceneBlendMode !== undefined) _sceneBlendMode = next.sceneBlendMode;
+    if (next.sceneBlendAmount !== undefined) _sceneBlendAmount = next.sceneBlendAmount;
+    if (next.artBlendMode !== undefined) _artBlendMode = next.artBlendMode;
+    if (next.artBlendAmount !== undefined) _artBlendAmount = next.artBlendAmount;
   } else {
     config = next;
     deactivateScene();
@@ -1150,8 +1154,10 @@ var _sceneH = 0;
 var _sceneState = {}; // per-scene persistent state
 var _sceneLastTs = 0; // last update timestamp (ms) for real dt
 var _sceneParamsCache = {}; // cached scene param values (updated on slider input)
-var _artSceneBlend = "mask"; // how art + scene combine: "mask", "add", "multiply", "screen"
-var _artSceneAmount = 1.0; // blend strength 0–1
+var _sceneBlendMode = "add";
+var _sceneBlendAmount = 0.5;
+var _artBlendMode = "add";
+var _artBlendAmount = 0.5;
 
 // Scene registry: each scene defines:
 //   label       — display name
@@ -2670,44 +2676,12 @@ function _dlaSpawnWalker(w, h) {
 SCENES.reactionDiffusion = {
   label: "Reaction-Diffusion",
   params: [
-    {
-      key: "feed",
-      label: "Feed Rate",
-      min: 0.01,
-      max: 0.08,
-      step: 0.001,
-      default: 0.037,
-      tip: "How fast chemical A is added",
-    },
-    {
-      key: "kill",
-      label: "Kill Rate",
-      min: 0.04,
-      max: 0.075,
-      step: 0.001,
-      default: 0.06,
-      tip: "How fast chemical B is removed",
-    },
-    {
-      key: "diffA",
-      label: "Diffuse A",
-      min: 0.5,
-      max: 1.5,
-      step: 0.05,
-      default: 1.0,
-      tip: "Diffusion rate of chemical A",
-    },
-    {
-      key: "diffB",
-      label: "Diffuse B",
-      min: 0.2,
-      max: 0.8,
-      step: 0.05,
-      default: 0.5,
-      tip: "Diffusion rate of chemical B",
-    },
+    { key: "feed", label: "Feed Rate", min: 0.01, max: 0.08, step: 0.001, default: 0.037, tip: "How fast chemical A is added" },
+    { key: "kill", label: "Kill Rate", min: 0.04, max: 0.075, step: 0.001, default: 0.06, tip: "How fast chemical B is removed" },
+    { key: "diffA", label: "Diffuse A", min: 0.5, max: 1.5, step: 0.05, default: 1.0, tip: "Diffusion rate of chemical A" },
+    { key: "diffB", label: "Diffuse B", min: 0.2, max: 0.8, step: 0.05, default: 0.5, tip: "Diffusion rate of chemical B" }
   ],
-  init: function (w, h, p) {
+  init: function(w, h, p) {
     var n = w * h;
     var a = new Float32Array(n);
     var b = new Float32Array(n);
@@ -2721,38 +2695,22 @@ SCENES.reactionDiffusion = {
       for (var dy = -rad; dy <= rad; dy++) {
         for (var dx = -rad; dx <= rad; dx++) {
           if (dx * dx + dy * dy <= rad * rad) {
-            var px = (cx + dx + w) % w,
-              py = (cy + dy + h) % h;
+            var px = (cx + dx + w) % w, py = (cy + dy + h) % h;
             b[py * w + px] = 1;
           }
         }
       }
     }
-    _sceneState = {
-      a: a,
-      b: b,
-      a2: new Float32Array(n),
-      b2: new Float32Array(n),
-      tickAccum: 0,
-    };
+    _sceneState = { a: a, b: b, a2: new Float32Array(n), b2: new Float32Array(n), tickAccum: 0 };
   },
-  update: function (dt, w, h, p, grid) {
+  update: function(dt, w, h, p, grid) {
     var st = _sceneState;
-    if (!st.a || st.a.length !== w * h) {
-      this.init(w, h, p);
-      st = _sceneState;
-    }
+    if (!st.a || st.a.length !== w * h) { this.init(w, h, p); st = _sceneState; }
     st.tickAccum += dt * 60;
     var ticks = Math.min(Math.floor(st.tickAccum), 8);
     st.tickAccum -= ticks;
-    var a = st.a,
-      b = st.b,
-      a2 = st.a2,
-      b2 = st.b2;
-    var dA = p.diffA,
-      dB = p.diffB,
-      f = p.feed,
-      k = p.kill;
+    var a = st.a, b = st.b, a2 = st.a2, b2 = st.b2;
+    var dA = p.diffA, dB = p.diffB, f = p.feed, k = p.kill;
     for (var t = 0; t < ticks; t++) {
       for (var y = 0; y < h; y++) {
         for (var x = 0; x < w; x++) {
@@ -2767,26 +2725,19 @@ SCENES.reactionDiffusion = {
           var abb = a[i] * b[i] * b[i];
           a2[i] = a[i] + (dA * lapA - abb + f * (1 - a[i])) * 0.9;
           b2[i] = b[i] + (dB * lapB + abb - (k + f) * b[i]) * 0.9;
-          if (a2[i] < 0) a2[i] = 0;
-          if (a2[i] > 1) a2[i] = 1;
-          if (b2[i] < 0) b2[i] = 0;
-          if (b2[i] > 1) b2[i] = 1;
+          if (a2[i] < 0) a2[i] = 0; if (a2[i] > 1) a2[i] = 1;
+          if (b2[i] < 0) b2[i] = 0; if (b2[i] > 1) b2[i] = 1;
         }
       }
       // Swap buffers
-      var tmp = st.a;
-      st.a = a = a2;
-      st.a2 = tmp;
-      tmp = st.b;
-      st.b = b = b2;
-      st.b2 = tmp;
-      a2 = st.a2;
-      b2 = st.b2;
+      var tmp = st.a; st.a = a = a2; st.a2 = tmp;
+      tmp = st.b; st.b = b = b2; st.b2 = tmp;
+      a2 = st.a2; b2 = st.b2;
     }
     for (var i = 0; i < w * h; i++) {
       grid[i] = (a[i] - b[i]) * 4 - 2;
     }
-  },
+  }
 };
 
 // ─────────────────────────────────────
@@ -2795,55 +2746,20 @@ SCENES.reactionDiffusion = {
 SCENES.fallingSand = {
   label: "Falling Sand",
   params: [
-    {
-      key: "spawnRate",
-      label: "Spawn Rate",
-      min: 0.01,
-      max: 0.3,
-      step: 0.01,
-      default: 0.1,
-      tip: "How much sand falls per frame",
-    },
-    {
-      key: "gravity",
-      label: "Gravity",
-      min: 0.5,
-      max: 5,
-      step: 0.5,
-      default: 2,
-      tip: "How fast sand falls",
-    },
-    {
-      key: "spread",
-      label: "Spread",
-      min: 0,
-      max: 1,
-      step: 0.1,
-      default: 0.5,
-      tip: "How much sand slides sideways",
-    },
-    {
-      key: "erosion",
-      label: "Erosion",
-      min: 0,
-      max: 0.05,
-      step: 0.005,
-      default: 0.01,
-      tip: "How fast piled sand decays",
-    },
+    { key: "spawnRate", label: "Spawn Rate", min: 0.01, max: 0.3, step: 0.01, default: 0.1, tip: "How much sand falls per frame" },
+    { key: "gravity", label: "Gravity", min: 0.5, max: 5, step: 0.5, default: 2, tip: "How fast sand falls" },
+    { key: "spread", label: "Spread", min: 0, max: 1, step: 0.1, default: 0.5, tip: "How much sand slides sideways" },
+    { key: "erosion", label: "Erosion", min: 0, max: 0.05, step: 0.005, default: 0.01, tip: "How fast piled sand decays" }
   ],
-  init: function (w, h, p) {
+  init: function(w, h, p) {
     _sceneState = {
       cells: new Float32Array(w * h),
-      tickAccum: 0,
+      tickAccum: 0
     };
   },
-  update: function (dt, w, h, p, grid) {
+  update: function(dt, w, h, p, grid) {
     var st = _sceneState;
-    if (!st.cells || st.cells.length !== w * h) {
-      this.init(w, h, p);
-      st = _sceneState;
-    }
+    if (!st.cells || st.cells.length !== w * h) { this.init(w, h, p); st = _sceneState; }
     var cells = st.cells;
     st.tickAccum += dt * 30 * p.gravity;
     var ticks = Math.min(Math.floor(st.tickAccum), 6);
@@ -2869,17 +2785,11 @@ SCENES.fallingSand = {
           } else if (p.spread > 0) {
             // Try sliding diagonally
             var dir = Math.random() < 0.5 ? -1 : 1;
-            var nx1 = x + dir,
-              nx2 = x - dir;
+            var nx1 = x + dir, nx2 = x - dir;
             if (nx1 >= 0 && nx1 < w && cells[(y + 1) * w + nx1] <= 0) {
               cells[(y + 1) * w + nx1] = cells[i] * (0.8 + Math.random() * 0.2);
               cells[i] = 0;
-            } else if (
-              nx2 >= 0 &&
-              nx2 < w &&
-              cells[(y + 1) * w + nx2] <= 0 &&
-              Math.random() < p.spread
-            ) {
+            } else if (nx2 >= 0 && nx2 < w && cells[(y + 1) * w + nx2] <= 0 && Math.random() < p.spread) {
               cells[(y + 1) * w + nx2] = cells[i] * (0.8 + Math.random() * 0.2);
               cells[i] = 0;
             }
@@ -2897,7 +2807,7 @@ SCENES.fallingSand = {
     for (var i = 0; i < w * h; i++) {
       grid[i] = cells[i] > 0 ? cells[i] * 2 - 1 : -2;
     }
-  },
+  }
 };
 
 // ─────────────────────────────────────
@@ -2906,57 +2816,22 @@ SCENES.fallingSand = {
 SCENES.lightning = {
   label: "Lightning",
   params: [
-    {
-      key: "strikeRate",
-      label: "Strike Rate",
-      min: 0.1,
-      max: 3,
-      step: 0.1,
-      default: 0.8,
-      tip: "How often lightning strikes",
-    },
-    {
-      key: "branches",
-      label: "Branches",
-      min: 0,
-      max: 0.4,
-      step: 0.02,
-      default: 0.15,
-      tip: "Chance of branching at each step",
-    },
-    {
-      key: "fade",
-      label: "Fade Speed",
-      min: 0.8,
-      max: 0.99,
-      step: 0.01,
-      default: 0.92,
-      tip: "How quickly the flash fades",
-    },
-    {
-      key: "jitter",
-      label: "Jitter",
-      min: 0.1,
-      max: 3,
-      step: 0.1,
-      default: 1.5,
-      tip: "How much the bolt wanders sideways",
-    },
+    { key: "strikeRate", label: "Strike Rate", min: 0.1, max: 3, step: 0.1, default: 0.8, tip: "How often lightning strikes" },
+    { key: "branches", label: "Branches", min: 0, max: 0.4, step: 0.02, default: 0.15, tip: "Chance of branching at each step" },
+    { key: "fade", label: "Fade Speed", min: 0.8, max: 0.99, step: 0.01, default: 0.92, tip: "How quickly the flash fades" },
+    { key: "jitter", label: "Jitter", min: 0.1, max: 3, step: 0.1, default: 1.5, tip: "How much the bolt wanders sideways" }
   ],
-  init: function (w, h, p) {
+  init: function(w, h, p) {
     _sceneState = {
       glow: new Float32Array(w * h),
       bolts: [],
       strikeAccum: 0,
-      tickAccum: 0,
+      tickAccum: 0
     };
   },
-  update: function (dt, w, h, p, grid) {
+  update: function(dt, w, h, p, grid) {
     var st = _sceneState;
-    if (!st.glow || st.glow.length !== w * h) {
-      this.init(w, h, p);
-      st = _sceneState;
-    }
+    if (!st.glow || st.glow.length !== w * h) { this.init(w, h, p); st = _sceneState; }
     var glow = st.glow;
 
     // Fade existing glow
@@ -2984,10 +2859,8 @@ SCENES.lightning = {
           var gi = Math.floor(bolt.y) * w + ix;
           glow[gi] = Math.min(glow[gi] + bolt.life * 2, 3);
           // Slight width glow
-          if (ix > 0)
-            glow[gi - 1] = Math.min(glow[gi - 1] + bolt.life * 0.5, 2);
-          if (ix < w - 1)
-            glow[gi + 1] = Math.min(glow[gi + 1] + bolt.life * 0.5, 2);
+          if (ix > 0) glow[gi - 1] = Math.min(glow[gi - 1] + bolt.life * 0.5, 2);
+          if (ix < w - 1) glow[gi + 1] = Math.min(glow[gi + 1] + bolt.life * 0.5, 2);
         }
         bolt.y++;
         bolt.x += (Math.random() - 0.5) * p.jitter * 2 + bolt.dx;
@@ -2996,12 +2869,7 @@ SCENES.lightning = {
         bolt.life *= 0.98;
         // Branch
         if (Math.random() < p.branches && bolt.life > 0.3) {
-          newBolts.push({
-            x: bolt.x,
-            y: bolt.y,
-            dx: (Math.random() - 0.5) * p.jitter,
-            life: bolt.life * 0.6,
-          });
+          newBolts.push({ x: bolt.x, y: bolt.y, dx: (Math.random() - 0.5) * p.jitter, life: bolt.life * 0.6 });
         }
       }
       if (bolt.y < h && bolt.life > 0.1) {
@@ -3014,7 +2882,7 @@ SCENES.lightning = {
     for (var i = 0; i < w * h; i++) {
       grid[i] = glow[i] > 0.01 ? glow[i] * 1.5 - 1 : -2;
     }
-  },
+  }
 };
 
 // ─────────────────────────────────────
@@ -3176,15 +3044,15 @@ function _buildSceneParamsUI(key) {
     syncSlider(slider);
   }
 
-  // ── Art + Scene blend controls ──
-  if (_artGrid) {
+  // ── Scene blend controls ──
+  {
     var sep = document.createElement("div");
     sep.style.cssText =
       "border-top:1px solid #aaa; margin:8px 0 6px; padding-top:6px;";
     var sepLabel = document.createElement("label");
     sepLabel.style.cssText =
       "font-weight:bold; font-size:11px; margin-bottom:4px; display:block;";
-    sepLabel.textContent = "Art + Scene Blend";
+    sepLabel.textContent = "Scene Blend";
     sep.appendChild(sepLabel);
     wrap.appendChild(sep);
 
@@ -3192,46 +3060,48 @@ function _buildSceneParamsUI(key) {
     var modeField = document.createElement("div");
     modeField.className = "field";
     var modeLabel = document.createElement("label");
-    modeLabel.textContent = "Effect ";
+    modeLabel.textContent = "Mode ";
     var modeTip = document.createElement("span");
     modeTip.className = "help-tip";
     modeTip.title =
-      "Mask = scene fills your shape. Add = scene layered on top. Multiply = scene modulates art. Screen = brightening blend.";
+      "How the scene composites with layers below (pattern). Add = sum values. Multiply = modulate. Screen = brighten.";
     modeTip.textContent = "?";
     modeLabel.appendChild(modeTip);
     modeField.appendChild(modeLabel);
     var modeSelect = document.createElement("select");
-    modeSelect.id = "art-scene-blend";
+    modeSelect.id = "scene-blend-mode";
     var modes = [
-      ["mask", "Mask (scene fills shape)"],
-      ["add", "Add (scene on top)"],
+      ["add", "Add"],
       ["multiply", "Multiply"],
-      ["screen", "Screen (brighten)"],
+      ["subtract", "Subtract"],
+      ["screen", "Screen"],
+      ["min", "Min"],
+      ["max", "Max"],
     ];
     for (var m = 0; m < modes.length; m++) {
       var opt = document.createElement("option");
       opt.value = modes[m][0];
       opt.textContent = modes[m][1];
-      if (modes[m][0] === _artSceneBlend) opt.selected = true;
+      if (modes[m][0] === _sceneBlendMode) opt.selected = true;
       modeSelect.appendChild(opt);
     }
     modeSelect.onchange = function () {
       pushUndo();
-      _artSceneBlend = this.value;
+      _sceneBlendMode = this.value;
       if (!playing) render();
     };
     modeField.appendChild(modeSelect);
     wrap.appendChild(modeField);
 
-    // Strength slider
+    // Amount slider
     var strField = document.createElement("div");
     strField.className = "field";
     var strLabel = document.createElement("label");
-    strLabel.textContent = "Strength ";
+    strLabel.textContent = "Amount ";
     var strTip = document.createElement("span");
     strTip.className = "help-tip";
     strTip.title =
-      "How much the scene affects your art. 0 = art only, 1 = full effect.";
+      "Blend strength. 0 = scene has no effect, 1 = full blend.";
     strTip.textContent = "?";
     strLabel.appendChild(strTip);
     strField.appendChild(strLabel);
@@ -3239,14 +3109,14 @@ function _buildSceneParamsUI(key) {
     strRow.className = "slider-row";
     var strSlider = document.createElement("input");
     strSlider.type = "range";
-    strSlider.id = "art-scene-amount";
+    strSlider.id = "scene-blend-amount";
     strSlider.min = "0";
     strSlider.max = "1";
     strSlider.step = "0.05";
-    strSlider.value = _artSceneAmount;
+    strSlider.value = _sceneBlendAmount;
     strSlider.oninput = function () {
       syncSlider(this);
-      _artSceneAmount = parseFloat(this.value);
+      _sceneBlendAmount = parseFloat(this.value);
     };
     strSlider.onpointerdown = function () {
       pushUndo();
@@ -3255,13 +3125,13 @@ function _buildSceneParamsUI(key) {
     var strVal = document.createElement("input");
     strVal.type = "text";
     strVal.className = "slider-val";
-    strVal.id = "art-scene-amount-val";
-    strVal.value = _artSceneAmount;
+    strVal.id = "scene-blend-amount-val";
+    strVal.value = _sceneBlendAmount;
     strVal.onchange = function () {
       pushUndo();
-      syncVal(this, "art-scene-amount");
-      _artSceneAmount = parseFloat(
-        document.getElementById("art-scene-amount").value,
+      syncVal(this, "scene-blend-amount");
+      _sceneBlendAmount = parseFloat(
+        document.getElementById("scene-blend-amount").value,
       );
       if (!playing) render();
     };
@@ -3276,27 +3146,22 @@ function _updateSceneUI() {
   var list = document.getElementById("scene-list");
   var paramsWrap = document.getElementById("scene-params");
   var exitBtn = document.getElementById("scene-exit-btn");
-  var patSection = document.getElementById("pattern-section");
-  var spatialSection = document.getElementById("spatial-section");
-  var artSection = document.getElementById("ascii-art-section");
   var fmField = document.getElementById("fm-field");
   var compatHint = document.getElementById("scene-compat-hint");
   var sceneActive = document.getElementById("scene-active-label");
-  var hasArt = !!_artGrid;
 
   if (_activeScene) {
-    // Show scene params, hide pattern section
+    // Show scene params, hide scene list
     if (list) list.style.display = "none";
     if (paramsWrap) paramsWrap.style.display = "";
     if (exitBtn) {
       exitBtn.style.display = "";
-      exitBtn.textContent = hasArt ? "Remove Scene Effect" : "Back to Patterns";
+      exitBtn.textContent = "Exit Scene";
     }
     if (compatHint) {
       compatHint.style.display = "";
-      compatHint.textContent = hasArt
-        ? "Scene animates on your uploaded art. Use blend mode and strength below."
-        : "Scenes replace the pattern equation. Transforms, character set, colors, Layer B and animation speed still apply.";
+      compatHint.textContent =
+        "Scene composites with pattern and art via blend controls below. Transforms, characters, colours, Layer B and animation speed still apply.";
     }
     if (sceneActive) {
       sceneActive.style.display = "";
@@ -3304,10 +3169,6 @@ function _updateSceneUI() {
         "Active: " +
         (SCENES[_activeScene] ? SCENES[_activeScene].label : _activeScene);
     }
-    // Dim sections that scenes override (but NOT art section — art coexists)
-    if (patSection) patSection.classList.add("art-override");
-    if (spatialSection && !hasArt) spatialSection.classList.add("art-override");
-    if (artSection) artSection.classList.remove("art-override");
     // Dim Frame Multiplier (only animationSpeed affects scenes)
     if (fmField) fmField.classList.add("scene-na");
     _buildSceneParamsUI(_activeScene);
@@ -3326,10 +3187,6 @@ function _updateSceneUI() {
     if (exitBtn) exitBtn.style.display = "none";
     if (compatHint) compatHint.style.display = "none";
     if (sceneActive) sceneActive.style.display = "none";
-    if (patSection && !_artGrid) patSection.classList.remove("art-override");
-    if (spatialSection && !_artGrid)
-      spatialSection.classList.remove("art-override");
-    if (artSection) artSection.classList.remove("art-override");
     if (fmField) fmField.classList.remove("scene-na");
   }
 }
@@ -3381,7 +3238,7 @@ var PATTERN_RANGES = {
   radialStar: { xc: [0.01, 1, 0.01], yc: [1, 12, 1], gv: [0, 8, 0.1] },
   lissajous: { xc: [0.5, 15, 0.1], yc: [0.5, 15, 0.1], gv: [0, 5, 0.1] },
   custom: { xc: [-10, 10, 0.01], yc: [-10, 10, 0.01], gv: [0, 10, 0.1] },
-  asciiArt: { xc: [0, 0.5, 0.001], yc: [0, 0.5, 0.001], gv: [0.5, 2, 0.1] },
+  none: { xc: [0, 1, 0.01], yc: [0, 1, 0.01], gv: [0, 1, 0.1] },
 };
 
 function applyPatternRanges(pattern) {
@@ -3696,7 +3553,6 @@ function render() {
   var lb = hasLayerB ? c.layerB : null;
   var isScene = !!_activeScene;
   var hasArt = !!_artGrid;
-  var artScene = isScene && hasArt; // both active — blend them
 
   // Update scene simulation before rendering
   if (isScene) _updateSceneGrid(_exportFrameDt);
@@ -3743,50 +3599,43 @@ function render() {
       var mx = dx + fw * 0.5;
       var my = dy + fh * 0.5;
 
-      // 7. Compute
-      var value;
-      if (artScene) {
-        // Both art and scene active — blend them
-        var artVal = sampleArtGrid(mx, my, fw, fh);
-        var sceneVal = _sampleScene(mx, my, fw, fh);
-        if (sceneVal === -2) sceneVal = 0; // scene OOB — use neutral value
-        if (artVal <= -0.95) {
-          // Outside art bounds — show nothing
-          continue;
-        }
-        var amt = _artSceneAmount;
-        switch (_artSceneBlend) {
-          case "mask":
-            // Scene adds animated detail within art shape, preserving art brightness
-            var mask = (artVal + 1) * 0.5; // 0..1
-            if (mask < 0.05) {
-              continue;
-            } // outside shape
-            value = artVal + sceneVal * mask * amt * 0.5;
-            break;
-          case "add":
-            value = artVal + sceneVal * amt * 0.5;
-            break;
-          case "multiply":
-            // Scene oscillates around 1.0 so it can brighten and darken equally
-            var sceneFactor = 0.5 + (sceneVal + 2) * 0.25; // 0.5..1.5
-            value = artVal * (1 - amt + amt * sceneFactor);
-            break;
-          case "screen":
-            var a = (artVal + 2) * 0.25; // 0..1
-            var b = (sceneVal + 2) * 0.25;
-            var s = a + b - a * b;
-            value = artVal * (1 - amt) + (s * 4 - 2) * amt;
-            break;
-          default:
-            value = artVal;
-        }
-      } else if (isScene) {
-        value = _sampleScene(mx, my, fw, fh);
-        if (value === -2) continue; // OOB — leave background
-      } else {
+      // 7. Compute — layered compositing
+      var value = 0;
+      var hasValue = false;
+
+      // Layer 1: Pattern
+      if (c.pattern !== "none" && c.pattern !== "asciiArt") {
         value = computeValue(c.pattern, mx, my, fw, fh, c);
+        hasValue = true;
       }
+
+      // Layer 2: Scene
+      if (isScene) {
+        var sv = _sampleScene(mx, my, fw, fh);
+        if (sv !== -2) {
+          if (hasValue) {
+            value = blendValues(value, sv, _sceneBlendMode, _sceneBlendAmount);
+          } else {
+            value = sv;
+          }
+          hasValue = true;
+        }
+      }
+
+      // Layer 3: Art
+      if (hasArt) {
+        var av = sampleArtGrid(mx, my, fw, fh);
+        if (av > -0.95) {
+          if (hasValue) {
+            value = blendValues(value, av, _artBlendMode, _artBlendAmount);
+          } else {
+            value = av;
+          }
+          hasValue = true;
+        }
+      }
+
+      if (!hasValue) continue;
 
       // 8. Layer B blend
       if (hasLayerB) {
@@ -3898,6 +3747,8 @@ document.addEventListener("fullscreenchange", function () {
 //  UI SYNC
 // ══════════════════════════════════════
 function configToUI() {
+  // Migrate legacy "asciiArt" pattern to real pattern
+  if (config.pattern === "asciiArt") config.pattern = "centerSpiral";
   document.getElementById("p-pattern").value = config.pattern;
   applyPatternRanges(config.pattern);
   setSlider("p-xc", config.xConstant);
@@ -3943,9 +3794,7 @@ function configToUI() {
 }
 
 function UIToConfig() {
-  config.pattern = _artGrid
-    ? "asciiArt"
-    : document.getElementById("p-pattern").value;
+  config.pattern = document.getElementById("p-pattern").value;
   config.xConstant = parseFloat(document.getElementById("p-xc").value);
   config.yConstant = parseFloat(document.getElementById("p-yc").value);
   config.globalVal = parseFloat(document.getElementById("p-gv").value);
@@ -4057,18 +3906,16 @@ function handleArtDrop(e) {
 }
 function _applyArtText(text, fileName) {
   if (!loadAsciiArt(text, fileName)) return;
-  // Switch to asciiArt pattern (internal — not in dropdown)
-  config.pattern = "asciiArt";
-  applyPatternRanges("asciiArt");
   _updateArtInfo();
   _updateArtActiveUI();
-  if (_activeScene) _updateSceneUI(); // refresh blend controls
+  if (_activeScene) _updateSceneUI();
   liveUpdate();
 }
 function _updateArtInfo() {
   var info = document.getElementById("art-info");
   var label = document.getElementById("art-drop-label");
   var dropZone = document.getElementById("art-drop-zone");
+  var blendWrap = document.getElementById("art-blend-controls");
   if (_artGrid) {
     if (info) {
       info.style.display = "flex";
@@ -4077,19 +3924,102 @@ function _updateArtInfo() {
         _artW + "×" + _artH + " chars";
     }
     if (dropZone) dropZone.style.display = "none";
+    if (blendWrap) {
+      blendWrap.style.display = "";
+      _buildArtBlendUI(blendWrap);
+    }
   } else {
     if (info) info.style.display = "none";
     if (dropZone) dropZone.style.display = "";
     if (label) label.textContent = "Drop .txt here or click to browse";
+    if (blendWrap) {
+      blendWrap.style.display = "none";
+      blendWrap.innerHTML = "";
+    }
   }
+}
+
+function _buildArtBlendUI(wrap) {
+  if (wrap.querySelector("#art-blend-mode")) return; // already built
+  wrap.innerHTML = "";
+
+  // Mode
+  var modeField = document.createElement("div");
+  modeField.className = "field";
+  var modeLabel = document.createElement("label");
+  modeLabel.textContent = "Blend Mode";
+  modeField.appendChild(modeLabel);
+  var modeSelect = document.createElement("select");
+  modeSelect.id = "art-blend-mode";
+  var modes = [
+    ["add", "Add"],
+    ["multiply", "Multiply"],
+    ["subtract", "Subtract"],
+    ["screen", "Screen"],
+    ["min", "Min"],
+    ["max", "Max"],
+  ];
+  for (var m = 0; m < modes.length; m++) {
+    var opt = document.createElement("option");
+    opt.value = modes[m][0];
+    opt.textContent = modes[m][1];
+    if (modes[m][0] === _artBlendMode) opt.selected = true;
+    modeSelect.appendChild(opt);
+  }
+  modeSelect.onchange = function () {
+    pushUndo();
+    _artBlendMode = this.value;
+    if (!playing) render();
+  };
+  modeField.appendChild(modeSelect);
+  wrap.appendChild(modeField);
+
+  // Amount
+  var amtField = document.createElement("div");
+  amtField.className = "field";
+  var amtLabel = document.createElement("label");
+  amtLabel.textContent = "Blend Amount";
+  amtField.appendChild(amtLabel);
+  var amtRow = document.createElement("div");
+  amtRow.className = "slider-row";
+  var amtSlider = document.createElement("input");
+  amtSlider.type = "range";
+  amtSlider.id = "art-blend-amount";
+  amtSlider.min = "0";
+  amtSlider.max = "1";
+  amtSlider.step = "0.05";
+  amtSlider.value = _artBlendAmount;
+  amtSlider.oninput = function () {
+    syncSlider(this);
+    _artBlendAmount = parseFloat(this.value);
+  };
+  amtSlider.onpointerdown = function () {
+    pushUndo();
+  };
+  amtRow.appendChild(amtSlider);
+  var amtVal = document.createElement("input");
+  amtVal.type = "text";
+  amtVal.className = "slider-val";
+  amtVal.id = "art-blend-amount-val";
+  amtVal.value = _artBlendAmount;
+  amtVal.onchange = function () {
+    pushUndo();
+    syncVal(this, "art-blend-amount");
+    _artBlendAmount = parseFloat(
+      document.getElementById("art-blend-amount").value,
+    );
+    if (!playing) render();
+  };
+  amtRow.appendChild(amtVal);
+  amtField.appendChild(amtRow);
+  wrap.appendChild(amtField);
+  syncSlider(amtSlider);
 }
 function clearArt() {
   _artGrid = null;
   _artW = 0;
   _artH = 0;
   _artFileName = "";
-  // Restore to the dropdown's selected pattern
-  config.pattern = document.getElementById("p-pattern").value;
   _updateArtInfo();
   _updateArtActiveUI();
   if (_activeScene) _updateSceneUI(); // refresh scene UI text
@@ -4101,8 +4031,7 @@ function clearArt() {
 function resetArtStyles() {
   if (!_artGrid) return;
   pushUndo();
-  // Keep art-specific pattern, reset everything else to clean defaults
-  config.pattern = "asciiArt";
+  // Reset style to clean defaults — keep current pattern
   config.charset = "░▒▓█";
   config.colors = ["#00ffd5", "#00b396", "#006654"];
   config.xConstant = 0;
@@ -4138,31 +4067,9 @@ function resetArtStyles() {
 // - Hide/show custom equation
 // - Relabel spatial hints
 function _updateArtActiveUI() {
-  var active = !!_artGrid;
-
-  // Pattern section — dim when art overrides it
-  var patSection = document.getElementById("pattern-section");
-  if (patSection) {
-    patSection.classList.toggle("art-override", active);
-  }
-
-  // Pattern dropdown
-  var patSelect = document.getElementById("p-pattern");
-  if (patSelect) patSelect.disabled = active;
-
-  // Custom equation group — hide when art is active
-  var exprGroup = document.getElementById("custom-expr-group");
-  if (exprGroup && active) exprGroup.style.display = "none";
-
-  // Spatial range hint — relabel for art mode
-  if (active) {
-    var hint = document.getElementById("spatial-range-hint");
-    if (hint) {
-      hint.textContent =
-        "xC/yC = wave overlay frequency, gV = art contrast. " +
-        "Type any value in the number box — no limit.";
-    }
-  }
+  // Art is now a compositing layer — pattern stays fully enabled
+  // Just update the art info display
+  _updateArtInfo();
 }
 
 var _lastFormulaTarget = "a";
@@ -4327,24 +4234,12 @@ function buildPresets() {
     btn.textContent = p.name;
     btn.onclick = function () {
       pushUndo();
-      var hasArt = !!_artGrid;
-      var hasScene = !!_activeScene;
 
-      // Apply the preset's style settings
-      var preset = JSON.parse(JSON.stringify(p));
-
-      if (hasArt) {
-        // Keep art as the pattern — apply only the visual style from the preset
-        preset.pattern = "asciiArt";
-        config = preset;
-      } else if (hasScene) {
-        // Keep scene active — apply only the visual style from the preset
-        var curPattern = config.pattern;
-        config = preset;
-        config.pattern = curPattern;
-      } else {
-        config = preset;
-      }
+      // Presets apply style (chars, colours, transforms, speed).
+      // Source layers (pattern, scene, art) stay as-is.
+      var curPattern = config.pattern;
+      config = JSON.parse(JSON.stringify(p));
+      config.pattern = curPattern;
 
       time = 0;
       configToUI();
@@ -4357,54 +4252,6 @@ function buildPresets() {
     };
     wrap.appendChild(btn);
   });
-}
-
-function newPreset() {
-  pushUndo();
-  // Deactivate scene if one is running
-  if (_activeScene) {
-    deactivateScene();
-  }
-  // Clear art state so blank preset starts fresh
-  _artGrid = null;
-  _artW = 0;
-  _artH = 0;
-  _artFileName = "";
-  var artInput = document.getElementById("art-file-input");
-  if (artInput) artInput.value = "";
-
-  config = {
-    name: "Untitled",
-    pattern: "centerSpiral",
-    charset: "░▒▓█",
-    colors: ["#00ffd5", "#00b396", "#006654"],
-    xConstant: 1,
-    yConstant: 1,
-    frameMultiplier: 0.05,
-    animationSpeed: 0.3,
-    mirrorAxis: "none",
-    globalVal: 1,
-    colored: true,
-    centerX: 0,
-    centerY: 0,
-    rotation: 0,
-    scale: 1,
-    turbulence: 0,
-    customExpr: "sin(x * 0.1 + time) * cos(y * 0.05 + time * 1.5)",
-    layerB: {
-      enabled: false,
-      pattern: "circular",
-      xConstant: 0.01,
-      yConstant: 0.01,
-      frameMultiplier: 0.05,
-      globalVal: 1,
-      blendMode: "add",
-      blendAmount: 0.5,
-      customExpr: "sin(r * 0.2 + time)",
-    },
-  };
-  time = 0;
-  configToUI();
 }
 
 // ══════════════════════════════════════
@@ -4601,13 +4448,11 @@ function randomize() {
     if (!playing) togglePlay();
     // Also randomise the compatible visual settings
     _randomizeVisuals();
-    // Randomise art+scene blend if art is loaded
-    if (_artGrid) {
-      var blendModes = ["mask", "add", "multiply", "screen"];
-      _artSceneBlend =
-        blendModes[Math.floor(Math.random() * blendModes.length)];
-      _artSceneAmount = 0.3 + Math.random() * 0.7;
-    }
+    // Randomise scene blend
+    var blendModes = ["add", "multiply", "screen", "subtract", "min", "max"];
+    _sceneBlendMode =
+      blendModes[Math.floor(Math.random() * blendModes.length)];
+    _sceneBlendAmount = 0.3 + Math.random() * 0.7;
     config.name = "Random — " + (SCENES[key] ? SCENES[key].label : key);
     _updateSceneUI();
     configToUI();
@@ -4715,21 +4560,12 @@ function randomize() {
   };
   var p = pick(patterns);
 
-  // If ASCII art is loaded, keep using it as the pattern
-  var hasArt = !!_artGrid;
-  if (hasArt) p = "asciiArt";
   // If pattern is locked, keep the current pattern
-  if (_isLocked("pattern") && !hasArt) p = config.pattern;
+  if (_isLocked("pattern")) p = config.pattern;
 
   // Pattern-tuned constants — biased toward the clean zone for each pattern
   var xc, yc, fm, gv;
   switch (p) {
-    case "asciiArt":
-      xc = rng(0, 0.3);
-      yc = rng(0, 0.3);
-      fm = rng(0.01, 0.15);
-      gv = rng(0.7, 1.5);
-      break;
     case "centerSpiral":
       xc = rng(-2, 5);
       yc = rng(0.1, 10);
@@ -4804,7 +4640,7 @@ function randomize() {
   var prevConfig = JSON.parse(JSON.stringify(config));
 
   config = {
-    name: hasArt ? "Random — " + _artFileName : "Random — " + p,
+    name: _artGrid ? "Random — " + _artFileName : "Random — " + p,
     // Pattern + spatial (these are tightly coupled via the switch above)
     pattern: _isLocked("pattern") ? prevConfig.pattern : p,
     customExpr: _isLocked("pattern")
@@ -5217,11 +5053,16 @@ function resetScene() {
 }
 
 function resetPattern() {
-  if (_artGrid) return;
   pushUndo();
   config.pattern = "centerSpiral";
   config.customExpr = "sin(x * 0.1 + time) * cos(y * 0.05 + time * 1.5)";
   _customSrcA = "";
+  configToUI();
+}
+
+function removePattern() {
+  pushUndo();
+  config.pattern = "none";
   configToUI();
 }
 
@@ -5268,6 +5109,12 @@ function resetLayerB() {
   configToUI();
 }
 
+function removeLayerB() {
+  pushUndo();
+  config.layerB.enabled = false;
+  configToUI();
+}
+
 function resetCharset() {
   pushUndo();
   config.charset = "░▒▓█";
@@ -5311,11 +5158,15 @@ function switchTab(tab) {
   document.querySelectorAll(".tab-content").forEach(function (t) {
     t.classList.remove("active");
   });
-  if (tab === "visual") {
-    document.querySelectorAll(".tab-btn")[0].classList.add("active");
-    document.getElementById("tab-visual").classList.add("active");
+  var btns = document.querySelectorAll(".tab-btn");
+  if (tab === "source") {
+    btns[0].classList.add("active");
+    document.getElementById("tab-source").classList.add("active");
+  } else if (tab === "style") {
+    btns[1].classList.add("active");
+    document.getElementById("tab-style").classList.add("active");
   } else {
-    document.querySelectorAll(".tab-btn")[1].classList.add("active");
+    btns[2].classList.add("active");
     document.getElementById("tab-advanced").classList.add("active");
     updateCode();
   }
@@ -5478,6 +5329,117 @@ function showAbout() {
 function closeAbout() {
   document.getElementById("about-overlay").classList.remove("show");
   document.getElementById("about-dialog").classList.remove("show");
+}
+
+// ══════════════════════════════════════
+//  WELCOME SCREEN
+// ══════════════════════════════════════
+function showWelcome() {
+  document.getElementById("welcome-overlay").classList.add("show");
+  document.getElementById("welcome-dialog").classList.add("show");
+  // Reset picker
+  var picker = document.getElementById("welcome-picker");
+  if (picker) picker.style.display = "none";
+}
+function closeWelcome() {
+  document.getElementById("welcome-overlay").classList.remove("show");
+  document.getElementById("welcome-dialog").classList.remove("show");
+}
+function welcomeOK() {
+  var choice = document.querySelector('input[name="welcome-choice"]:checked');
+  if (!choice) return;
+  switch (choice.value) {
+    case "new":
+      welcomeNewDesign();
+      break;
+    case "preset":
+      welcomeShowPresets();
+      return; // don't close — picker is shown inline
+    case "random":
+      welcomeRandom();
+      break;
+  }
+}
+function welcomeNewDesign() {
+  closeWelcome();
+  // Deactivate scene if any
+  if (_activeScene) deactivateScene();
+  _artGrid = null; _artW = 0; _artH = 0; _artFileName = "";
+  var artInput = document.getElementById("art-file-input");
+  if (artInput) artInput.value = "";
+  config = {
+    name: "Untitled",
+    pattern: "none",
+    charset: "░▒▓█",
+    colors: ["#00ffd5", "#00b396", "#006654"],
+    xConstant: 1,
+    yConstant: 1,
+    frameMultiplier: 0.05,
+    animationSpeed: 0.3,
+    mirrorAxis: "none",
+    globalVal: 1,
+    colored: true,
+    centerX: 0,
+    centerY: 0,
+    rotation: 0,
+    scale: 1,
+    turbulence: 0,
+    customExpr: "sin(x * 0.1 + time) * cos(y * 0.05 + time * 1.5)",
+    layerB: {
+      enabled: false,
+      pattern: "circular",
+      xConstant: 0.01,
+      yConstant: 0.01,
+      frameMultiplier: 0.05,
+      globalVal: 1,
+      blendMode: "add",
+      blendAmount: 0.5,
+      customExpr: "sin(r * 0.2 + time)",
+    },
+  };
+  time = 0;
+  configToUI();
+  _updateArtInfo();
+  _updateArtActiveUI();
+}
+function welcomeShowPresets() {
+  var picker = document.getElementById("welcome-picker");
+  var label = document.getElementById("welcome-picker-label");
+  var grid = document.getElementById("welcome-picker-grid");
+  label.textContent = "Choose a preset:";
+  grid.innerHTML = "";
+  PRESETS.forEach(function (p) {
+    var btn = document.createElement("span");
+    btn.className = "preset-btn";
+    btn.textContent = p.name;
+    btn.onclick = function () {
+      closeWelcome();
+      if (_activeScene) deactivateScene();
+      _artGrid = null; _artW = 0; _artH = 0; _artFileName = "";
+      config = JSON.parse(JSON.stringify(p));
+      time = 0;
+      configToUI();
+      _updateArtInfo();
+      _updateArtActiveUI();
+      // Highlight in sidebar
+      var wrap = document.getElementById("presets");
+      if (wrap) {
+        wrap.querySelectorAll(".preset-btn").forEach(function (b) {
+          b.classList.toggle("active", b.textContent === p.name);
+        });
+      }
+    };
+    grid.appendChild(btn);
+  });
+  picker.style.display = "";
+}
+function welcomeRandom() {
+  closeWelcome();
+  if (_activeScene) deactivateScene();
+  _artGrid = null; _artW = 0; _artH = 0; _artFileName = "";
+  _updateArtInfo();
+  _updateArtActiveUI();
+  randomize();
 }
 
 // ══════════════════════════════════════
@@ -5849,30 +5811,10 @@ function collapseAllSections() {
 }
 
 // ══════════════════════════════════════
-//  NEW PRESET (reset)
+//  NEW PRESET (reset) — opens welcome screen
 // ══════════════════════════════════════
 function newPreset() {
-  pushUndo();
-  // Deactivate scene if one is running
-  if (_activeScene) {
-    deactivateScene();
-  }
-  // Clear art state so blank preset starts fresh
-  _artGrid = null;
-  _artW = 0;
-  _artH = 0;
-  _artFileName = "";
-  var artInput = document.getElementById("art-file-input");
-  if (artInput) artInput.value = "";
-
-  if (typeof PRESETS !== "undefined" && PRESETS.length > 0) {
-    // Load first preset
-    config = JSON.parse(JSON.stringify(PRESETS[0]));
-    time = 0;
-    configToUI();
-    _updateArtInfo();
-    _updateArtActiveUI();
-  }
+  showWelcome();
 }
 
 // ══════════════════════════════════════
@@ -5901,26 +5843,41 @@ function _buildRndLockPanel() {
   var body = document.getElementById("rnd-lock-body");
   if (!body) return;
   body.innerHTML = "";
-  var isScene = !!_activeScene;
-  var sections = isScene
-    ? [
-        ["scene", "Scene"],
-        ["animation", "Animation"],
-        ["transform", "Transform"],
-        ["layerB", "Layer B"],
-        ["charset", "Character Set"],
-        ["palette", "Colour Palette"],
-      ]
-    : [
-        ["pattern", "Pattern"],
-        ["spatial", "Spatial Constants"],
-        ["animation", "Animation"],
-        ["transform", "Transform"],
-        ["layerB", "Layer B"],
-        ["charset", "Character Set"],
-        ["palette", "Colour Palette"],
-      ];
-  for (var i = 0; i < sections.length; i++) {
+
+  // Source layers
+  var srcLabel = document.createElement("div");
+  srcLabel.className = "rnd-lock-group";
+  srcLabel.textContent = "Sources";
+  body.appendChild(srcLabel);
+
+  var sourceSections = [
+    ["pattern", "Pattern"],
+    ["spatial", "Spatial Constants"],
+    ["scene", "Scene"],
+    ["layerB", "Layer B"],
+  ];
+
+  // Style settings
+  var styleLabel = document.createElement("div");
+  styleLabel.className = "rnd-lock-group";
+
+  var styleSections = [
+    ["charset", "Character Set"],
+    ["palette", "Colour Palette"],
+    ["animation", "Animation"],
+    ["transform", "Transform"],
+  ];
+
+  var allGroups = [
+    [sourceSections, srcLabel],
+    [styleSections, styleLabel],
+  ];
+  styleLabel.textContent = "Style";
+
+  for (var g = 0; g < allGroups.length; g++) {
+    var sections = allGroups[g][0];
+    body.appendChild(allGroups[g][1]);
+    for (var i = 0; i < sections.length; i++) {
     var key = sections[i][0];
     var label = sections[i][1];
     var locked = _rndLocks[key] === true;
@@ -6027,6 +5984,7 @@ function _buildRndLockPanel() {
         body.appendChild(subRow);
       }
     }
+  }
   }
 }
 
@@ -6254,6 +6212,10 @@ window.addEventListener("load", function () {
     dropZone.addEventListener("click", function () {
       fileInput.click();
     });
+  }
+  // Show welcome screen on startup (unless embedded)
+  if (!isEmbedded) {
+    showWelcome();
   }
 });
 

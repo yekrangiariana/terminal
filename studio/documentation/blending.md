@@ -1,13 +1,22 @@
 ## Layer Blending
 
-Layer B runs a second pattern on top of Layer A and combines them. This is where simple patterns become something neither could be alone.
+Sources stack as compositing layers — each one blends onto the result below it. The order is: **Pattern → Scene → ASCII Art → Layer B**. The pattern is the base; the others each have a blend mode and amount controlling how they mix in.
+
+### The Compositing Stack
+
+1. **Pattern** — the foundation. No blend mode — it's the starting layer.
+2. **Scene** — blends on top of the pattern (blend mode + amount in the scene section).
+3. **ASCII Art** — blends on top of the combined pattern + scene (blend mode + amount in the art section).
+4. **Layer B** — a second math pattern that blends on top of everything.
+
+Any layer can be disabled. If the pattern is "None", the next active layer becomes the base. You can use a scene alone, art alone, or any combination.
 
 ### How to Use It
 
-1. Enable **Layer B** in the sidebar
-2. Choose a second pattern and adjust its sliders independently
-3. Pick a **Blend Mode** — this controls how the two layers mix
-4. Adjust **Blend Amount** — 0 = pure Layer A, 1 = full blend
+1. Start with a **Pattern** as your base (or set it to None if you only want a scene/art)
+2. Add a **Scene** and adjust its blend mode and amount in the scene controls
+3. Upload **ASCII Art** and configure its blend mode and amount
+4. Enable **Layer B**, choose a second pattern, pick a blend mode and amount
 
 ### Blend Modes Explained
 

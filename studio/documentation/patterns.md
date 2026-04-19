@@ -144,3 +144,47 @@ Two oscillators dancing — creates looping, figure-eight-style motion. Looks li
 ### Custom Equation
 
 Write your own formula. See **Custom Equations** and **Equation Reference** in the help menu.
+
+---
+
+## Spatial Constants (xC, yC, gV)
+
+These are the three main sliders that shape any pattern. Think of them as creative knobs rather than math variables — each one changes something visual, and the effect depends on which pattern is selected.
+
+### xC — Shape / Density
+
+Controls the **horizontal complexity**. Higher values pack more detail into the same space.
+
+- Spirals: tighter winding
+- Rings: more rings packed together
+- Grids: more columns
+- Tunnel: denser zoom rings
+
+**Quick rule:** Turn it up for more detail, down for simpler shapes.
+
+### yC — Detail / Structure
+
+Controls the **vertical complexity or angular features**.
+
+- Spirals: curvature of the arms
+- Rings: vertical density (set differently from xC for elliptical shapes)
+- Grids: more rows
+- Star: **number of petals** — this is where flower shapes come from
+- Diamond: angular twist
+
+**Quick rule:** This is often the most "interesting" slider — it changes the character of the pattern.
+
+### gV — Depth / Modulation
+
+A secondary control that adds a **layer of movement or distortion** on top of the main shape.
+
+- Spirals: breathing / pulsing feel
+- Tunnel: wobbly ripple on the walls
+- Star: spikiness of petals
+- Plasma: radial mixing
+
+**Quick rule:** Start at 0. Increase slowly. Small values (0.5–2) add subtle organic feel; larger values get wild.
+
+### Tip
+
+If you're not sure what a slider does for a given pattern, drag it from min to max and watch the preview. The effect is always instant.
