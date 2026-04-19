@@ -118,7 +118,6 @@
       </div>
     </div>
 
-
     <!-- ════════════════════════════════════
      WELCOME SCREEN
      ════════════════════════════════════ -->
@@ -132,7 +131,10 @@
         <div style="display: flex; gap: 14px; align-items: flex-start">
           <img
             src="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 48 48'%3E%3Cdefs%3E%3ClinearGradient id='asc' x1='0' y1='0' x2='0' y2='1'%3E%3Cstop offset='0' stop-color='%23445'/%3E%3Cstop offset='1' stop-color='%23112'/%3E%3C/linearGradient%3E%3C/defs%3E%3Crect x='4' y='4' width='40' height='36' rx='3' fill='url(%23asc)' stroke='%23666'/%3E%3Crect x='6' y='6' width='36' height='32' rx='1' fill='%23000d14'/%3E%3Ctext x='24' y='18' font-family='monospace' font-size='7' fill='%2300ffd5' text-anchor='middle'%3E░▒▓█▓▒░%3C/text%3E%3Ctext x='24' y='27' font-family='monospace' font-size='7' fill='%2300b396' text-anchor='middle'%3E▓░▒█▒░▓%3C/text%3E%3Ctext x='24' y='36' font-family='monospace' font-size='7' fill='%23006654' text-anchor='middle'%3E░▒▓█▓▒░%3C/text%3E%3C/svg%3E"
-            alt="" width="40" height="40" style="flex-shrink: 0"
+            alt=""
+            width="40"
+            height="40"
+            style="flex-shrink: 0"
           />
           <div>
             <p style="margin: 0 0 12px; font-size: 11px; color: #222">
@@ -141,22 +143,38 @@
             <div class="welcome-options">
               <label class="welcome-radio">
                 <input type="radio" name="welcome-choice" value="new" checked />
-                <span><strong>New design</strong> — blank canvas with defaults</span>
+                <span
+                  ><strong>New design</strong> — blank canvas with
+                  defaults</span
+                >
               </label>
               <label class="welcome-radio">
                 <input type="radio" name="welcome-choice" value="preset" />
-                <span><strong>Start from a preset</strong> — pick a pre-built animation</span>
+                <span
+                  ><strong>Start from a preset</strong> — pick a pre-built
+                  animation</span
+                >
               </label>
               <label class="welcome-radio">
                 <input type="radio" name="welcome-choice" value="random" />
-                <span><strong>Random design</strong> — generate a random combination</span>
+                <span
+                  ><strong>Random design</strong> — generate a random
+                  combination</span
+                >
               </label>
             </div>
           </div>
         </div>
         <div id="welcome-picker" class="welcome-picker" style="display: none">
-          <p id="welcome-picker-label" style="margin: 0 0 8px; font-size: 11px; font-weight: bold"></p>
-          <div id="welcome-picker-grid" class="presets" style="max-height: 200px; overflow-y: auto"></div>
+          <p
+            id="welcome-picker-label"
+            style="margin: 0 0 8px; font-size: 11px; font-weight: bold"
+          ></p>
+          <div
+            id="welcome-picker-grid"
+            class="presets"
+            style="max-height: 200px; overflow-y: auto"
+          ></div>
         </div>
       </div>
       <div class="xp-dialog-footer">
@@ -862,9 +880,7 @@
               <div class="tab-btn active" onclick="switchTab('source')">
                 Source
               </div>
-              <div class="tab-btn" onclick="switchTab('style')">
-                Style
-              </div>
+              <div class="tab-btn" onclick="switchTab('style')">Style</div>
               <div class="tab-btn" onclick="switchTab('advanced')">
                 Advanced
               </div>
@@ -936,8 +952,24 @@
                   title="Disable pattern"
                 >
                   <svg viewBox="0 0 16 16" width="13" height="13">
-                    <line x1="4" y1="4" x2="12" y2="12" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"/>
-                    <line x1="12" y1="4" x2="4" y2="12" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"/>
+                    <line
+                      x1="4"
+                      y1="4"
+                      x2="12"
+                      y2="12"
+                      stroke="currentColor"
+                      stroke-width="1.8"
+                      stroke-linecap="round"
+                    />
+                    <line
+                      x1="12"
+                      y1="4"
+                      x2="4"
+                      y2="12"
+                      stroke="currentColor"
+                      stroke-width="1.8"
+                      stroke-linecap="round"
+                    />
                   </svg>
                 </button>
               </div>
@@ -1002,109 +1034,109 @@ sin(x * 0.1 + time) * cos(y * 0.05 + time * 1.5)</textarea
                   </div>
                 </div>
                 <div id="spatial-controls">
-                <div class="field">
-                  <label
-                    >X Constant
-                    <span
-                      class="help-tip"
-                      title="Stretches or compresses the pattern horizontally. Small values (0.01–1) make wide, smooth shapes. Large values (100+) make tight, dense textures. The effect depends on the pattern — in Spirals it tightens the arms, in Mosaic it adds more columns. You can type exact values in the number box."
-                      >?</span
-                    ></label
-                  >
-                  <div class="slider-row">
-                    <input
-                      type="range"
-                      id="p-xc"
-                      min="-1000"
-                      max="1000"
-                      step="0.01"
-                      oninput="
-                        syncSlider(this);
-                        liveUpdate();
-                      "
-                    />
-                    <input
-                      type="text"
-                      class="slider-val"
-                      id="p-xc-val"
-                      title="Type any decimal (e.g. 0.00189 or 55000) — the slider covers the sweet spot, this box accepts anything"
-                      onchange="
-                        syncVal(this, 'p-xc');
-                        liveUpdate();
-                      "
-                    />
+                  <div class="field">
+                    <label
+                      >X Constant
+                      <span
+                        class="help-tip"
+                        title="Stretches or compresses the pattern horizontally. Small values (0.01–1) make wide, smooth shapes. Large values (100+) make tight, dense textures. The effect depends on the pattern — in Spirals it tightens the arms, in Mosaic it adds more columns. You can type exact values in the number box."
+                        >?</span
+                      ></label
+                    >
+                    <div class="slider-row">
+                      <input
+                        type="range"
+                        id="p-xc"
+                        min="-1000"
+                        max="1000"
+                        step="0.01"
+                        oninput="
+                          syncSlider(this);
+                          liveUpdate();
+                        "
+                      />
+                      <input
+                        type="text"
+                        class="slider-val"
+                        id="p-xc-val"
+                        title="Type any decimal (e.g. 0.00189 or 55000) — the slider covers the sweet spot, this box accepts anything"
+                        onchange="
+                          syncVal(this, 'p-xc');
+                          liveUpdate();
+                        "
+                      />
+                    </div>
                   </div>
-                </div>
-                <div class="field">
-                  <label
-                    >Y Constant
-                    <span
-                      class="help-tip"
-                      title="Stretches or compresses the pattern vertically. Works like X Constant but in the other direction. In Radial Star, this controls how many petals appear. When X and Y constants differ, round shapes become elongated or skewed."
-                      >?</span
-                    ></label
-                  >
-                  <div class="slider-row">
-                    <input
-                      type="range"
-                      id="p-yc"
-                      min="-1000"
-                      max="1000"
-                      step="0.01"
-                      oninput="
-                        syncSlider(this);
-                        liveUpdate();
-                      "
-                    />
-                    <input
-                      type="text"
-                      class="slider-val"
-                      id="p-yc-val"
-                      title="Type any decimal (e.g. 0.00189 or 55000) — the slider covers the sweet spot, this box accepts anything"
-                      onchange="
-                        syncVal(this, 'p-yc');
-                        liveUpdate();
-                      "
-                    />
+                  <div class="field">
+                    <label
+                      >Y Constant
+                      <span
+                        class="help-tip"
+                        title="Stretches or compresses the pattern vertically. Works like X Constant but in the other direction. In Radial Star, this controls how many petals appear. When X and Y constants differ, round shapes become elongated or skewed."
+                        >?</span
+                      ></label
+                    >
+                    <div class="slider-row">
+                      <input
+                        type="range"
+                        id="p-yc"
+                        min="-1000"
+                        max="1000"
+                        step="0.01"
+                        oninput="
+                          syncSlider(this);
+                          liveUpdate();
+                        "
+                      />
+                      <input
+                        type="text"
+                        class="slider-val"
+                        id="p-yc-val"
+                        title="Type any decimal (e.g. 0.00189 or 55000) — the slider covers the sweet spot, this box accepts anything"
+                        onchange="
+                          syncVal(this, 'p-yc');
+                          liveUpdate();
+                        "
+                      />
+                    </div>
                   </div>
-                </div>
-                <div class="field">
-                  <label
-                    >Global Value
-                    <span
-                      class="help-tip"
-                      title="A general-purpose intensity knob. It does something different in each pattern — in Spirals it controls how much the arms breathe in and out, in Radial Star it sharpens or softens the petals, in Tunnel it adds wobble. Start at 0 and increase slowly to see its effect."
-                      >?</span
-                    ></label
-                  >
-                  <div class="slider-row">
-                    <input
-                      type="range"
-                      id="p-gv"
-                      min="0"
-                      max="20"
-                      step="0.1"
-                      oninput="
-                        syncSlider(this);
-                        liveUpdate();
-                      "
-                    />
-                    <input
-                      type="text"
-                      class="slider-val"
-                      id="p-gv-val"
-                      title="Type any decimal (e.g. 0.00189 or 55000) — the slider covers the sweet spot, this box accepts anything"
-                      onchange="
-                        syncVal(this, 'p-gv');
-                        liveUpdate();
-                      "
-                    />
+                  <div class="field">
+                    <label
+                      >Global Value
+                      <span
+                        class="help-tip"
+                        title="A general-purpose intensity knob. It does something different in each pattern — in Spirals it controls how much the arms breathe in and out, in Radial Star it sharpens or softens the petals, in Tunnel it adds wobble. Start at 0 and increase slowly to see its effect."
+                        >?</span
+                      ></label
+                    >
+                    <div class="slider-row">
+                      <input
+                        type="range"
+                        id="p-gv"
+                        min="0"
+                        max="20"
+                        step="0.1"
+                        oninput="
+                          syncSlider(this);
+                          liveUpdate();
+                        "
+                      />
+                      <input
+                        type="text"
+                        class="slider-val"
+                        id="p-gv-val"
+                        title="Type any decimal (e.g. 0.00189 or 55000) — the slider covers the sweet spot, this box accepts anything"
+                        onchange="
+                          syncVal(this, 'p-gv');
+                          liveUpdate();
+                        "
+                      />
+                    </div>
                   </div>
-                </div>
-                <p class="range-hint" id="spatial-range-hint">
-                  Slider covers the useful range. Type any value in the number
-                  box.
-                </p>
+                  <p class="range-hint" id="spatial-range-hint">
+                    Slider covers the useful range. Type any value in the number
+                    box.
+                  </p>
                 </div>
               </div>
             </div>
@@ -1172,8 +1204,24 @@ sin(x * 0.1 + time) * cos(y * 0.05 + time * 1.5)</textarea
                   title="Remove scene"
                 >
                   <svg viewBox="0 0 16 16" width="13" height="13">
-                    <line x1="4" y1="4" x2="12" y2="12" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"/>
-                    <line x1="12" y1="4" x2="4" y2="12" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"/>
+                    <line
+                      x1="4"
+                      y1="4"
+                      x2="12"
+                      y2="12"
+                      stroke="currentColor"
+                      stroke-width="1.8"
+                      stroke-linecap="round"
+                    />
+                    <line
+                      x1="12"
+                      y1="4"
+                      x2="4"
+                      y2="12"
+                      stroke="currentColor"
+                      stroke-width="1.8"
+                      stroke-linecap="round"
+                    />
                   </svg>
                 </button>
               </div>
@@ -1228,16 +1276,32 @@ sin(x * 0.1 + time) * cos(y * 0.05 + time * 1.5)</textarea
                   title="Remove uploaded art"
                 >
                   <svg viewBox="0 0 16 16" width="13" height="13">
-                    <line x1="4" y1="4" x2="12" y2="12" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"/>
-                    <line x1="12" y1="4" x2="4" y2="12" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"/>
+                    <line
+                      x1="4"
+                      y1="4"
+                      x2="12"
+                      y2="12"
+                      stroke="currentColor"
+                      stroke-width="1.8"
+                      stroke-linecap="round"
+                    />
+                    <line
+                      x1="12"
+                      y1="4"
+                      x2="4"
+                      y2="12"
+                      stroke="currentColor"
+                      stroke-width="1.8"
+                      stroke-linecap="round"
+                    />
                   </svg>
                 </button>
               </div>
               <div class="section-body">
                 <div class="field">
                   <div class="desc">
-                    Upload a <strong>.txt</strong> file to add as a
-                    compositing layer. Blends with pattern, scene, and Layer B.
+                    Upload a <strong>.txt</strong> file to add as a compositing
+                    layer. Blends with pattern, scene, and Layer B.
                   </div>
                 </div>
                 <div
@@ -1346,8 +1410,24 @@ sin(x * 0.1 + time) * cos(y * 0.05 + time * 1.5)</textarea
                   title="Disable Layer B"
                 >
                   <svg viewBox="0 0 16 16" width="13" height="13">
-                    <line x1="4" y1="4" x2="12" y2="12" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"/>
-                    <line x1="12" y1="4" x2="4" y2="12" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"/>
+                    <line
+                      x1="4"
+                      y1="4"
+                      x2="12"
+                      y2="12"
+                      stroke="currentColor"
+                      stroke-width="1.8"
+                      stroke-linecap="round"
+                    />
+                    <line
+                      x1="12"
+                      y1="4"
+                      x2="4"
+                      y2="12"
+                      stroke="currentColor"
+                      stroke-width="1.8"
+                      stroke-linecap="round"
+                    />
                   </svg>
                 </button>
               </div>
@@ -1569,7 +1649,6 @@ sin(r * 0.2 + time)</textarea
                 </div>
               </div>
             </div>
-
           </div>
           <!-- /tab-source -->
 
@@ -1730,7 +1809,11 @@ sin(r * 0.2 + time)</textarea
                 </div>
                 <div class="field">
                   <label>Font Size</label>
-                  <select id="p-fontsize" onchange="setupCanvas()" style="width: auto">
+                  <select
+                    id="p-fontsize"
+                    onchange="setupCanvas()"
+                    style="width: auto"
+                  >
                     <option value="10">10 px</option>
                     <option value="12">12 px</option>
                     <option value="14" selected>14 px</option>

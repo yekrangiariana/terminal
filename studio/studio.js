@@ -124,10 +124,13 @@ function undo() {
     if (prev.sceneParams && _activeScene) {
       _restoreSceneParams(prev.sceneParams);
     }
-    if (prev.sceneBlendMode !== undefined) _sceneBlendMode = prev.sceneBlendMode;
-    if (prev.sceneBlendAmount !== undefined) _sceneBlendAmount = prev.sceneBlendAmount;
+    if (prev.sceneBlendMode !== undefined)
+      _sceneBlendMode = prev.sceneBlendMode;
+    if (prev.sceneBlendAmount !== undefined)
+      _sceneBlendAmount = prev.sceneBlendAmount;
     if (prev.artBlendMode !== undefined) _artBlendMode = prev.artBlendMode;
-    if (prev.artBlendAmount !== undefined) _artBlendAmount = prev.artBlendAmount;
+    if (prev.artBlendAmount !== undefined)
+      _artBlendAmount = prev.artBlendAmount;
   } else {
     config = prev;
     deactivateScene();
@@ -160,10 +163,13 @@ function redo() {
     if (next.sceneParams && _activeScene) {
       _restoreSceneParams(next.sceneParams);
     }
-    if (next.sceneBlendMode !== undefined) _sceneBlendMode = next.sceneBlendMode;
-    if (next.sceneBlendAmount !== undefined) _sceneBlendAmount = next.sceneBlendAmount;
+    if (next.sceneBlendMode !== undefined)
+      _sceneBlendMode = next.sceneBlendMode;
+    if (next.sceneBlendAmount !== undefined)
+      _sceneBlendAmount = next.sceneBlendAmount;
     if (next.artBlendMode !== undefined) _artBlendMode = next.artBlendMode;
-    if (next.artBlendAmount !== undefined) _artBlendAmount = next.artBlendAmount;
+    if (next.artBlendAmount !== undefined)
+      _artBlendAmount = next.artBlendAmount;
   } else {
     config = next;
     deactivateScene();
@@ -2676,12 +2682,44 @@ function _dlaSpawnWalker(w, h) {
 SCENES.reactionDiffusion = {
   label: "Reaction-Diffusion",
   params: [
-    { key: "feed", label: "Feed Rate", min: 0.01, max: 0.08, step: 0.001, default: 0.037, tip: "How fast chemical A is added" },
-    { key: "kill", label: "Kill Rate", min: 0.04, max: 0.075, step: 0.001, default: 0.06, tip: "How fast chemical B is removed" },
-    { key: "diffA", label: "Diffuse A", min: 0.5, max: 1.5, step: 0.05, default: 1.0, tip: "Diffusion rate of chemical A" },
-    { key: "diffB", label: "Diffuse B", min: 0.2, max: 0.8, step: 0.05, default: 0.5, tip: "Diffusion rate of chemical B" }
+    {
+      key: "feed",
+      label: "Feed Rate",
+      min: 0.01,
+      max: 0.08,
+      step: 0.001,
+      default: 0.037,
+      tip: "How fast chemical A is added",
+    },
+    {
+      key: "kill",
+      label: "Kill Rate",
+      min: 0.04,
+      max: 0.075,
+      step: 0.001,
+      default: 0.06,
+      tip: "How fast chemical B is removed",
+    },
+    {
+      key: "diffA",
+      label: "Diffuse A",
+      min: 0.5,
+      max: 1.5,
+      step: 0.05,
+      default: 1.0,
+      tip: "Diffusion rate of chemical A",
+    },
+    {
+      key: "diffB",
+      label: "Diffuse B",
+      min: 0.2,
+      max: 0.8,
+      step: 0.05,
+      default: 0.5,
+      tip: "Diffusion rate of chemical B",
+    },
   ],
-  init: function(w, h, p) {
+  init: function (w, h, p) {
     var n = w * h;
     var a = new Float32Array(n);
     var b = new Float32Array(n);
@@ -2695,22 +2733,38 @@ SCENES.reactionDiffusion = {
       for (var dy = -rad; dy <= rad; dy++) {
         for (var dx = -rad; dx <= rad; dx++) {
           if (dx * dx + dy * dy <= rad * rad) {
-            var px = (cx + dx + w) % w, py = (cy + dy + h) % h;
+            var px = (cx + dx + w) % w,
+              py = (cy + dy + h) % h;
             b[py * w + px] = 1;
           }
         }
       }
     }
-    _sceneState = { a: a, b: b, a2: new Float32Array(n), b2: new Float32Array(n), tickAccum: 0 };
+    _sceneState = {
+      a: a,
+      b: b,
+      a2: new Float32Array(n),
+      b2: new Float32Array(n),
+      tickAccum: 0,
+    };
   },
-  update: function(dt, w, h, p, grid) {
+  update: function (dt, w, h, p, grid) {
     var st = _sceneState;
-    if (!st.a || st.a.length !== w * h) { this.init(w, h, p); st = _sceneState; }
+    if (!st.a || st.a.length !== w * h) {
+      this.init(w, h, p);
+      st = _sceneState;
+    }
     st.tickAccum += dt * 60;
     var ticks = Math.min(Math.floor(st.tickAccum), 8);
     st.tickAccum -= ticks;
-    var a = st.a, b = st.b, a2 = st.a2, b2 = st.b2;
-    var dA = p.diffA, dB = p.diffB, f = p.feed, k = p.kill;
+    var a = st.a,
+      b = st.b,
+      a2 = st.a2,
+      b2 = st.b2;
+    var dA = p.diffA,
+      dB = p.diffB,
+      f = p.feed,
+      k = p.kill;
     for (var t = 0; t < ticks; t++) {
       for (var y = 0; y < h; y++) {
         for (var x = 0; x < w; x++) {
@@ -2725,19 +2779,26 @@ SCENES.reactionDiffusion = {
           var abb = a[i] * b[i] * b[i];
           a2[i] = a[i] + (dA * lapA - abb + f * (1 - a[i])) * 0.9;
           b2[i] = b[i] + (dB * lapB + abb - (k + f) * b[i]) * 0.9;
-          if (a2[i] < 0) a2[i] = 0; if (a2[i] > 1) a2[i] = 1;
-          if (b2[i] < 0) b2[i] = 0; if (b2[i] > 1) b2[i] = 1;
+          if (a2[i] < 0) a2[i] = 0;
+          if (a2[i] > 1) a2[i] = 1;
+          if (b2[i] < 0) b2[i] = 0;
+          if (b2[i] > 1) b2[i] = 1;
         }
       }
       // Swap buffers
-      var tmp = st.a; st.a = a = a2; st.a2 = tmp;
-      tmp = st.b; st.b = b = b2; st.b2 = tmp;
-      a2 = st.a2; b2 = st.b2;
+      var tmp = st.a;
+      st.a = a = a2;
+      st.a2 = tmp;
+      tmp = st.b;
+      st.b = b = b2;
+      st.b2 = tmp;
+      a2 = st.a2;
+      b2 = st.b2;
     }
     for (var i = 0; i < w * h; i++) {
       grid[i] = (a[i] - b[i]) * 4 - 2;
     }
-  }
+  },
 };
 
 // ─────────────────────────────────────
@@ -2746,20 +2807,55 @@ SCENES.reactionDiffusion = {
 SCENES.fallingSand = {
   label: "Falling Sand",
   params: [
-    { key: "spawnRate", label: "Spawn Rate", min: 0.01, max: 0.3, step: 0.01, default: 0.1, tip: "How much sand falls per frame" },
-    { key: "gravity", label: "Gravity", min: 0.5, max: 5, step: 0.5, default: 2, tip: "How fast sand falls" },
-    { key: "spread", label: "Spread", min: 0, max: 1, step: 0.1, default: 0.5, tip: "How much sand slides sideways" },
-    { key: "erosion", label: "Erosion", min: 0, max: 0.05, step: 0.005, default: 0.01, tip: "How fast piled sand decays" }
+    {
+      key: "spawnRate",
+      label: "Spawn Rate",
+      min: 0.01,
+      max: 0.3,
+      step: 0.01,
+      default: 0.1,
+      tip: "How much sand falls per frame",
+    },
+    {
+      key: "gravity",
+      label: "Gravity",
+      min: 0.5,
+      max: 5,
+      step: 0.5,
+      default: 2,
+      tip: "How fast sand falls",
+    },
+    {
+      key: "spread",
+      label: "Spread",
+      min: 0,
+      max: 1,
+      step: 0.1,
+      default: 0.5,
+      tip: "How much sand slides sideways",
+    },
+    {
+      key: "erosion",
+      label: "Erosion",
+      min: 0,
+      max: 0.05,
+      step: 0.005,
+      default: 0.01,
+      tip: "How fast piled sand decays",
+    },
   ],
-  init: function(w, h, p) {
+  init: function (w, h, p) {
     _sceneState = {
       cells: new Float32Array(w * h),
-      tickAccum: 0
+      tickAccum: 0,
     };
   },
-  update: function(dt, w, h, p, grid) {
+  update: function (dt, w, h, p, grid) {
     var st = _sceneState;
-    if (!st.cells || st.cells.length !== w * h) { this.init(w, h, p); st = _sceneState; }
+    if (!st.cells || st.cells.length !== w * h) {
+      this.init(w, h, p);
+      st = _sceneState;
+    }
     var cells = st.cells;
     st.tickAccum += dt * 30 * p.gravity;
     var ticks = Math.min(Math.floor(st.tickAccum), 6);
@@ -2785,11 +2881,17 @@ SCENES.fallingSand = {
           } else if (p.spread > 0) {
             // Try sliding diagonally
             var dir = Math.random() < 0.5 ? -1 : 1;
-            var nx1 = x + dir, nx2 = x - dir;
+            var nx1 = x + dir,
+              nx2 = x - dir;
             if (nx1 >= 0 && nx1 < w && cells[(y + 1) * w + nx1] <= 0) {
               cells[(y + 1) * w + nx1] = cells[i] * (0.8 + Math.random() * 0.2);
               cells[i] = 0;
-            } else if (nx2 >= 0 && nx2 < w && cells[(y + 1) * w + nx2] <= 0 && Math.random() < p.spread) {
+            } else if (
+              nx2 >= 0 &&
+              nx2 < w &&
+              cells[(y + 1) * w + nx2] <= 0 &&
+              Math.random() < p.spread
+            ) {
               cells[(y + 1) * w + nx2] = cells[i] * (0.8 + Math.random() * 0.2);
               cells[i] = 0;
             }
@@ -2807,7 +2909,7 @@ SCENES.fallingSand = {
     for (var i = 0; i < w * h; i++) {
       grid[i] = cells[i] > 0 ? cells[i] * 2 - 1 : -2;
     }
-  }
+  },
 };
 
 // ─────────────────────────────────────
@@ -2816,22 +2918,57 @@ SCENES.fallingSand = {
 SCENES.lightning = {
   label: "Lightning",
   params: [
-    { key: "strikeRate", label: "Strike Rate", min: 0.1, max: 3, step: 0.1, default: 0.8, tip: "How often lightning strikes" },
-    { key: "branches", label: "Branches", min: 0, max: 0.4, step: 0.02, default: 0.15, tip: "Chance of branching at each step" },
-    { key: "fade", label: "Fade Speed", min: 0.8, max: 0.99, step: 0.01, default: 0.92, tip: "How quickly the flash fades" },
-    { key: "jitter", label: "Jitter", min: 0.1, max: 3, step: 0.1, default: 1.5, tip: "How much the bolt wanders sideways" }
+    {
+      key: "strikeRate",
+      label: "Strike Rate",
+      min: 0.1,
+      max: 3,
+      step: 0.1,
+      default: 0.8,
+      tip: "How often lightning strikes",
+    },
+    {
+      key: "branches",
+      label: "Branches",
+      min: 0,
+      max: 0.4,
+      step: 0.02,
+      default: 0.15,
+      tip: "Chance of branching at each step",
+    },
+    {
+      key: "fade",
+      label: "Fade Speed",
+      min: 0.8,
+      max: 0.99,
+      step: 0.01,
+      default: 0.92,
+      tip: "How quickly the flash fades",
+    },
+    {
+      key: "jitter",
+      label: "Jitter",
+      min: 0.1,
+      max: 3,
+      step: 0.1,
+      default: 1.5,
+      tip: "How much the bolt wanders sideways",
+    },
   ],
-  init: function(w, h, p) {
+  init: function (w, h, p) {
     _sceneState = {
       glow: new Float32Array(w * h),
       bolts: [],
       strikeAccum: 0,
-      tickAccum: 0
+      tickAccum: 0,
     };
   },
-  update: function(dt, w, h, p, grid) {
+  update: function (dt, w, h, p, grid) {
     var st = _sceneState;
-    if (!st.glow || st.glow.length !== w * h) { this.init(w, h, p); st = _sceneState; }
+    if (!st.glow || st.glow.length !== w * h) {
+      this.init(w, h, p);
+      st = _sceneState;
+    }
     var glow = st.glow;
 
     // Fade existing glow
@@ -2859,8 +2996,10 @@ SCENES.lightning = {
           var gi = Math.floor(bolt.y) * w + ix;
           glow[gi] = Math.min(glow[gi] + bolt.life * 2, 3);
           // Slight width glow
-          if (ix > 0) glow[gi - 1] = Math.min(glow[gi - 1] + bolt.life * 0.5, 2);
-          if (ix < w - 1) glow[gi + 1] = Math.min(glow[gi + 1] + bolt.life * 0.5, 2);
+          if (ix > 0)
+            glow[gi - 1] = Math.min(glow[gi - 1] + bolt.life * 0.5, 2);
+          if (ix < w - 1)
+            glow[gi + 1] = Math.min(glow[gi + 1] + bolt.life * 0.5, 2);
         }
         bolt.y++;
         bolt.x += (Math.random() - 0.5) * p.jitter * 2 + bolt.dx;
@@ -2869,7 +3008,12 @@ SCENES.lightning = {
         bolt.life *= 0.98;
         // Branch
         if (Math.random() < p.branches && bolt.life > 0.3) {
-          newBolts.push({ x: bolt.x, y: bolt.y, dx: (Math.random() - 0.5) * p.jitter, life: bolt.life * 0.6 });
+          newBolts.push({
+            x: bolt.x,
+            y: bolt.y,
+            dx: (Math.random() - 0.5) * p.jitter,
+            life: bolt.life * 0.6,
+          });
         }
       }
       if (bolt.y < h && bolt.life > 0.1) {
@@ -2882,7 +3026,7 @@ SCENES.lightning = {
     for (var i = 0; i < w * h; i++) {
       grid[i] = glow[i] > 0.01 ? glow[i] * 1.5 - 1 : -2;
     }
-  }
+  },
 };
 
 // ─────────────────────────────────────
@@ -3100,8 +3244,7 @@ function _buildSceneParamsUI(key) {
     strLabel.textContent = "Amount ";
     var strTip = document.createElement("span");
     strTip.className = "help-tip";
-    strTip.title =
-      "Blend strength. 0 = scene has no effect, 1 = full blend.";
+    strTip.title = "Blend strength. 0 = scene has no effect, 1 = full blend.";
     strTip.textContent = "?";
     strLabel.appendChild(strTip);
     strField.appendChild(strLabel);
@@ -4450,8 +4593,7 @@ function randomize() {
     _randomizeVisuals();
     // Randomise scene blend
     var blendModes = ["add", "multiply", "screen", "subtract", "min", "max"];
-    _sceneBlendMode =
-      blendModes[Math.floor(Math.random() * blendModes.length)];
+    _sceneBlendMode = blendModes[Math.floor(Math.random() * blendModes.length)];
     _sceneBlendAmount = 0.3 + Math.random() * 0.7;
     config.name = "Random — " + (SCENES[key] ? SCENES[key].label : key);
     _updateSceneUI();
@@ -5364,7 +5506,10 @@ function welcomeNewDesign() {
   closeWelcome();
   // Deactivate scene if any
   if (_activeScene) deactivateScene();
-  _artGrid = null; _artW = 0; _artH = 0; _artFileName = "";
+  _artGrid = null;
+  _artW = 0;
+  _artH = 0;
+  _artFileName = "";
   var artInput = document.getElementById("art-file-input");
   if (artInput) artInput.value = "";
   config = {
@@ -5415,7 +5560,10 @@ function welcomeShowPresets() {
     btn.onclick = function () {
       closeWelcome();
       if (_activeScene) deactivateScene();
-      _artGrid = null; _artW = 0; _artH = 0; _artFileName = "";
+      _artGrid = null;
+      _artW = 0;
+      _artH = 0;
+      _artFileName = "";
       config = JSON.parse(JSON.stringify(p));
       time = 0;
       configToUI();
@@ -5436,7 +5584,10 @@ function welcomeShowPresets() {
 function welcomeRandom() {
   closeWelcome();
   if (_activeScene) deactivateScene();
-  _artGrid = null; _artW = 0; _artH = 0; _artFileName = "";
+  _artGrid = null;
+  _artW = 0;
+  _artH = 0;
+  _artFileName = "";
   _updateArtInfo();
   _updateArtActiveUI();
   randomize();
@@ -5878,113 +6029,117 @@ function _buildRndLockPanel() {
     var sections = allGroups[g][0];
     body.appendChild(allGroups[g][1]);
     for (var i = 0; i < sections.length; i++) {
-    var key = sections[i][0];
-    var label = sections[i][1];
-    var locked = _rndLocks[key] === true;
-    var hasSubs = !!_rndSubFields[key];
-    var hasSubLocks =
-      typeof _rndLocks[key] === "object" && _rndLocks[key] !== null;
+      var key = sections[i][0];
+      var label = sections[i][1];
+      var locked = _rndLocks[key] === true;
+      var hasSubs = !!_rndSubFields[key];
+      var hasSubLocks =
+        typeof _rndLocks[key] === "object" && _rndLocks[key] !== null;
 
-    // Section row
-    var row = document.createElement("div");
-    row.className = "rnd-lock-row";
-    if (locked) row.classList.add("locked");
-    row.onclick = (function (k, r) {
-      return function (e) {
-        if (e.target.closest && e.target.closest(".rnd-lock-expand")) return;
-        if (_rndLocks[k] === true) {
-          _rndLocks[k] = false;
-        } else if (typeof _rndLocks[k] === "object") {
-          // Has sub-locks — toggle to fully locked
-          _rndLocks[k] = true;
-        } else {
-          _rndLocks[k] = true;
-        }
-        _buildRndLockPanel();
-      };
-    })(key, row);
-    var icon = document.createElement("span");
-    icon.className = "rnd-lock-icon";
-    icon.innerHTML = locked ? _lockSVG : hasSubLocks ? _partialSVG : _unlockSVG;
-    row.appendChild(icon);
-    var txt = document.createElement("span");
-    txt.className = "rnd-lock-label";
-    txt.textContent = label;
-    row.appendChild(txt);
-
-    // Expand button for sections with sub-fields
-    if (hasSubs) {
-      var exp = document.createElement("span");
-      exp.className = "rnd-lock-expand";
-      exp.textContent = "▾";
-      exp.title = "Lock individual fields";
-      exp.onclick = (function (k) {
+      // Section row
+      var row = document.createElement("div");
+      row.className = "rnd-lock-row";
+      if (locked) row.classList.add("locked");
+      row.onclick = (function (k, r) {
         return function (e) {
-          e.stopPropagation();
-          // Toggle into sub-field mode
+          if (e.target.closest && e.target.closest(".rnd-lock-expand")) return;
           if (_rndLocks[k] === true) {
-            // Expand from fully locked — set all sub-fields locked
-            var obj = {};
-            _rndSubFields[k].forEach(function (sf) {
-              obj[sf[0]] = true;
-            });
-            _rndLocks[k] = obj;
+            _rndLocks[k] = false;
           } else if (typeof _rndLocks[k] === "object") {
-            // Collapse back — if all locked, set true; if all unlocked, set false
-            var allLocked = true,
-              allUnlocked = true;
-            _rndSubFields[k].forEach(function (sf) {
-              if (_rndLocks[k][sf[0]]) allUnlocked = false;
-              else allLocked = false;
-            });
-            _rndLocks[k] = allLocked ? true : false;
+            // Has sub-locks — toggle to fully locked
+            _rndLocks[k] = true;
           } else {
-            // Expand from unlocked — set all sub-fields unlocked
-            var obj = {};
-            _rndSubFields[k].forEach(function (sf) {
-              obj[sf[0]] = false;
-            });
-            _rndLocks[k] = obj;
+            _rndLocks[k] = true;
           }
           _buildRndLockPanel();
         };
-      })(key);
-      row.appendChild(exp);
-    }
+      })(key, row);
+      var icon = document.createElement("span");
+      icon.className = "rnd-lock-icon";
+      icon.innerHTML = locked
+        ? _lockSVG
+        : hasSubLocks
+          ? _partialSVG
+          : _unlockSVG;
+      row.appendChild(icon);
+      var txt = document.createElement("span");
+      txt.className = "rnd-lock-label";
+      txt.textContent = label;
+      row.appendChild(txt);
 
-    body.appendChild(row);
-
-    // Sub-field rows if expanded
-    if (hasSubs && hasSubLocks) {
-      var subs = _rndSubFields[key];
-      var lockObj = _rndLocks[key];
-      for (var j = 0; j < subs.length; j++) {
-        var sf = subs[j];
-        var subRow = document.createElement("div");
-        subRow.className = "rnd-lock-sub";
-        if (lockObj[sf[0]]) subRow.classList.add("locked");
-        subRow.onclick = (function (k, field, sr) {
+      // Expand button for sections with sub-fields
+      if (hasSubs) {
+        var exp = document.createElement("span");
+        exp.className = "rnd-lock-expand";
+        exp.textContent = "▾";
+        exp.title = "Lock individual fields";
+        exp.onclick = (function (k) {
           return function (e) {
             e.stopPropagation();
-            _rndLocks[k][field] = !_rndLocks[k][field];
-            sr.classList.toggle("locked", _rndLocks[k][field]);
-            sr.querySelector(".rnd-lock-icon").innerHTML = _rndLocks[k][field]
-              ? _lockSVG
-              : _unlockSVG;
+            // Toggle into sub-field mode
+            if (_rndLocks[k] === true) {
+              // Expand from fully locked — set all sub-fields locked
+              var obj = {};
+              _rndSubFields[k].forEach(function (sf) {
+                obj[sf[0]] = true;
+              });
+              _rndLocks[k] = obj;
+            } else if (typeof _rndLocks[k] === "object") {
+              // Collapse back — if all locked, set true; if all unlocked, set false
+              var allLocked = true,
+                allUnlocked = true;
+              _rndSubFields[k].forEach(function (sf) {
+                if (_rndLocks[k][sf[0]]) allUnlocked = false;
+                else allLocked = false;
+              });
+              _rndLocks[k] = allLocked ? true : false;
+            } else {
+              // Expand from unlocked — set all sub-fields unlocked
+              var obj = {};
+              _rndSubFields[k].forEach(function (sf) {
+                obj[sf[0]] = false;
+              });
+              _rndLocks[k] = obj;
+            }
+            _buildRndLockPanel();
           };
-        })(key, sf[0], subRow);
-        var subIcon = document.createElement("span");
-        subIcon.className = "rnd-lock-icon";
-        subIcon.innerHTML = lockObj[sf[0]] ? _lockSVG : _unlockSVG;
-        subRow.appendChild(subIcon);
-        var subTxt = document.createElement("span");
-        subTxt.className = "rnd-lock-label";
-        subTxt.textContent = sf[1];
-        subRow.appendChild(subTxt);
-        body.appendChild(subRow);
+        })(key);
+        row.appendChild(exp);
+      }
+
+      body.appendChild(row);
+
+      // Sub-field rows if expanded
+      if (hasSubs && hasSubLocks) {
+        var subs = _rndSubFields[key];
+        var lockObj = _rndLocks[key];
+        for (var j = 0; j < subs.length; j++) {
+          var sf = subs[j];
+          var subRow = document.createElement("div");
+          subRow.className = "rnd-lock-sub";
+          if (lockObj[sf[0]]) subRow.classList.add("locked");
+          subRow.onclick = (function (k, field, sr) {
+            return function (e) {
+              e.stopPropagation();
+              _rndLocks[k][field] = !_rndLocks[k][field];
+              sr.classList.toggle("locked", _rndLocks[k][field]);
+              sr.querySelector(".rnd-lock-icon").innerHTML = _rndLocks[k][field]
+                ? _lockSVG
+                : _unlockSVG;
+            };
+          })(key, sf[0], subRow);
+          var subIcon = document.createElement("span");
+          subIcon.className = "rnd-lock-icon";
+          subIcon.innerHTML = lockObj[sf[0]] ? _lockSVG : _unlockSVG;
+          subRow.appendChild(subIcon);
+          var subTxt = document.createElement("span");
+          subTxt.className = "rnd-lock-label";
+          subTxt.textContent = sf[1];
+          subRow.appendChild(subTxt);
+          body.appendChild(subRow);
+        }
       }
     }
-  }
   }
 }
 

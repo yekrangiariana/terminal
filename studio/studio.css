@@ -340,7 +340,9 @@ body {
   cursor: pointer;
   padding: 0 4px;
   opacity: 0.35;
-  transition: opacity 0.15s, color 0.15s;
+  transition:
+    opacity 0.15s,
+    color 0.15s;
   display: flex;
   align-items: center;
   color: inherit;
